@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Community Feed | Vertex Chamber</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .feed-container {
+        display: grid;
+        grid-template-columns: 250px 1fr 300px;
+        gap: 30px;
+        padding: 40px 0;
+      }
+
+      .sidebar {
+        height: fit-content;
+      }
+
+      .sidebar-section {
+        margin-bottom: 30px;
+      }
+
+      .sidebar-section h3 {
+        margin-bottom: 15px;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .filter-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .filter-tag {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .filter-tag:hover,
+      .filter-tag.active {
+        background: linear-gradient(
+          90deg,
+          var(--accent-primary),
+          var(--accent-secondary)
+        );
+        color: white;
+      }
+
+      .feed {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .feed-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .feed-sort {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .feed-card {
+        padding: 25px;
+        margin-bottom: 15px;
+      }
+
+      .feed-user {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .feed-user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        overflow: hidden;
+      }
+
+      .feed-user-info h4 {
+        font-size: 16px;
+        margin-bottom: 5px;
+      }
+
+      .feed-user-info p {
+        color: var(--text-secondary);
+        font-size: 14px;
+      }
+
+      .feed-content h3 {
+        font-size: 20px;
+        margin-bottom: 10px;
+      }
+
+      .feed-content p {
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+
+      .skill-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .skill-tag {
+        background: rgba(0, 212, 255, 0.1);
+        color: var(--accent-primary);
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .feed-actions {
+        display: flex;
+        gap: 15px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: var(--transition);
+        padding: 8px 16px;
+        border-radius: 8px;
+      }
+
+      .action-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+      }
+
+      .action-btn.active {
+        color: var(--accent-primary);
+      }
+
+      .right-panel {
+        height: fit-content;
+      }
+
+      .trending-projects {
+        margin-bottom: 30px;
+      }
+
+      .trending-project {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        border-radius: var(--border-radius);
+        margin-bottom: 15px;
+        transition: var(--transition);
+      }
+
+      .trending-project:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .trending-project-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: linear-gradient(
+          135deg,
+          var(--accent-primary),
+          var(--accent-secondary)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .trending-project-info h4 {
+        font-size: 15px;
+        margin-bottom: 5px;
+      }
+
+      .trending-project-info p {
+        color: var(--text-secondary);
+        font-size: 13px;
+      }
+
+      .suggested-users {
+        margin-bottom: 30px;
+      }
+
+      .suggested-user {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px;
+        border-radius: var(--border-radius);
+        margin-bottom: 10px;
+        transition: var(--transition);
+      }
+
+      .suggested-user:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .user-info-small {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .user-avatar-small {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        overflow: hidden;
+      }
+
+      .user-avatar-small img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .user-details h5 {
+        font-size: 14px;
+        margin-bottom: 3px;
+      }
+
+      .user-details p {
+        color: var(--text-secondary);
+        font-size: 12px;
+      }
+
+      .btn-follow {
+        padding: 5px 12px;
+        font-size: 12px;
+        border-radius: 15px;
+      }
+
+      @media (max-width: 1200px) {
+        .feed-container {
+          grid-template-columns: 200px 1fr;
+        }
+
+        .right-panel {
+          display: none;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .feed-container {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .feed-header {
+          flex-direction: column;
+          gap: 15px;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="particles"></canvas>
+
+    <header>
+      <div class="container nav-container">
+        <div class="logo">
+          <div class="logo-icon">
+            <i class="fas fa-cube"></i>
+          </div>
+          <span class="gradient-text">Vertex Chamber</span>
+        </div>
+
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <i class="fas fa-bars"></i>
+        </button>
+
+        <nav class="main-nav" id="mainNav">
+          <ul>
+            <li>
+              <a href="index.html"><i class="fas fa-home"></i> Home</a>
+            </li>
+            <li>
+              <a href="feed.html" class="active"
+                ><i class="fas fa-stream"></i> Feed</a
+              >
+            </li>
+            <li>
+              <a href="chambers.html"
+                ><i class="fas fa-door-closed"></i> Chambers</a
+              >
+            </li>
+            <li>
+              <a href="workspace.html"><i class="fas fa-code"></i> Workspace</a>
+            </li>
+            <li>
+              <a href="messages.html"
+                ><i class="fas fa-comments"></i> Messages</a
+              >
+            </li>
+            <li>
+              <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="user-menu">
+          <div class="user-avatar">
+            <img
+              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
+              alt="User Avatar"
+            />
+          </div>
+          <div class="notification-badge">3</div>
+        </div>
+      </div>
+    </header>
+
+    <section class="page-header">
+      <div class="container">
+        <h1 class="page-title">
+          Community <span class="gradient-text">Feed</span>
+        </h1>
+        <p class="page-subtitle">
+          Discover innovative projects, join teams, and collaborate with global
+          innovators
+        </p>
+      </div>
+    </section>
+
+    <div class="container">
+      <div class="feed-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+          <div class="glass-card sidebar-section">
+            <h3><i class="fas fa-filter"></i> Filters</h3>
+            <div class="filter-tags">
+              <span class="filter-tag active">All</span>
+              <span class="filter-tag">AI/ML</span>
+              <span class="filter-tag">Web Dev</span>
+              <span class="filter-tag">Mobile</span>
+              <span class="filter-tag">Hardware</span>
+              <span class="filter-tag">Design</span>
+              <span class="filter-tag">Blockchain</span>
+              <span class="filter-tag">IoT</span>
+              <span class="filter-tag">Open Source</span>
+            </div>
+          </div>
+
+          <div class="glass-card sidebar-section">
+            <h3><i class="fas fa-fire"></i> Trending</h3>
+            <p
+              style="
+                color: var(--text-secondary);
+                font-size: 14px;
+                margin-bottom: 15px;
+              "
+            >
+              Projects gaining traction
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                  padding: 8px;
+                  border-radius: 8px;
+                  background: rgba(0, 212, 255, 0.05);
+                "
+              >
+                <i class="fas fa-arrow-up" style="color: #00d4ff"></i>
+                <span style="font-size: 14px">AI Code Assistant</span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                  padding: 8px;
+                  border-radius: 8px;
+                  background: rgba(138, 43, 226, 0.05);
+                "
+              >
+                <i class="fas fa-arrow-up" style="color: #8a2be2"></i>
+                <span style="font-size: 14px">AR Shopping App</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card sidebar-section">
+            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 15px;
+              "
+            >
+              <a
+                href="workspace.html#create-project"
+                class="btn btn-primary btn-sm"
+              >
+                <i class="fas fa-plus"></i> New Project
+              </a>
+              <button class="btn btn-secondary btn-sm" id="findTeamBtn">
+                <i class="fas fa-users"></i> Find Team
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Feed -->
+        <main class="feed">
+          <div class="feed-header">
+            <h2>Latest Projects</h2>
+            <div class="feed-sort">
+              <span style="color: var(--text-secondary)">Sort by:</span>
+              <select
+                class="glass-card"
+                style="
+                  padding: 8px 15px;
+                  border: none;
+                  background: rgba(255, 255, 255, 0.05);
+                  color: white;
+                  border-radius: 8px;
+                "
+              >
+                <option>Newest</option>
+                <option>Most Popular</option>
+                <option>Most Active</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Feed Card 1 -->
+          <div class="glass-card feed-card">
+            <div class="feed-user">
+              <div class="feed-user-avatar">
+                <img
+                  src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
+                  alt="User"
+                />
+              </div>
+              <div class="feed-user-info">
+                <h4>Alex Morgan</h4>
+                <p>Posted 2 hours ago · Looking for 3 members</p>
+              </div>
+            </div>
+
+            <div class="feed-content">
+              <h3>AI-Powered Code Review Assistant</h3>
+              <p>
+                Building an intelligent code review system that learns from your
+                codebase and provides contextual suggestions, security
+                vulnerability detection, and performance optimization tips.
+                Looking for ML engineers and full-stack developers.
+              </p>
+
+              <div class="skill-tags">
+                <span class="skill-tag">AI/ML</span>
+                <span class="skill-tag">Python</span>
+                <span class="skill-tag">React</span>
+                <span class="skill-tag">Node.js</span>
+                <span class="skill-tag">TensorFlow</span>
+              </div>
+            </div>
+
+            <div class="feed-actions">
+              <button class="action-btn">
+                <i class="far fa-heart"></i> 24
+              </button>
+              <button class="action-btn">
+                <i class="far fa-comment"></i> 12
+              </button>
+              <button class="action-btn">
+                <i class="far fa-bookmark"></i> Save
+              </button>
+              <a
+                href="workspace.html"
+                class="btn btn-primary btn-sm"
+                style="margin-left: auto"
+              >
+                <i class="fas fa-plus"></i> Join Project
+              </a>
+            </div>
+          </div>
+
+          <!-- Feed Card 2 -->
+          <div class="glass-card feed-card">
+            <div class="feed-user">
+              <div class="feed-user-avatar">
+                <img
+                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
+                  alt="User"
+                />
+              </div>
+              <div class="feed-user-info">
+                <h4>Marcus Chen</h4>
+                <p>Posted 5 hours ago · Team of 4</p>
+              </div>
+            </div>
+
+            <div class="feed-content">
+              <h3>Decentralized Social Media Platform</h3>
+              <p>
+                Creating a blockchain-based social media platform where users
+                own their data and content. Built on Solana with React frontend.
+                Currently in beta testing, looking for security auditors and UX
+                designers.
+              </p>
+
+              <div class="skill-tags">
+                <span class="skill-tag">Blockchain</span>
+                <span class="skill-tag">Solana</span>
+                <span class="skill-tag">React</span>
+                <span class="skill-tag">Rust</span>
+                <span class="skill-tag">UX Design</span>
+              </div>
+            </div>
+
+            <div class="feed-actions">
+              <button class="action-btn">
+                <i class="far fa-heart"></i> 42
+              </button>
+              <button class="action-btn">
+                <i class="far fa-comment"></i> 18
+              </button>
+              <button class="action-btn">
+                <i class="far fa-bookmark"></i> Save
+              </button>
+              <a
+                href="workspace.html"
+                class="btn btn-primary btn-sm"
+                style="margin-left: auto"
+              >
+                <i class="fas fa-eye"></i> View Project
+              </a>
+            </div>
+          </div>
+
+          <!-- Feed Card 3 -->
+          <div class="glass-card feed-card">
+            <div class="feed-user">
+              <div class="feed-user-avatar">
+                <img
+                  src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
+                  alt="User"
+                />
+              </div>
+              <div class="feed-user-info">
+                <h4>Sarah Johnson</h4>
+                <p>Posted 1 day ago · Looking for 2 members</p>
+              </div>
+            </div>
+
+            <div class="feed-content">
+              <h3>AR Interior Design App</h3>
+              <p>
+                Developing an augmented reality app that lets users visualize
+                furniture and decor in their home before purchasing. Looking for
+                AR specialists (ARKit/ARCore) and 3D modelers.
+              </p>
+
+              <div class="skill-tags">
+                <span class="skill-tag">AR/VR</span>
+                <span class="skill-tag">Swift</span>
+                <span class="skill-tag">Kotlin</span>
+                <span class="skill-tag">3D Modeling</span>
+                <span class="skill-tag">UI/UX</span>
+              </div>
+            </div>
+
+            <div class="feed-actions">
+              <button class="action-btn active">
+                <i class="fas fa-heart"></i> 31
+              </button>
+              <button class="action-btn">
+                <i class="far fa-comment"></i> 7
+              </button>
+              <button class="action-btn active">
+                <i class="fas fa-bookmark"></i> Saved
+              </button>
+              <a
+                href="workspace.html"
+                class="btn btn-primary btn-sm"
+                style="margin-left: auto"
+              >
+                <i class="fas fa-plus"></i> Join Project
+              </a>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel">
+          <div class="glass-card trending-projects">
+            <h3
+              style="
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+              "
+            >
+              <i class="fas fa-chart-line"></i> Trending Projects
+            </h3>
+
+            <div class="trending-project">
+              <div class="trending-project-icon">
+                <i class="fas fa-brain"></i>
+              </div>
+              <div class="trending-project-info">
+                <h4>Neural Network Visualizer</h4>
+                <p>42 contributors · 2 weeks old</p>
+              </div>
+            </div>
+
+            <div class="trending-project">
+              <div class="trending-project-icon">
+                <i class="fas fa-leaf"></i>
+              </div>
+              <div class="trending-project-info">
+                <h4>Carbon Footprint Tracker</h4>
+                <p>28 contributors · 1 month old</p>
+              </div>
+            </div>
+
+            <div class="trending-project">
+              <div class="trending-project-icon">
+                <i class="fas fa-robot"></i>
+              </div>
+              <div class="trending-project-info">
+                <h4>Autonomous Delivery Bot</h4>
+                <p>16 contributors · 3 days old</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card suggested-users">
+            <h3
+              style="
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+              "
+            >
+              <i class="fas fa-user-plus"></i> Suggested Innovators
+            </h3>
+
+            <div class="suggested-user">
+              <div class="user-info-small">
+                <div class="user-avatar-small">
+                  <img
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=50&q=80"
+                    alt="User"
+                  />
+                </div>
+                <div class="user-details">
+                  <h5>David Kim</h5>
+                  <p>AI Researcher</p>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-sm btn-follow">
+                Follow
+              </button>
+            </div>
+
+            <div class="suggested-user">
+              <div class="user-info-small">
+                <div class="user-avatar-small">
+                  <img
+                    src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=50&q=80"
+                    alt="User"
+                  />
+                </div>
+                <div class="user-details">
+                  <h5>Maya Rodriguez</h5>
+                  <p>Blockchain Dev</p>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-sm btn-follow">
+                Follow
+              </button>
+            </div>
+
+            <div class="suggested-user">
+              <div class="user-info-small">
+                <div class="user-avatar-small">
+                  <img
+                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=50&q=80"
+                    alt="User"
+                  />
+                </div>
+                <div class="user-details">
+                  <h5>James Wilson</h5>
+                  <p>Full-Stack Engineer</p>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-sm btn-follow">
+                Follow
+              </button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <footer>
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <div class="logo">
+              <div class="logo-icon">
+                <i class="fas fa-cube"></i>
+              </div>
+              <span class="gradient-text">Vertex Chamber</span>
+            </div>
+            <p style="margin-top: 20px; color: var(--text-secondary)">
+              Where ideas meet teams and projects come alive. Build the future
+              together.
+            </p>
+          </div>
+
+          <div class="footer-section">
+            <h4>Platform</h4>
+            <ul>
+              <li><a href="index.html">Home</a></li>
+              <li><a href="feed.html">Community Feed</a></li>
+              <li><a href="workspace.html">Project Workspace</a></li>
+              <li><a href="chambers.html">Chambers</a></li>
+              <li><a href="messages.html">Messages</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-section">
+            <h4>Resources</h4>
+            <ul>
+              <li><a href="#">Documentation</a></li>
+              <li><a href="#">API</a></li>
+              <li><a href="#">Blog</a></li>
+              <li><a href="#">Success Stories</a></li>
+              <li><a href="#">Help Center</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-section">
+            <h4>Connect</h4>
+            <ul>
+              <li>
+                <a href="#"><i class="fab fa-twitter"></i> Twitter</a>
+              </li>
+              <li>
+                <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+              </li>
+              <li>
+                <a href="#"><i class="fab fa-github"></i> GitHub</a>
+              </li>
+              <li>
+                <a href="#"><i class="fab fa-discord"></i> Discord</a>
+              </li>
+              <li>
+                <a href="#"><i class="fas fa-envelope"></i> Newsletter</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="copyright">
+          &copy; 2023 Vertex Chamber. All rights reserved. Designed for
+          innovators, builders, and creators.
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/particles.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+      // Additional feed functionality
+      document.addEventListener("DOMContentLoaded", function () {
+        // Find team button
+        document
+          .getElementById("findTeamBtn")
+          ?.addEventListener("click", function () {
+            window.location.href = "chambers.html#join-chamber";
+          });
+
+        // Filter tag selection
+        document.querySelectorAll(".filter-tag").forEach((tag) => {
+          tag.addEventListener("click", function () {
+            document
+              .querySelectorAll(".filter-tag")
+              .forEach((t) => t.classList.remove("active"));
+            this.classList.add("active");
+          });
+        });
+
+        // Action buttons (like, save, etc.)
+        document.querySelectorAll(".action-btn").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const icon = this.querySelector("i");
+
+            if (icon.classList.contains("far")) {
+              // Toggle like
+              if (icon.classList.contains("fa-heart")) {
+                icon.className = "fas fa-heart";
+                const count = this.textContent.trim();
+                const num = parseInt(count) + 1;
+                this.innerHTML = `<i class="fas fa-heart"></i> ${num}`;
+              }
+              // Toggle save
+              else if (icon.classList.contains("fa-bookmark")) {
+                icon.className = "fas fa-bookmark";
+                this.innerHTML = '<i class="fas fa-bookmark"></i> Saved';
+                this.classList.add("active");
+              }
+            } else {
+              // Untoggle like
+              if (icon.classList.contains("fa-heart")) {
+                icon.className = "far fa-heart";
+                const count = this.textContent.trim();
+                const num = parseInt(count) - 1;
+                this.innerHTML = `<i class="far fa-heart"></i> ${num}`;
+              }
+              // Untoggle save
+              else if (icon.classList.contains("fa-bookmark")) {
+                icon.className = "far fa-bookmark";
+                this.innerHTML = '<i class="far fa-bookmark"></i> Save';
+                this.classList.remove("active");
+              }
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
