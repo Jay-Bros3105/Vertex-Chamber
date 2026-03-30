@@ -1,3 +1,40 @@
+/**
+ * ============================================================
+ * Message.js — Mongoose Schema (Server-side / MongoDB)
+ * Vertex Chamber | Message Data Model
+ * ============================================================
+ *
+ * NOTE ON FIREBASE INTEGRATION:
+ * This Mongoose model is retained for any server-side operations
+ * (e.g., admin tools, data migration, server-rendered APIs).
+ * For the real-time chat frontend (messages.html), all reads/writes
+ * go through Firebase Firestore via message_controller.js.
+ *
+ * Firestore message document structure mirrors this schema:
+ * {
+ *   conversationId: String,
+ *   senderId: String (Firebase Auth UID),
+ *   receiverId: String (Firebase Auth UID),
+ *   content: String,
+ *   type: 'text' | 'audio' | 'file' | 'image' | 'code' | 'system',
+ *   attachmentURL: String | null,
+ *   attachmentName: String | null,
+ *   attachmentSize: Number | null,
+ *   replyTo: String | null (message ID),
+ *   codeSnippet: { language: String, code: String } | null,
+ *   reactions: { [emoji]: [userId, ...] },
+ *   readBy: [String],
+ *   deleted: Boolean,
+ *   deletedAt: Timestamp | null,
+ *   deletedBy: String | null,
+ *   edited: Boolean,
+ *   editedAt: Timestamp | null,
+ *   previousContent: String | null,
+ *   timestamp: Timestamp (serverTimestamp),
+ * }
+ * ============================================================
+ */
+
 const mongoose = require('mongoose');
 
 const MessageSchema = new mongoose.Schema({
@@ -18,7 +55,7 @@ const MessageSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['text', 'image', 'file', 'code', 'system'],
+    enum: ['text', 'image', 'file', 'code', 'system', 'audio'],
     default: 'text'
   },
   attachments: [{
@@ -32,7 +69,7 @@ const MessageSchema = new mongoose.Schema({
     },
     type: {
       type: String,
-      enum: ['image', 'document', 'code', 'other']
+      enum: ['image', 'document', 'code', 'audio', 'other']
     },
     size: Number
   }],

@@ -3,1512 +3,456 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Profile | Vertex Chamber</title>
+    <title>Complete Profile | Vertex Chamber</title>
+
     <link rel="stylesheet" href="styles.css" />
     <link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+
     <style>
-      .profile-container {
-        display: grid;
-        grid-template-columns: 300px 1fr;
-        gap: 30px;
-        padding: 40px 0 80px;
+      :root {
+        --cyan:       #00d4ff;
+        --violet:     #8a2be2;
+        --mid:        #5e5ce6;
+        --bg:         #080810;
+        --surface:    #0e0e1a;
+        --surface2:   #141428;
+        --border:     rgba(255,255,255,0.07);
+        --text:       #f0f0ff;
+        --muted:      #6b6b8a;
+        --success:    #00ffb3;
+        --error:      #ff4d6d;
+        --warning:    #ffbe00;
+        --radius:     16px;
+        --glow-cyan:  0 0 24px rgba(0,212,255,0.25);
+        --glow-violet:0 0 24px rgba(138,43,226,0.25);
       }
 
-      .profile-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 30px;
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--bg); color: var(--text);
+        min-height: 100vh; display: flex;
+        align-items: center; justify-content: center; overflow-x: hidden;
       }
 
-      .profile-header-card {
-        text-align: center;
-        padding: 30px;
+      body::before {
+        content: ""; position: fixed; inset: 0;
+        background:
+          radial-gradient(ellipse 80% 60% at 10% 0%,  rgba(0,212,255,0.08) 0%, transparent 60%),
+          radial-gradient(ellipse 60% 50% at 90% 100%, rgba(138,43,226,0.1) 0%, transparent 55%),
+          radial-gradient(ellipse 40% 40% at 50% 50%,  rgba(94,92,230,0.05) 0%, transparent 70%);
+        pointer-events: none; z-index: 0;
       }
 
-      .profile-avatar {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        margin: 0 auto 20px;
-        overflow: hidden;
-        border: 3px solid rgba(0, 212, 255, 0.3);
+      .orb { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.18; animation: drift 18s ease-in-out infinite; pointer-events: none; z-index: 0; }
+      .orb-1 { width: 400px; height: 400px; background: var(--cyan); top: -100px; left: -100px; animation-delay: 0s; }
+      .orb-2 { width: 350px; height: 350px; background: var(--violet); bottom: -80px; right: -80px; animation-delay: -9s; }
+      @keyframes drift {
+        0%, 100% { transform: translate(0,0) scale(1); }
+        33%       { transform: translate(40px,30px) scale(1.05); }
+        66%       { transform: translate(-20px,50px) scale(0.95); }
+      }
+
+      .page {
+        position: relative; z-index: 1;
+        width: 100%; max-width: 520px; padding: 24px 16px;
+        animation: pageIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
+      }
+      @keyframes pageIn {
+        from { opacity: 0; transform: translateY(32px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border); border-radius: 24px;
+        padding: 40px 36px;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 32px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+      }
+
+      .card-header { text-align: center; margin-bottom: 36px; }
+
+      .badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: linear-gradient(135deg, rgba(0,212,255,0.12), rgba(138,43,226,0.12));
+        border: 1px solid rgba(0,212,255,0.2); border-radius: 100px;
+        padding: 6px 14px; font-size: 11px;
+        font-family: "Syne", sans-serif; font-weight: 700;
+        letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan);
+        margin-bottom: 16px;
+      }
+      .badge i { font-size: 10px; }
+
+      .card-header h1 {
+        font-family: "Syne", sans-serif; font-size: 26px; font-weight: 800;
+        background: linear-gradient(135deg, #fff 30%, var(--cyan) 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text; line-height: 1.2; margin-bottom: 8px;
+      }
+      .card-header p { font-size: 13px; color: var(--muted); font-weight: 300; }
+
+      /* ── Logged-in email pill ── */
+      .email-pill {
+        display: inline-flex; align-items: center; gap: 7px;
+        background: rgba(0,212,255,0.07);
+        border: 1px solid rgba(0,212,255,0.18);
+        border-radius: 100px; padding: 5px 14px;
+        font-size: 12px; color: var(--cyan);
+        margin-top: 10px; font-weight: 500;
+        letter-spacing: 0.02em;
+      }
+      .email-pill i { font-size: 11px; }
+
+      /* ── Avatar ── */
+      .avatar-zone { display: flex; flex-direction: column; align-items: center; margin-bottom: 32px; }
+      .avatar-ring { position: relative; width: 110px; height: 110px; margin-bottom: 14px; }
+      .avatar-ring::before {
+        content: ""; position: absolute; inset: -3px; border-radius: 50%;
+        background: conic-gradient(var(--cyan), var(--violet), var(--cyan));
+        animation: spin 4s linear infinite; z-index: 0;
+      }
+      .avatar-ring::after {
+        content: ""; position: absolute; inset: -3px; border-radius: 50%;
+        background: conic-gradient(var(--cyan), var(--violet), var(--cyan));
+        filter: blur(8px); opacity: 0.5;
+        animation: spin 4s linear infinite; z-index: 0;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      .avatar-inner {
+        position: relative; z-index: 1;
+        width: 100%; height: 100%; border-radius: 50%;
+        background: var(--surface2); overflow: hidden; border: 3px solid var(--bg);
+      }
+      .avatar-inner img {
+        width: 100%; height: 100%; object-fit: cover; display: block;
+        transition: transform 0.3s ease;
+      }
+      .avatar-ring:hover .avatar-inner img { transform: scale(1.06); }
+
+      .avatar-overlay {
+        position: absolute; inset: 3px; z-index: 2; border-radius: 50%;
+        background: rgba(0,0,0,0.55);
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; gap: 4px;
+        opacity: 0; transition: opacity 0.2s ease;
+        cursor: pointer; border: none;
+      }
+      .avatar-ring:hover .avatar-overlay { opacity: 1; }
+      .avatar-overlay i   { font-size: 20px; color: #fff; }
+      .avatar-overlay span { font-size: 10px; color: rgba(255,255,255,0.8); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; }
+
+      #avatarInput { display: none; }
+
+      .avatar-hint {
+        text-align: center; font-size: 12px; color: var(--muted); line-height: 1.6;
+      }
+      .avatar-hint strong { color: var(--text); font-size: 13px; }
+
+      .divider {
+        height: 1px; background: var(--border); margin: 28px 0;
         position: relative;
       }
+      .divider::after {
+        content: "IDENTITY"; position: absolute;
+        top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: var(--surface); padding: 0 12px;
+        font-size: 10px; letter-spacing: 0.15em;
+        color: var(--muted); font-family: "Syne", sans-serif; font-weight: 700;
+      }
 
-      .profile-avatar img {
+      /* ── Fields ── */
+      .field { margin-bottom: 20px; }
+      .field-label {
+        display: flex; align-items: center; gap: 7px;
+        font-size: 12px; font-weight: 600; font-family: "Syne", sans-serif;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--muted); margin-bottom: 10px;
+      }
+      .field-label i { color: var(--cyan); font-size: 11px; }
+
+      .input-wrap { position: relative; }
+      .input-wrap input, .input-wrap textarea {
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        background: var(--surface2);
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius); padding: 14px 44px 14px 16px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 15px; font-weight: 400; color: var(--text);
+        outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+        resize: none;
+      }
+      .input-wrap textarea { padding-right: 16px; min-height: 80px; }
+      .input-wrap input:focus, .input-wrap textarea:focus {
+        border-color: var(--cyan); box-shadow: var(--glow-cyan);
+      }
+      .input-wrap input.valid   { border-color: var(--success); box-shadow: 0 0 16px rgba(0,255,179,0.15); }
+      .input-wrap input.invalid { border-color: var(--error);   box-shadow: 0 0 16px rgba(255,77,109,0.15); }
+
+      .input-icon {
+        position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+        font-size: 14px; color: var(--muted); pointer-events: none;
       }
 
-      .edit-avatar-btn {
-        position: absolute;
-        bottom: 5px;
-        right: 5px;
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        background: linear-gradient(
-          90deg,
-          var(--accent-primary),
-          var(--accent-secondary)
-        );
-        border: none;
-        color: white;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: var(--transition);
+      .char-count { font-size: 11px; color: var(--muted); text-align: right; margin-top: 6px; }
+
+      /* ── Status pill ── */
+      .status-pill {
+        margin-top: 8px; font-size: 12px; color: var(--muted);
+        min-height: 20px; padding: 4px 0;
+        transition: opacity 0.2s; opacity: 0;
       }
+      .status-pill.show    { opacity: 1; }
+      .status-pill.available { color: var(--success); }
+      .status-pill.taken     { color: var(--error); }
+      .status-pill.checking  { color: var(--warning); }
+      .status-pill.short     { color: var(--warning); }
 
-      .edit-avatar-btn:hover {
-        transform: scale(1.1);
+      /* ── Save button ── */
+      .btn-save {
+        width: 100%; padding: 0; border: none; cursor: pointer;
+        border-radius: 14px; overflow: hidden; position: relative;
+        transition: transform 0.2s, box-shadow 0.2s;
+        background: linear-gradient(135deg, var(--cyan), var(--violet));
+        margin-top: 28px;
       }
-
-      .profile-name {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 5px;
+      .btn-save:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0,212,255,0.35);
       }
+      .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-      .profile-title {
-        color: var(--accent-primary);
-        margin-bottom: 15px;
-        font-size: 16px;
+      .btn-inner {
+        display: flex; align-items: center; justify-content: center;
+        padding: 16px 28px; gap: 10px;
+        font-family: "Syne", sans-serif; font-size: 15px; font-weight: 700;
+        letter-spacing: 0.05em; color: #fff; text-transform: uppercase;
       }
-
-      .profile-location {
-        color: var(--text-secondary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-bottom: 20px;
+      .spinner {
+        display: none; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: #fff; border-radius: 50%;
+        animation: spin 0.7s linear infinite;
       }
+      .btn-save.loading .spinner { display: block; }
 
-      .profile-stats {
-        display: flex;
-        justify-content: space-around;
-        margin: 20px 0;
+      /* ── Toast ── */
+      .toast {
+        position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(16px);
+        background: var(--surface2); border: 1px solid var(--border);
+        border-radius: 100px; padding: 10px 22px;
+        display: flex; align-items: center; gap: 8px;
+        font-size: 13px; font-weight: 500;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        transition: transform 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.3s;
+        z-index: 999; white-space: nowrap; opacity: 0;
       }
+      .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+      .toast.success { border-color: rgba(0,255,179,0.3); color: var(--success); }
+      .toast.error   { border-color: rgba(255,77,109,0.3); color: var(--error); }
 
-      .stat-item {
-        text-align: center;
+      .footer-note {
+        text-align: center; margin-top: 20px;
+        font-size: 12px; color: var(--muted); line-height: 1.6;
       }
+      .footer-note i { color: var(--cyan); margin-right: 4px; }
 
-      .stat-number {
-        font-size: 20px;
-        font-weight: 700;
-        margin-bottom: 5px;
+      /* ── Back / Sign-out row ── */
+      .top-bar {
+        position: fixed; top: 20px; left: 0; right: 0;
+        display: flex; justify-content: space-between;
+        padding: 0 20px; z-index: 100;
+        pointer-events: none;
       }
+      .top-bar > * { pointer-events: all; }
 
-      .stat-label {
-        color: var(--text-secondary);
-        font-size: 13px;
+      .back-btn, .signout-btn {
+        display: flex; align-items: center; gap: 8px;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 100px; padding: 10px 18px 10px 14px;
+        font-family: "DM Sans", sans-serif; font-size: 13px;
+        font-weight: 500; text-decoration: none; cursor: pointer;
+        transition: all 0.2s ease; backdrop-filter: blur(12px);
       }
-
-      .profile-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+      .back-btn   { color: var(--muted); }
+      .signout-btn { color: var(--muted); }
+      .back-btn:hover, .signout-btn:hover {
+        border-color: rgba(0,212,255,0.3); color: var(--cyan);
+        box-shadow: 0 0 16px rgba(0,212,255,0.12);
       }
+      .signout-btn:hover { border-color: rgba(255,77,109,0.3); color: var(--error); box-shadow: none; }
+      .back-btn i, .signout-btn i { font-size: 12px; }
 
-      .profile-badges {
-        padding: 25px;
+      @media (max-width: 540px) {
+        .card { padding: 28px 20px; border-radius: 20px; }
+        .card-header h1 { font-size: 22px; }
       }
-
-      .badges-title {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 20px;
-      }
-
-      .badges-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-      }
-
-      .badge-item {
-        text-align: center;
-        padding: 15px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.03);
-        transition: var(--transition);
-      }
-
-      .badge-item:hover {
-        transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .badge-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        margin: 0 auto 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-      }
-
-      .badge-icon.contributor {
-        background: rgba(0, 212, 255, 0.1);
-        color: var(--accent-primary);
-      }
-
-      .badge-icon.leader {
-        background: rgba(138, 43, 226, 0.1);
-        color: var(--accent-secondary);
-      }
-
-      .badge-icon.innovator {
-        background: rgba(255, 193, 7, 0.1);
-        color: #ffc107;
-      }
-
-      .badge-icon.mentor {
-        background: rgba(76, 175, 80, 0.1);
-        color: #4caf50;
-      }
-
-      .badge-name {
-        font-size: 13px;
-        font-weight: 600;
-        margin-bottom: 5px;
-      }
-
-      .badge-description {
-        color: var(--text-secondary);
-        font-size: 11px;
-      }
-
-      .profile-content {
-        display: flex;
-        flex-direction: column;
-        gap: 30px;
-      }
-
-      .profile-section {
-        margin-bottom: 30px;
-      }
-
-      .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 25px;
-      }
-
-      .section-title {
-        font-size: 20px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .skills-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-bottom: 30px;
-      }
-
-      .skill-tag-large {
-        padding: 10px 20px;
-        background: rgba(0, 212, 255, 0.1);
-        border: 1px solid rgba(0, 212, 255, 0.2);
-        border-radius: 25px;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .skill-name {
-        font-weight: 600;
-        color: var(--accent-primary);
-      }
-
-      .skill-level {
-        color: var(--text-secondary);
-        font-size: 13px;
-      }
-
-      .projects-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 25px;
-      }
-
-      .project-card-profile {
-        padding: 25px;
-      }
-
-      .project-card-header {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 20px;
-      }
-
-      .project-icon-small {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
-        background: linear-gradient(
-          135deg,
-          var(--accent-primary),
-          var(--accent-secondary)
-        );
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-      }
-
-      .project-info-small h4 {
-        font-size: 16px;
-        margin-bottom: 5px;
-      }
-
-      .project-info-small p {
-        color: var(--text-secondary);
-        font-size: 13px;
-      }
-
-      .project-description-small {
-        color: var(--text-secondary);
-        font-size: 14px;
-        line-height: 1.5;
-        margin-bottom: 20px;
-      }
-
-      .project-tags-small {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 20px;
-      }
-
-      .project-tag-small {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 4px 12px;
-        border-radius: 15px;
-        font-size: 12px;
-      }
-
-      .project-progress {
-        margin-top: 20px;
-      }
-
-      .progress-info {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-      }
-
-      .progress-bar-small {
-        height: 6px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 3px;
-        overflow: hidden;
-      }
-
-      .progress-fill {
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          var(--accent-primary),
-          var(--accent-secondary)
-        );
-        border-radius: 3px;
-      }
-
-      .activity-feed {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-      }
-
-      .activity-item {
-        display: flex;
-        gap: 20px;
-        padding: 20px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.03);
-        transition: var(--transition);
-      }
-
-      .activity-item:hover {
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .activity-icon {
-        width: 45px;
-        height: 45px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        flex-shrink: 0;
-      }
-
-      .activity-content h4 {
-        font-size: 15px;
-        margin-bottom: 5px;
-      }
-
-      .activity-content p {
-        color: var(--text-secondary);
-        font-size: 14px;
-        line-height: 1.5;
-      }
-
-      .activity-time {
-        color: var(--text-secondary);
-        font-size: 12px;
-        margin-top: 8px;
-      }
-
-      .chambers-grid-profile {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 20px;
-      }
-
-      .chamber-card-profile {
-        padding: 25px;
-        text-align: center;
-      }
-
-      .chamber-icon-profile {
-        width: 60px;
-        height: 60px;
-        border-radius: 16px;
-        background: linear-gradient(
-          135deg,
-          var(--accent-primary),
-          var(--accent-secondary)
-        );
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        font-size: 24px;
-      }
-
-      .chamber-card-profile h4 {
-        font-size: 16px;
-        margin-bottom: 10px;
-      }
-
-      .chamber-card-profile p {
-        color: var(--text-secondary);
-        font-size: 13px;
-        margin-bottom: 15px;
-      }
-
-      @media (max-width: 992px) {
-        .profile-container {
-          grid-template-columns: 1fr;
-        }
-
-        .profile-sidebar {
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-
-        .profile-header-card {
-          flex: 1;
-          min-width: 300px;
-        }
-
-        .profile-badges {
-          flex: 1;
-          min-width: 300px;
-        }
-      }
-
-      @media (max-width: 768px) {
-        .projects-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .chambers-grid-profile {
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        }
-
-        .badges-grid {
-          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        }
-      }
-
-      @media (max-width: 480px) {
-        .profile-sidebar {
-          flex-direction: column;
-        }
-
-        .profile-header-card,
-        .profile-badges {
-          min-width: 100%;
-        }
-
-        .skills-container {
-          justify-content: center;
-        }
-
-        .chambers-grid-profile {
-          grid-template-columns: 1fr;
-        }
-      }
+      @media (max-width: 360px) { .card { padding: 22px 14px; } }
     </style>
   </head>
-  <body>
-    <canvas id="particles"></canvas>
 
-    <header>
-      <div class="container nav-container">
-        <div class="logo">
-          <div class="logo-icon">
-            <i class="fas fa-cube"></i>
+  <body>
+    <!-- Top bar: back + sign-out -->
+    <div class="top-bar">
+      <button class="back-btn" onclick="window.history.back()">
+        <i class="fa-solid fa-arrow-left"></i> Back
+      </button>
+      <button class="signout-btn" onclick="window.signOutVertex && window.signOutVertex()">
+        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+      </button>
+    </div>
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="page">
+      <div class="card">
+
+        <!-- Header -->
+        <div class="card-header">
+          <div class="badge">
+            <i class="fa-solid fa-hexagon-nodes"></i>
+            Vertex Chamber
           </div>
-          <span class="gradient-text">Vertex Chamber</span>
+          <h1>Setup Your Profile</h1>
+          <p>Your identity across the entire chamber — choose wisely.</p>
+          <!-- Shows the logged-in email so user knows whose profile they're editing -->
+          <div class="email-pill">
+            <i class="fa-solid fa-envelope"></i>
+            <span id="loggedInEmail">Loading…</span>
+          </div>
         </div>
 
-        <button class="mobile-menu-btn" id="mobileMenuBtn">
-          <i class="fas fa-bars"></i>
+        <!-- Avatar Upload -->
+        <div class="avatar-zone">
+          <div class="avatar-ring" onclick="document.getElementById('avatarInput').click()" style="cursor:pointer">
+            <div class="avatar-inner">
+              <img src="https://via.placeholder.com/110/0e0e1a/5e5ce6?text=+" id="avatar" alt="Profile avatar" />
+            </div>
+            <button class="avatar-overlay" type="button" tabindex="-1">
+              <i class="fa-solid fa-camera"></i>
+              <span>Change</span>
+            </button>
+          </div>
+          <input type="file" id="avatarInput" accept="image/*" />
+          <div class="avatar-hint">
+            <strong>Click to upload</strong> your identification photo<br />
+            <span>Stored in the cloud — loads on every device · JPG, PNG, WebP</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Username -->
+        <div class="field">
+          <div class="field-label">
+            <i class="fa-solid fa-at"></i> Username
+          </div>
+          <div class="input-wrap">
+            <input type="text" id="username"
+              placeholder="Pick a unique chamber name"
+              autocomplete="off" spellcheck="false" />
+            <span class="input-icon" id="usernameIcon"><i class="fa-solid fa-user"></i></span>
+          </div>
+          <div class="status-pill" id="statusPill"></div>
+        </div>
+
+        <!-- Bio -->
+        <div class="field">
+          <div class="field-label">
+            <i class="fa-solid fa-pen-nib"></i> Bio
+            <span style="font-weight:400;color:#3a3a5c;margin-left:4px">(optional)</span>
+          </div>
+          <div class="input-wrap">
+            <textarea id="bio" placeholder="Tell the chamber who you are…" maxlength="160"></textarea>
+          </div>
+          <div class="char-count"><span id="bioCount">0</span> / 160</div>
+        </div>
+
+        <!-- Save button -->
+        <button class="btn-save" id="saveBtn" onclick="saveProfile()" disabled>
+          <div class="btn-inner">
+            <div class="spinner"></div>
+            <span class="btn-text">
+              <i class="fa-solid fa-bolt" style="margin-right:8px"></i>Activate Profile
+            </span>
+          </div>
         </button>
 
-        <nav class="main-nav" id="mainNav">
-          <ul>
-            <li>
-              <a href="index.html"><i class="fas fa-home"></i> Home</a>
-            </li>
-            <li>
-              <a href="feed.html"><i class="fas fa-stream"></i> Feed</a>
-            </li>
-            <li>
-              <a href="chambers.html"
-                ><i class="fas fa-door-closed"></i> Chambers</a
-              >
-            </li>
-            <li>
-              <a href="workspace.html"><i class="fas fa-code"></i> Workspace</a>
-            </li>
-            <li>
-              <a href="messages.html"
-                ><i class="fas fa-comments"></i> Messages</a
-              >
-            </li>
-            <li>
-              <a href="profile.html" class="active"
-                ><i class="fas fa-user"></i> Profile</a
-              >
-            </li>
-          </ul>
-        </nav>
-
-        <div class="user-menu">
-          <div class="user-avatar">
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
-              alt="User Avatar"
-            />
-          </div>
-          <div class="notification-badge">3</div>
-        </div>
-      </div>
-    </header>
-
-    <section class="page-header">
-      <div class="container">
-        <h1 class="page-title">
-          My <span class="gradient-text">Profile</span>
-        </h1>
-        <p class="page-subtitle">
-          Your innovation journey, skills, projects, and achievements
-        </p>
-      </div>
-    </section>
-
-    <div class="container">
-      <div class="profile-container">
-        <!-- Profile Sidebar -->
-        <div class="profile-sidebar">
-          <div class="glass-card profile-header-card">
-            <div class="profile-avatar">
-              <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80"
-                alt="Profile Picture"
-              />
-              <button class="edit-avatar-btn" title="Edit Profile Picture">
-                <i class="fas fa-camera"></i>
-              </button>
-            </div>
-
-            <div class="profile-name">Alex Turner</div>
-            <div class="profile-title">
-              Full-Stack Developer & AI Enthusiast
-            </div>
-
-            <div class="profile-location">
-              <i class="fas fa-map-marker-alt"></i>
-              <span>San Francisco, CA</span>
-            </div>
-
-            <div class="profile-stats">
-              <div class="stat-item">
-                <div class="stat-number">12</div>
-                <div class="stat-label">Projects</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">4</div>
-                <div class="stat-label">Launched</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">48</div>
-                <div class="stat-label">Contributions</div>
-              </div>
-            </div>
-
-            <div class="profile-actions">
-              <button class="btn btn-primary" id="editProfileBtn">
-                <i class="fas fa-edit"></i> Edit Profile
-              </button>
-              <button class="btn btn-secondary">
-                <i class="fas fa-share"></i> Share Profile
-              </button>
-            </div>
-          </div>
-
-          <div class="glass-card profile-badges">
-            <div class="badges-title">
-              <h3>Innovation Badges</h3>
-              <span style="color: var(--accent-primary); font-size: 13px"
-                >4 earned</span
-              >
-            </div>
-
-            <div class="badges-grid">
-              <div class="badge-item">
-                <div class="badge-icon contributor">
-                  <i class="fas fa-code"></i>
-                </div>
-                <div class="badge-name">Contributor</div>
-                <div class="badge-description">50+ contributions</div>
-              </div>
-
-              <div class="badge-item">
-                <div class="badge-icon leader">
-                  <i class="fas fa-crown"></i>
-                </div>
-                <div class="badge-name">Leader</div>
-                <div class="badge-description">Project lead</div>
-              </div>
-
-              <div class="badge-item">
-                <div class="badge-icon innovator">
-                  <i class="fas fa-lightbulb"></i>
-                </div>
-                <div class="badge-name">Innovator</div>
-                <div class="badge-description">5+ projects</div>
-              </div>
-
-              <div class="badge-item">
-                <div class="badge-icon mentor">
-                  <i class="fas fa-hands-helping"></i>
-                </div>
-                <div class="badge-name">Mentor</div>
-                <div class="badge-description">Helped 10+ members</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Profile Content -->
-        <div class="profile-content">
-          <!-- Skills Section -->
-          <div class="profile-section">
-            <div class="section-header">
-              <h3 class="section-title">
-                <i class="fas fa-code"></i>
-                Skills & Expertise
-              </h3>
-              <button class="btn btn-secondary btn-sm" id="addSkillBtn">
-                <i class="fas fa-plus"></i> Add Skill
-              </button>
-            </div>
-
-            <div class="skills-container">
-              <div class="skill-tag-large">
-                <span class="skill-name">JavaScript</span>
-                <span class="skill-level">Advanced</span>
-              </div>
-
-              <div class="skill-tag-large">
-                <span class="skill-name">React</span>
-                <span class="skill-level">Advanced</span>
-              </div>
-
-              <div class="skill-tag-large">
-                <span class="skill-name">Node.js</span>
-                <span class="skill-level">Advanced</span>
-              </div>
-
-              <div class="skill-tag-large">
-                <span class="skill-name">Python</span>
-                <span class="skill-level">Intermediate</span>
-              </div>
-
-              <div class="skill-tag-large">
-                <span class="skill-name">TensorFlow</span>
-                <span class="skill-level">Intermediate</span>
-              </div>
-
-              <div class="skill-tag-large">
-                <span class="skill-name">MongoDB</span>
-                <span class="skill-level">Advanced</span>
-              </div>
-
-              <div class="skill-tag-large">
-                <span class="skill-name">Docker</span>
-                <span class="skill-level">Intermediate</span>
-              </div>
-
-              <div class="skill-tag-large">
-                <span class="skill-name">AWS</span>
-                <span class="skill-level">Intermediate</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Projects Section -->
-          <div class="profile-section">
-            <div class="section-header">
-              <h3 class="section-title">
-                <i class="fas fa-project-diagram"></i>
-                My Projects
-              </h3>
-              <a
-                href="workspace.html#create-project"
-                class="btn btn-primary btn-sm"
-              >
-                <i class="fas fa-plus"></i> New Project
-              </a>
-            </div>
-
-            <div class="projects-grid">
-              <!-- Project 1 -->
-              <div class="glass-card project-card-profile">
-                <div class="project-card-header">
-                  <div class="project-icon-small">
-                    <i class="fas fa-robot"></i>
-                  </div>
-                  <div class="project-info-small">
-                    <h4>AI Code Assistant</h4>
-                    <p>Building • 4 members</p>
-                  </div>
-                </div>
-
-                <div class="project-description-small">
-                  AI-powered code review and suggestion system
-                </div>
-
-                <div class="project-tags-small">
-                  <span class="project-tag-small">AI/ML</span>
-                  <span class="project-tag-small">React</span>
-                  <span class="project-tag-small">Node.js</span>
-                </div>
-
-                <div class="project-progress">
-                  <div class="progress-info">
-                    <span>Progress</span>
-                    <span>65%</span>
-                  </div>
-                  <div class="progress-bar-small">
-                    <div class="progress-fill" style="width: 65%"></div>
-                  </div>
-                </div>
-
-                <div style="margin-top: 20px">
-                  <a href="workspace.html" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-external-link-alt"></i> Open Workspace
-                  </a>
-                </div>
-              </div>
-
-              <!-- Project 2 -->
-              <div class="glass-card project-card-profile">
-                <div class="project-card-header">
-                  <div class="project-icon-small">
-                    <i class="fas fa-chart-line"></i>
-                  </div>
-                  <div class="project-info-small">
-                    <h4>Data Visualization Tool</h4>
-                    <p>Launched • 3 members</p>
-                  </div>
-                </div>
-
-                <div class="project-description-small">
-                  Interactive data visualization platform for complex datasets
-                </div>
-
-                <div class="project-tags-small">
-                  <span class="project-tag-small">D3.js</span>
-                  <span class="project-tag-small">React</span>
-                  <span class="project-tag-small">Data Science</span>
-                </div>
-
-                <div class="project-progress">
-                  <div class="progress-info">
-                    <span>Status</span>
-                    <span style="color: #4caf50">Launched</span>
-                  </div>
-                  <div class="progress-bar-small">
-                    <div
-                      class="progress-fill"
-                      style="width: 100%; background: #4caf50"
-                    ></div>
-                  </div>
-                </div>
-
-                <div style="margin-top: 20px">
-                  <a href="#" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-external-link-alt"></i> View Live
-                  </a>
-                </div>
-              </div>
-
-              <!-- Project 3 -->
-              <div class="glass-card project-card-profile">
-                <div class="project-card-header">
-                  <div class="project-icon-small">
-                    <i class="fas fa-mobile-alt"></i>
-                  </div>
-                  <div class="project-info-small">
-                    <h4>Health Tracker App</h4>
-                    <p>Planning • 2 members</p>
-                  </div>
-                </div>
-
-                <div class="project-description-small">
-                  Mobile app for health monitoring and fitness tracking
-                </div>
-
-                <div class="project-tags-small">
-                  <span class="project-tag-small">React Native</span>
-                  <span class="project-tag-small">Health Tech</span>
-                  <span class="project-tag-small">Mobile</span>
-                </div>
-
-                <div class="project-progress">
-                  <div class="progress-info">
-                    <span>Progress</span>
-                    <span>25%</span>
-                  </div>
-                  <div class="progress-bar-small">
-                    <div class="progress-fill" style="width: 25%"></div>
-                  </div>
-                </div>
-
-                <div style="margin-top: 20px">
-                  <a href="workspace.html" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-external-link-alt"></i> Open Workspace
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Activity Feed -->
-          <div class="profile-section">
-            <div class="section-header">
-              <h3 class="section-title">
-                <i class="fas fa-history"></i>
-                Recent Activity
-              </h3>
-            </div>
-
-            <div class="activity-feed">
-              <div class="activity-item">
-                <div
-                  class="activity-icon"
-                  style="
-                    background: rgba(0, 212, 255, 0.1);
-                    color: var(--accent-primary);
-                  "
-                >
-                  <i class="fas fa-code-commit"></i>
-                </div>
-                <div class="activity-content">
-                  <h4>Pushed commits to AI Code Assistant</h4>
-                  <p>
-                    Implemented rate limiting for API endpoints and updated
-                    documentation
-                  </p>
-                  <div class="activity-time">2 hours ago</div>
-                </div>
-              </div>
-
-              <div class="activity-item">
-                <div
-                  class="activity-icon"
-                  style="
-                    background: rgba(138, 43, 226, 0.1);
-                    color: var(--accent-secondary);
-                  "
-                >
-                  <i class="fas fa-comment"></i>
-                </div>
-                <div class="activity-content">
-                  <h4>Commented on Data Visualization Tool</h4>
-                  <p>
-                    Provided feedback on new chart components and suggested
-                    improvements
-                  </p>
-                  <div class="activity-time">1 day ago</div>
-                </div>
-              </div>
-
-              <div class="activity-item">
-                <div
-                  class="activity-icon"
-                  style="background: rgba(255, 193, 7, 0.1); color: #ffc107"
-                >
-                  <i class="fas fa-user-plus"></i>
-                </div>
-                <div class="activity-content">
-                  <h4>Joined AI & Machine Learning Chamber</h4>
-                  <p>Became a member of the AI innovation chamber</p>
-                  <div class="activity-time">3 days ago</div>
-                </div>
-              </div>
-
-              <div class="activity-item">
-                <div
-                  class="activity-icon"
-                  style="background: rgba(76, 175, 80, 0.1); color: #4caf50"
-                >
-                  <i class="fas fa-medal"></i>
-                </div>
-                <div class="activity-content">
-                  <h4>Earned "Innovator" Badge</h4>
-                  <p>Completed 5 successful projects on Vertex Chamber</p>
-                  <div class="activity-time">1 week ago</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Chambers Section -->
-          <div class="profile-section">
-            <div class="section-header">
-              <h3 class="section-title">
-                <i class="fas fa-door-closed"></i>
-                My Chambers
-              </h3>
-              <a href="chambers.html" class="btn btn-secondary btn-sm">
-                <i class="fas fa-search"></i> Explore Chambers
-              </a>
-            </div>
-
-            <div class="chambers-grid-profile">
-              <div class="glass-card chamber-card-profile">
-                <div class="chamber-icon-profile">
-                  <i class="fas fa-robot"></i>
-                </div>
-                <h4>AI & Machine Learning</h4>
-                <p>Member since May 2023</p>
-                <span style="color: var(--text-secondary); font-size: 12px"
-                  >847 members</span
-                >
-              </div>
-
-              <div class="glass-card chamber-card-profile">
-                <div class="chamber-icon-profile">
-                  <i class="fas fa-code"></i>
-                </div>
-                <h4>Web & Mobile</h4>
-                <p>Member since March 2023</p>
-                <span style="color: var(--text-secondary); font-size: 12px"
-                  >1,234 members</span
-                >
-              </div>
-
-              <div class="glass-card chamber-card-profile">
-                <div class="chamber-icon-profile">
-                  <i class="fas fa-chart-line"></i>
-                </div>
-                <h4>Data Science</h4>
-                <p>Member since June 2023</p>
-                <span style="color: var(--text-secondary); font-size: 12px"
-                  >512 members</span
-                >
-              </div>
-            </div>
-          </div>
+        <div class="footer-note">
+          <i class="fa-solid fa-cloud"></i>
+          Your profile is linked to your email — accessible from any device, anywhere.
         </div>
       </div>
     </div>
 
-    <footer>
-      <div class="container">
-        <div class="footer-content">
-          <div class="footer-section">
-            <div class="logo">
-              <div class="logo-icon">
-                <i class="fas fa-cube"></i>
-              </div>
-              <span class="gradient-text">Vertex Chamber</span>
-            </div>
-            <p style="margin-top: 20px; color: var(--text-secondary)">
-              Where ideas meet teams and projects come alive. Build the future
-              together.
-            </p>
-          </div>
+    <div class="toast" id="toast"></div>
 
-          <div class="footer-section">
-            <h4>Platform</h4>
-            <ul>
-              <li><a href="index.html">Home</a></li>
-              <li><a href="feed.html">Community Feed</a></li>
-              <li><a href="workspace.html">Project Workspace</a></li>
-              <li><a href="chambers.html">Chambers</a></li>
-              <li><a href="messages.html">Messages</a></li>
-            </ul>
-          </div>
+    <!-- Firebase import map -->
+    <script type="importmap">
+      {
+        "imports": {
+          "firebase/app":       "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+          "firebase/auth":      "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+        }
+      }
+    </script>
 
-          <div class="footer-section">
-            <h4>Resources</h4>
-            <ul>
-              <li><a href="#">Documentation</a></li>
-              <li><a href="#">API</a></li>
-              <li><a href="#">Blog</a></li>
-              <li><a href="#">Success Stories</a></li>
-              <li><a href="#">Help Center</a></li>
-            </ul>
-          </div>
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="profile.js"></script>
 
-          <div class="footer-section">
-            <h4>Connect</h4>
-            <ul>
-              <li>
-                <a href="#"><i class="fab fa-twitter"></i> Twitter</a>
-              </li>
-              <li>
-                <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
-              </li>
-              <li>
-                <a href="#"><i class="fab fa-github"></i> GitHub</a>
-              </li>
-              <li>
-                <a href="#"><i class="fab fa-discord"></i> Discord</a>
-              </li>
-              <li>
-                <a href="#"><i class="fas fa-envelope"></i> Newsletter</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="copyright">
-          &copy; 2023 Vertex Chamber. All rights reserved. Designed for
-          innovators, builders, and creators.
-        </div>
-      </div>
-    </footer>
-
-    <script src="js/particles.js"></script>
-    <script src="js/main.js"></script>
     <script>
-      // Profile functionality
-      document.addEventListener("DOMContentLoaded", function () {
-        const editProfileBtn = document.getElementById("editProfileBtn");
-        const addSkillBtn = document.getElementById("addSkillBtn");
-        const editAvatarBtn = document.querySelector(".edit-avatar-btn");
+      // ── Avatar upload — saves to Firestore immediately ───
+      document.getElementById("avatarInput").addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith("image/")) { showToast("Please upload a valid image file.", "error"); return; }
+        if (file.size > 5 * 1024 * 1024)    { showToast("Image must be under 5MB.", "error"); return; }
 
-        // Edit profile button
-        if (editProfileBtn) {
-          editProfileBtn.addEventListener("click", function () {
-            showEditProfileModal();
-          });
-        }
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          const dataUrl = ev.target.result;
+          // Update preview instantly
+          document.getElementById("avatar").src = dataUrl;
+          // Cache locally for fast future loads
+          try { localStorage.setItem("vertex_avatar", dataUrl); } catch {}
+          // Push to Firestore right away (no need to click Save)
+          if (window.saveAvatarToFirestore) {
+            window.saveAvatarToFirestore(dataUrl);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
 
-        // Add skill button
-        if (addSkillBtn) {
-          addSkillBtn.addEventListener("click", function () {
-            showAddSkillModal();
-          });
-        }
+      // ── Bio char counter ──
+      document.getElementById("bio").addEventListener("input", function () {
+        document.getElementById("bioCount").textContent = this.value.length;
+      });
 
-        // Edit avatar button
-        if (editAvatarBtn) {
-          editAvatarBtn.addEventListener("click", function () {
-            showEditAvatarModal();
-          });
-        }
+      // ── Toast helper ──
+      window.showToast = function (msg, type = "success") {
+        const toast = document.getElementById("toast");
+        toast.textContent = "";
+        toast.className   = "toast " + type;
+        const icon = document.createElement("i");
+        icon.className = type === "success" ? "fa-solid fa-circle-check" : "fa-solid fa-circle-xmark";
+        toast.appendChild(icon);
+        toast.appendChild(document.createTextNode(" " + msg));
+        toast.classList.add("show");
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => toast.classList.remove("show"), 3500);
+      };
 
-        // Function to show edit profile modal
-        function showEditProfileModal() {
-          const modal = document.createElement("div");
-          modal.className = "modal";
-          modal.style.position = "fixed";
-          modal.style.top = "0";
-          modal.style.left = "0";
-          modal.style.width = "100%";
-          modal.style.height = "100%";
-          modal.style.background = "rgba(0, 0, 0, 0.8)";
-          modal.style.display = "flex";
-          modal.style.alignItems = "center";
-          modal.style.justifyContent = "center";
-          modal.style.zIndex = "10000";
-          modal.style.backdropFilter = "blur(10px)";
-
-          modal.innerHTML = `
-                    <div class="glass-card" style="padding: 40px; max-width: 600px; width: 90%; margin: 20px; max-height: 90vh; overflow-y: auto;">
-                        <h2 style="margin-bottom: 20px; font-size: 28px;">Edit <span class="gradient-text">Profile</span></h2>
-                        
-                        <div style="margin-bottom: 25px; text-align: center;">
-                            <div class="profile-avatar" style="display: inline-block; margin: 0 auto 20px;">
-                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Profile Picture">
-                                <button class="edit-avatar-btn" style="position: absolute; bottom: 5px; right: 5px;" onclick="showEditAvatarModal()">
-                                    <i class="fas fa-camera"></i>
-                                </button>
-                            </div>
-                            <button class="btn btn-secondary btn-sm" onclick="showEditAvatarModal()">
-                                <i class="fas fa-camera"></i> Change Avatar
-                            </button>
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">First Name</label>
-                                <input type="text" id="firstName" class="glass-card" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white;" value="Alex">
-                            </div>
-                            
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Last Name</label>
-                                <input type="text" id="lastName" class="glass-card" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white;" value="Turner">
-                            </div>
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Title / Role</label>
-                            <input type="text" id="profileTitle" class="glass-card" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white;" value="Full-Stack Developer & AI Enthusiast">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Bio</label>
-                            <textarea id="profileBio" class="glass-card" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white; min-height: 120px;">Passionate full-stack developer with expertise in JavaScript, React, and Node.js. Currently building AI-powered tools to help developers write better code. Always looking for innovative projects and collaborations.</textarea>
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Location</label>
-                            <input type="text" id="profileLocation" class="glass-card" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white;" value="San Francisco, CA">
-                        </div>
-                        
-                        <div style="display: flex; gap: 15px; justify-content: flex-end;">
-                            <button class="btn btn-secondary" id="cancelEditProfile">
-                                Cancel
-                            </button>
-                            <button class="btn btn-primary" id="saveProfile">
-                                <i class="fas fa-save"></i> Save Changes
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-          document.body.appendChild(modal);
-
-          // Modal event listeners
-          modal
-            .querySelector("#cancelEditProfile")
-            .addEventListener("click", function () {
-              document.body.removeChild(modal);
-            });
-
-          modal
-            .querySelector("#saveProfile")
-            .addEventListener("click", function () {
-              const firstName = modal.querySelector("#firstName").value;
-              const lastName = modal.querySelector("#lastName").value;
-              const title = modal.querySelector("#profileTitle").value;
-              const bio = modal.querySelector("#profileBio").value;
-              const location = modal.querySelector("#profileLocation").value;
-
-              // Update profile information
-              const profileName = document.querySelector(".profile-name");
-              const profileTitle = document.querySelector(".profile-title");
-              const profileLocation = document.querySelector(
-                ".profile-location span",
-              );
-
-              if (profileName) {
-                profileName.textContent = `${firstName} ${lastName}`;
-              }
-
-              if (profileTitle) {
-                profileTitle.textContent = title;
-              }
-
-              if (profileLocation) {
-                profileLocation.textContent = location;
-              }
-
-              // Show success notification
-              showNotification("Profile updated successfully!");
-
-              document.body.removeChild(modal);
-            });
-
-          // Close modal when clicking outside
-          modal.addEventListener("click", function (e) {
-            if (e.target === modal) {
-              document.body.removeChild(modal);
-            }
-          });
-        }
-
-        // Function to show add skill modal
-        function showAddSkillModal() {
-          const modal = document.createElement("div");
-          modal.className = "modal";
-          modal.style.position = "fixed";
-          modal.style.top = "0";
-          modal.style.left = "0";
-          modal.style.width = "100%";
-          modal.style.height = "100%";
-          modal.style.background = "rgba(0, 0, 0, 0.8)";
-          modal.style.display = "flex";
-          modal.style.alignItems = "center";
-          modal.style.justifyContent = "center";
-          modal.style.zIndex = "10000";
-          modal.style.backdropFilter = "blur(10px)";
-
-          modal.innerHTML = `
-                    <div class="glass-card" style="padding: 40px; max-width: 500px; width: 90%; margin: 20px;">
-                        <h2 style="margin-bottom: 20px; font-size: 28px;">Add New <span class="gradient-text">Skill</span></h2>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Skill Name</label>
-                            <input type="text" id="skillName" class="glass-card" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white;" placeholder="e.g., React, Python, UI/UX Design">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Proficiency Level</label>
-                            <select id="skillLevel" class="glass-card" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white;">
-                                <option value="beginner">Beginner</option>
-                                <option value="intermediate" selected>Intermediate</option>
-                                <option value="advanced">Advanced</option>
-                                <option value="expert">Expert</option>
-                            </select>
-                        </div>
-                        
-                        <div style="display: flex; gap: 15px; justify-content: flex-end;">
-                            <button class="btn btn-secondary" id="cancelSkill">
-                                Cancel
-                            </button>
-                            <button class="btn btn-primary" id="saveSkill">
-                                <i class="fas fa-plus"></i> Add Skill
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-          document.body.appendChild(modal);
-
-          // Modal event listeners
-          modal
-            .querySelector("#cancelSkill")
-            .addEventListener("click", function () {
-              document.body.removeChild(modal);
-            });
-
-          modal
-            .querySelector("#saveSkill")
-            .addEventListener("click", function () {
-              const skillName = modal.querySelector("#skillName").value;
-              const skillLevel = modal.querySelector("#skillLevel").value;
-
-              if (!skillName.trim()) {
-                alert("Please enter a skill name");
-                return;
-              }
-
-              // Add new skill to skills container
-              const skillsContainer =
-                document.querySelector(".skills-container");
-              if (skillsContainer) {
-                const skillElement = document.createElement("div");
-                skillElement.className = "skill-tag-large";
-
-                const levelText =
-                  skillLevel.charAt(0).toUpperCase() + skillLevel.slice(1);
-
-                skillElement.innerHTML = `
-                            <span class="skill-name">${skillName}</span>
-                            <span class="skill-level">${levelText}</span>
-                        `;
-
-                skillsContainer.appendChild(skillElement);
-
-                // Add remove functionality
-                skillElement.addEventListener("click", function (e) {
-                  if (
-                    e.target === this ||
-                    e.target.classList.contains("skill-name") ||
-                    e.target.classList.contains("skill-level")
-                  ) {
-                    if (confirm(`Remove skill "${skillName}"?`)) {
-                      this.remove();
-                      showNotification("Skill removed");
-                    }
-                  }
-                });
-
-                // Show success notification
-                showNotification(`Skill "${skillName}" added successfully!`);
-              }
-
-              document.body.removeChild(modal);
-            });
-
-          // Close modal when clicking outside
-          modal.addEventListener("click", function (e) {
-            if (e.target === modal) {
-              document.body.removeChild(modal);
-            }
-          });
-        }
-
-        // Function to show edit avatar modal
-        function showEditAvatarModal() {
-          const modal = document.createElement("div");
-          modal.className = "modal";
-          modal.style.position = "fixed";
-          modal.style.top = "0";
-          modal.style.left = "0";
-          modal.style.width = "100%";
-          modal.style.height = "100%";
-          modal.style.background = "rgba(0, 0, 0, 0.8)";
-          modal.style.display = "flex";
-          modal.style.alignItems = "center";
-          modal.style.justifyContent = "center";
-          modal.style.zIndex = "10000";
-          modal.style.backdropFilter = "blur(10px)";
-
-          modal.innerHTML = `
-                    <div class="glass-card" style="padding: 40px; max-width: 500px; width: 90%; margin: 20px; text-align: center;">
-                        <h2 style="margin-bottom: 20px; font-size: 28px;">Update <span class="gradient-text">Profile Picture</span></h2>
-                        
-                        <div style="margin-bottom: 30px;">
-                            <div class="profile-avatar" style="display: inline-block; margin: 0 auto 20px;">
-                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Profile Picture" id="avatarPreview">
-                            </div>
-                        </div>
-                        
-                        <div style="margin-bottom: 30px;">
-                            <h4 style="margin-bottom: 15px;">Choose an option:</h4>
-                            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                                <button class="btn btn-secondary" id="uploadAvatar">
-                                    <i class="fas fa-upload"></i> Upload Photo
-                                </button>
-                                <button class="btn btn-secondary" id="selectAvatar">
-                                    <i class="fas fa-images"></i> Choose from Gallery
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-bottom: 30px;">
-                            <h4 style="margin-bottom: 15px;">Sample Avatars:</h4>
-                            <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
-                                <div class="avatar-option" data-avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: var(--transition);">
-                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Avatar 1" style="width: 100%; height: 100%; object-fit: cover;">
-                                </div>
-                                <div class="avatar-option" data-avatar="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: var(--transition);">
-                                    <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Avatar 2" style="width: 100%; height: 100%; object-fit: cover;">
-                                </div>
-                                <div class="avatar-option" data-avatar="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: var(--transition);">
-                                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Avatar 3" style="width: 100%; height: 100%; object-fit: cover;">
-                                </div>
-                                <div class="avatar-option" data-avatar="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: var(--transition);">
-                                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Avatar 4" style="width: 100%; height: 100%; object-fit: cover;">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div style="display: flex; gap: 15px; justify-content: flex-end;">
-                            <button class="btn btn-secondary" id="cancelAvatar">
-                                Cancel
-                            </button>
-                            <button class="btn btn-primary" id="saveAvatar">
-                                <i class="fas fa-save"></i> Save Avatar
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-          document.body.appendChild(modal);
-
-          let selectedAvatar =
-            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80";
-
-          // Avatar selection
-          modal.querySelectorAll(".avatar-option").forEach((option) => {
-            option.addEventListener("click", function () {
-              modal.querySelectorAll(".avatar-option").forEach((o) => {
-                o.style.borderColor = "transparent";
-              });
-
-              this.style.borderColor = "var(--accent-primary)";
-              selectedAvatar = this.getAttribute("data-avatar");
-
-              // Update preview
-              const preview = modal.querySelector("#avatarPreview");
-              if (preview) {
-                preview.src = selectedAvatar;
-              }
-            });
-          });
-
-          // Upload avatar button
-          modal
-            .querySelector("#uploadAvatar")
-            .addEventListener("click", function () {
-              const input = document.createElement("input");
-              input.type = "file";
-              input.accept = "image/*";
-              input.style.display = "none";
-
-              input.addEventListener("change", function (e) {
-                const file = e.target.files[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = function (event) {
-                    selectedAvatar = event.target.result;
-
-                    // Update preview
-                    const preview = modal.querySelector("#avatarPreview");
-                    if (preview) {
-                      preview.src = selectedAvatar;
-                    }
-
-                    showNotification(
-                      "Image selected. Click Save to update your avatar.",
-                    );
-                  };
-                  reader.readAsDataURL(file);
-                }
-              });
-
-              document.body.appendChild(input);
-              input.click();
-              document.body.removeChild(input);
-            });
-
-          // Select from gallery (same as upload for demo)
-          modal
-            .querySelector("#selectAvatar")
-            .addEventListener("click", function () {
-              modal.querySelector("#uploadAvatar").click();
-            });
-
-          // Modal event listeners
-          modal
-            .querySelector("#cancelAvatar")
-            .addEventListener("click", function () {
-              document.body.removeChild(modal);
-            });
-
-          modal
-            .querySelector("#saveAvatar")
-            .addEventListener("click", function () {
-              // Update all avatar images on the page
-              const avatarImages = document.querySelectorAll(
-                ".profile-avatar img, .user-avatar img",
-              );
-              avatarImages.forEach((img) => {
-                img.src = selectedAvatar;
-              });
-
-              // Update header avatar too
-              const headerAvatar = document.querySelector(".user-avatar img");
-              if (headerAvatar) {
-                headerAvatar.src = selectedAvatar;
-              }
-
-              showNotification("Profile picture updated successfully!");
-              document.body.removeChild(modal);
-            });
-
-          // Close modal when clicking outside
-          modal.addEventListener("click", function (e) {
-            if (e.target === modal) {
-              document.body.removeChild(modal);
-            }
-          });
-        }
-
-        // Make skills removable on click
-        document.querySelectorAll(".skill-tag-large").forEach((skill) => {
-          skill.addEventListener("click", function (e) {
-            if (
-              e.target === this ||
-              e.target.classList.contains("skill-name") ||
-              e.target.classList.contains("skill-level")
-            ) {
-              const skillName = this.querySelector(".skill-name").textContent;
-              if (confirm(`Remove skill "${skillName}"?`)) {
-                this.remove();
-                showNotification("Skill removed");
-              }
-            }
-          });
-        });
-
-        // Function to show notification
-        function showNotification(message) {
-          const notification = document.createElement("div");
-          notification.className = "notification";
-          notification.textContent = message;
-          notification.style.position = "fixed";
-          notification.style.bottom = "20px";
-          notification.style.right = "20px";
-          notification.style.background =
-            "linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))";
-          notification.style.color = "white";
-          notification.style.padding = "12px 20px";
-          notification.style.borderRadius = "8px";
-          notification.style.zIndex = "1000";
-          notification.style.boxShadow = "0 5px 15px rgba(0, 0, 0, 0.3)";
-          notification.style.animation = "slideIn 0.3s ease";
-
-          document.body.appendChild(notification);
-
-          setTimeout(() => {
-            notification.style.animation = "slideOut 0.3s ease";
-            setTimeout(() => {
-              if (notification.parentNode) {
-                document.body.removeChild(notification);
-              }
-            }, 300);
-          }, 3000);
-        }
+      // ── Restore locally-cached avatar for instant display ──
+      window.addEventListener("DOMContentLoaded", () => {
+        try {
+          const saved = localStorage.getItem("vertex_avatar");
+          if (saved) document.getElementById("avatar").src = saved;
+        } catch {}
       });
     </script>
   </body>

@@ -2,27 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Vertex Chamber | Neural Login Interface</title>
     <link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
 
       body {
         font-family: "Inter", sans-serif;
@@ -36,159 +23,120 @@
       }
 
       .cyber-grid {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background-image:
           linear-gradient(rgba(0, 255, 255, 0.08) 1px, transparent 1px),
           linear-gradient(90deg, rgba(0, 255, 255, 0.08) 1px, transparent 1px);
         background-size: 40px 40px;
-        pointer-events: none;
-        z-index: 0;
+        pointer-events: none; z-index: 0;
         animation: gridPulse 8s infinite alternate;
       }
-      @keyframes gridPulse {
-        0% {
-          opacity: 0.3;
-        }
-        100% {
-          opacity: 0.7;
-        }
-      }
+      @keyframes gridPulse { 0% { opacity: 0.3; } 100% { opacity: 0.7; } }
 
       .particle {
         position: fixed;
-        background: radial-gradient(
-          circle,
-          rgba(0, 255, 255, 0.6),
-          rgba(138, 43, 226, 0)
-        );
-        width: 3px;
-        height: 3px;
-        border-radius: 50%;
-        pointer-events: none;
-        filter: blur(1px);
-        animation: floatParticle 15s infinite linear;
-        z-index: 0;
+        background: radial-gradient(circle, rgba(0, 255, 255, 0.6), rgba(138, 43, 226, 0));
+        width: 3px; height: 3px; border-radius: 50%;
+        pointer-events: none; filter: blur(1px);
+        animation: floatParticle 15s infinite linear; z-index: 0;
       }
       @keyframes floatParticle {
-        0% {
-          transform: translateY(100vh) translateX(0px);
-          opacity: 0;
-        }
-        10% {
-          opacity: 0.8;
-        }
-        90% {
-          opacity: 0.5;
-        }
-        100% {
-          transform: translateY(-10vh) translateX(30px);
-          opacity: 0;
-        }
+        0% { transform: translateY(100vh) translateX(0px); opacity: 0; }
+        10% { opacity: 0.8; }
+        90% { opacity: 0.5; }
+        100% { transform: translateY(-10vh) translateX(30px); opacity: 0; }
       }
 
       .login-container {
-        position: relative;
-        z-index: 10;
-        width: 100%;
-        max-width: 480px;
-        margin: 1.5rem;
+        position: relative; z-index: 10;
+        width: 100%; max-width: 480px; margin: 1.5rem;
         backdrop-filter: blur(12px);
         background: rgba(6, 12, 28, 0.65);
         border-radius: 2rem;
         border: 1px solid rgba(0, 255, 255, 0.3);
-        box-shadow:
-          0 20px 40px rgba(0, 0, 0, 0.5),
-          0 0 20px rgba(0, 255, 255, 0.2);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 255, 255, 0.2);
         transition: all 0.3s ease;
         animation: fadeSlideUp 0.7s cubic-bezier(0.2, 0.9, 0.4, 1.1);
       }
       @keyframes fadeSlideUp {
-        0% {
-          opacity: 0;
-          transform: translateY(30px) scale(0.97);
-        }
-        100% {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
+        0% { opacity: 0; transform: translateY(30px) scale(0.97); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
       }
 
-      .vertex-card {
-        padding: 2.2rem 2rem 2rem 2rem;
-      }
+      .vertex-card { padding: 2.2rem 2rem 2rem 2rem; }
 
-      .logo-area {
-        text-align: center;
-        margin-bottom: 2rem;
-      }
-      .logo-wrapper {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 0.8rem;
-      }
+      .logo-area { text-align: center; margin-bottom: 2rem; }
+      .logo-wrapper { display: flex; justify-content: center; align-items: center; margin-bottom: 0.8rem; }
       .vertex-logo {
-        max-width: 110px;
-        max-height: 110px;
-        width: auto;
-        height: auto;
+        max-width: 110px; max-height: 110px; width: auto; height: auto;
         display: inline-block;
         filter: drop-shadow(0 0 12px rgba(0, 255, 255, 0.7));
         transition: all 0.3s ease;
         animation: logoGlowPulse 3s infinite alternate;
-        border-radius: 24px;
-        cursor: pointer;
+        border-radius: 24px; cursor: pointer;
       }
-      .vertex-logo:hover {
-        filter: drop-shadow(0 0 25px rgba(0, 255, 255, 0.9));
-        transform: scale(1.02);
-      }
+      .vertex-logo:hover { filter: drop-shadow(0 0 25px rgba(0, 255, 255, 0.9)); transform: scale(1.02); }
       @keyframes logoGlowPulse {
-        0% {
-          filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.5));
-          transform: scale(1);
-        }
-        100% {
-          filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.9));
-          transform: scale(1.02);
-        }
+        0% { filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.5)); transform: scale(1); }
+        100% { filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.9)); transform: scale(1.02); }
       }
 
       .brand-name {
-        font-size: 1.6rem;
-        font-weight: 700;
+        font-size: 1.6rem; font-weight: 700;
         background: linear-gradient(120deg, #fff, #0ff, #bc7aff);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        letter-spacing: 2px;
-        margin-top: 8px;
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        letter-spacing: 2px; margin-top: 8px;
       }
-      .tagline {
-        font-size: 0.7rem;
-        letter-spacing: 2px;
-        color: #6c8eff;
-        text-transform: uppercase;
-        margin-top: 4px;
-      }
+      .tagline { font-size: 0.7rem; letter-spacing: 2px; color: #6c8eff; text-transform: uppercase; margin-top: 4px; }
 
-      .input-group {
-        margin-bottom: 1.6rem;
-        position: relative;
+      /* ── Session banner ── */
+      .session-banner {
+        background: rgba(0, 255, 179, 0.08);
+        border: 1px solid rgba(0, 255, 179, 0.3);
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.82rem;
+        color: #00ffb3;
       }
-      .input-icon {
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
+      .session-banner i { font-size: 1rem; flex-shrink: 0; }
+      .session-banner strong { color: #fff; }
+
+      /* ── Switch account pill ── */
+      .switch-account-pill {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        width: 100%;
+        background: transparent;
+        border: 1px dashed rgba(0, 255, 255, 0.25);
+        border-radius: 60px;
+        padding: 9px 18px;
+        font-size: 0.78rem;
+        font-family: "Inter", sans-serif;
+        font-weight: 500;
+        color: rgba(0, 255, 255, 0.55);
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 16px;
+      }
+      .switch-account-pill:hover {
+        background: rgba(0, 255, 255, 0.06);
+        border-color: rgba(0, 255, 255, 0.5);
         color: #0ff;
-        font-size: 1.1rem;
-        z-index: 2;
-        text-shadow: 0 0 3px cyan;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+      }
+      .switch-account-pill i { font-size: 0.75rem; }
+
+      .input-group { margin-bottom: 1.6rem; position: relative; }
+      .input-icon {
+        position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+        color: #0ff; font-size: 1.1rem; z-index: 2; text-shadow: 0 0 3px cyan;
       }
       .input-field {
         width: 100%;
@@ -196,230 +144,116 @@
         border: 1.5px solid rgba(0, 255, 255, 0.4);
         border-radius: 60px;
         padding: 14px 20px 14px 48px;
-        font-size: 1rem;
-        color: #eef5ff;
-        font-weight: 500;
-        outline: none;
-        transition: all 0.2s ease;
+        font-size: 1rem; color: #eef5ff; font-weight: 500;
+        outline: none; transition: all 0.2s ease;
         font-family: "Inter", monospace;
       }
       .input-field:focus {
         border-color: #0ff;
-        box-shadow:
-          0 0 15px rgba(0, 255, 255, 0.5),
-          0 0 5px rgba(0, 255, 255, 0.8);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), 0 0 5px rgba(0, 255, 255, 0.8);
         background: rgba(0, 20, 40, 0.8);
       }
       .input-field.invalid-shake {
         animation: shakeGlitch 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-        border-color: #ff3366;
-        box-shadow: 0 0 12px #ff3366;
+        border-color: #ff3366; box-shadow: 0 0 12px #ff3366;
       }
       @keyframes shakeGlitch {
-        0%,
-        100% {
-          transform: translateX(0);
-        }
-        10%,
-        30%,
-        50%,
-        70%,
-        90% {
-          transform: translateX(-3px);
-        }
-        20%,
-        40%,
-        60%,
-        80% {
-          transform: translateX(3px);
-        }
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+        20%, 40%, 60%, 80% { transform: translateX(3px); }
       }
 
       .neon-btn {
         width: 100%;
         background: rgba(0, 20, 40, 0.8);
-        border: 1px solid #0ff;
-        border-radius: 60px;
-        padding: 14px;
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0ff;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        backdrop-filter: blur(4px);
-        margin-top: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        font-family: inherit;
+        border: 1px solid #0ff; border-radius: 60px;
+        padding: 14px; font-size: 1rem; font-weight: 700;
+        color: #0ff; text-transform: uppercase; letter-spacing: 2px;
+        cursor: pointer; transition: all 0.2s ease;
+        backdrop-filter: blur(4px); margin-top: 10px;
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; font-family: inherit;
       }
       .neon-btn:hover:not(:disabled) {
         transform: scale(1.02);
         background: rgba(0, 255, 255, 0.15);
         box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
-        color: #fff;
-        text-shadow: 0 0 5px cyan;
+        color: #fff; text-shadow: 0 0 5px cyan;
       }
-      .neon-btn:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-      }
+      .neon-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
       .otp-section {
-        margin-top: 1rem;
-        padding-top: 0.5rem;
+        margin-top: 1rem; padding-top: 0.5rem;
         border-top: 1px dashed rgba(0, 255, 255, 0.4);
         transition: all 0.4s ease;
       }
-      .otp-field-group {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        margin-top: 10px;
-      }
+      .otp-field-group { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
       .otp-input {
         flex: 1;
         background: rgba(0, 10, 25, 0.7);
-        border: 1.5px solid #0ff;
-        border-radius: 60px;
-        padding: 12px 18px;
-        color: white;
-        font-size: 1rem;
-        letter-spacing: 2px;
-        font-weight: bold;
-        text-align: center;
-        font-family: monospace;
-        outline: none;
+        border: 1.5px solid #0ff; border-radius: 60px;
+        padding: 12px 18px; color: white;
+        font-size: 1rem; letter-spacing: 2px;
+        font-weight: bold; text-align: center;
+        font-family: monospace; outline: none;
       }
-      .otp-input:focus {
-        box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-      }
+      .otp-input:focus { box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); }
 
       .small-neon {
-        background: transparent;
-        border: 1px solid #0ff;
-        padding: 12px 18px;
-        border-radius: 60px;
-        color: #0ff;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.2s;
-        font-family: inherit;
-        white-space: nowrap;
+        background: transparent; border: 1px solid #0ff;
+        padding: 12px 18px; border-radius: 60px;
+        color: #0ff; font-weight: bold; cursor: pointer;
+        transition: 0.2s; font-family: inherit; white-space: nowrap;
       }
-      .small-neon:hover:not(:disabled) {
-        background: rgba(0, 255, 255, 0.2);
-        color: #fff;
-        box-shadow: 0 0 12px cyan;
-      }
-      .small-neon:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
+      .small-neon:hover:not(:disabled) { background: rgba(0, 255, 255, 0.2); color: #fff; box-shadow: 0 0 12px cyan; }
+      .small-neon:disabled { opacity: 0.6; cursor: not-allowed; }
 
       .info-message {
-        font-size: 0.75rem;
-        margin-top: 8px;
-        color: #6c9eff;
-        text-align: center;
-        min-height: 18px;
+        font-size: 0.75rem; margin-top: 8px;
+        color: #6c9eff; text-align: center; min-height: 18px;
       }
 
-      .action-buttons {
-        display: flex;
-        gap: 12px;
-        margin-top: 12px;
-      }
-      .action-buttons .small-neon {
-        flex: 1;
-        text-align: center;
-      }
+      .action-buttons { display: flex; gap: 12px; margin-top: 12px; }
+      .action-buttons .small-neon { flex: 1; text-align: center; }
 
       .email-display {
-        text-align: center;
-        color: #0ff;
-        font-size: 0.85rem;
-        margin-bottom: 12px;
-        opacity: 0.85;
-        font-style: italic;
-        letter-spacing: 0.5px;
+        text-align: center; color: #0ff; font-size: 0.85rem;
+        margin-bottom: 12px; opacity: 0.85; font-style: italic; letter-spacing: 0.5px;
       }
 
       .powered {
-        text-align: center;
-        margin-top: 2rem;
-        font-size: 0.7rem;
-        font-family: monospace;
-        letter-spacing: 1.5px;
-        color: #0ff;
+        text-align: center; margin-top: 2rem;
+        font-size: 0.7rem; font-family: monospace;
+        letter-spacing: 1.5px; color: #0ff;
         text-shadow: 0 0 3px cyan;
         border-top: 0.5px solid rgba(0, 255, 255, 0.3);
-        padding-top: 1.2rem;
-        opacity: 0.8;
+        padding-top: 1.2rem; opacity: 0.8;
       }
 
       .login-container::before {
-        content: "";
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
+        content: ""; position: absolute;
+        top: -2px; left: -2px; right: -2px; bottom: -2px;
         background: linear-gradient(45deg, #0ff, #f0f, #0ff);
-        border-radius: 2rem;
-        z-index: -1;
-        opacity: 0.2;
-        filter: blur(8px);
-        animation: borderGlitch 3s infinite;
+        border-radius: 2rem; z-index: -1; opacity: 0.2;
+        filter: blur(8px); animation: borderGlitch 3s infinite;
       }
       @keyframes borderGlitch {
-        0%,
-        100% {
-          opacity: 0.2;
-          transform: translate(0);
-        }
-        95% {
-          opacity: 0.5;
-          filter: blur(10px);
-        }
-        96% {
-          opacity: 0;
-        }
-        97% {
-          opacity: 0.4;
-        }
+        0%, 100% { opacity: 0.2; transform: translate(0); }
+        95% { opacity: 0.5; filter: blur(10px); }
+        96% { opacity: 0; }
+        97% { opacity: 0.4; }
       }
 
       .redirect-loading {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.92);
-        backdrop-filter: blur(12px);
-        z-index: 200;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        gap: 20px;
-        color: cyan;
-        font-size: 1.5rem;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(12px);
+        z-index: 200; display: flex; align-items: center; justify-content: center;
+        flex-direction: column; gap: 20px; color: cyan; font-size: 1.5rem;
         animation: fadeInZoom 0.4s ease;
       }
       @keyframes fadeInZoom {
-        from {
-          opacity: 0;
-          transform: scale(0.95);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-        }
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
       }
     </style>
 
@@ -428,16 +262,10 @@
     <script>
       // =====================================================
       // 📧 EMAILJS CONFIGURATION
-      // 1. Sign up free at https://www.emailjs.com
-      // 2. Account > API Keys → copy Public Key
-      // 3. Create Email Service → copy Service ID
-      // 4. Create Email Template with variables:
-      //    {{to_email}}, {{otp_code}}, {{app_name}}
-      //    → copy Template ID
       // =====================================================
-      window.EMAILJS_PUBLIC_KEY = "srQo3QulZIh_t9kZE"; // 🔁 replace with yours
-      window.EMAILJS_SERVICE_ID = "service_pn792k9"; // 🔁 replace with yours
-      window.EMAILJS_TEMPLATE_ID = "template_dmkj7iy"; // 🔁 replace with yours
+      window.EMAILJS_PUBLIC_KEY  = "srQo3QulZIh_t9kZE";   // 🔁 replace with yours
+      window.EMAILJS_SERVICE_ID  = "service_pn792k9";       // 🔁 replace with yours
+      window.EMAILJS_TEMPLATE_ID = "template_dmkj7iy";      // 🔁 replace with yours
       emailjs.init(window.EMAILJS_PUBLIC_KEY);
     </script>
   </head>
@@ -450,36 +278,43 @@
       <div class="vertex-card">
         <div class="logo-area">
           <div class="logo-wrapper">
-            <img
-              class="vertex-logo"
-              src="Vertex Logo.png"
-              alt="Vertex Chamber Logo"
-              onerror="this.src = 'https://i.imgur.com/M2itY4A.png'"
-            />
+            <img class="vertex-logo" src="Vertex Logo.png" alt="Vertex Chamber Logo"
+              onerror="this.src='https://i.imgur.com/M2itY4A.png'" />
           </div>
           <div class="brand-name">VERTEX CHAMBER</div>
           <div class="tagline">SECURE ACCESS • BIOMETRIC READY</div>
         </div>
 
-        <!-- STEP 1: Email Entry -->
+        <!-- ── STEP 1: Email Entry ── -->
         <div id="stepEmail">
+          <!-- Session banner: shown if a session already exists -->
+          <div class="session-banner" id="sessionBanner" style="display:none">
+            <i class="fas fa-user-check"></i>
+            <span>Welcome back, <strong id="sessionEmailDisplay">—</strong><br>
+              <span style="font-size:0.75rem;opacity:0.8;">Session active — tap Enter Chamber to continue</span>
+            </span>
+          </div>
+
           <div class="input-group">
             <i class="fas fa-envelope input-icon"></i>
-            <input
-              type="email"
-              id="emailInput"
-              class="input-field"
-              placeholder="Enter your email address"
-              autocomplete="email"
-            />
+            <input type="email" id="emailInput" class="input-field"
+              placeholder="Enter your email address" autocomplete="email" />
           </div>
           <button id="sendOtpBtn" class="neon-btn">
             <i class="fas fa-paper-plane"></i> Send OTP
           </button>
+          <!-- "Enter Chamber" button shown when session is already saved -->
+          <button id="enterChamberBtn" class="neon-btn" style="display:none; border-color:#00ffb3; color:#00ffb3; margin-top:10px;">
+            <i class="fas fa-door-open"></i> Enter Chamber
+          </button>
+          <!-- "Login with different email" — shown alongside the Enter Chamber button -->
+          <button id="switchAccountBtn" class="switch-account-pill" style="display:none;">
+            <i class="fas fa-user-plus"></i> Login with different Email
+          </button>
           <div class="info-message" id="emailErrorMsg"></div>
         </div>
 
-        <!-- STEP 2: OTP Verification -->
+        <!-- ── STEP 2: OTP Verification ── -->
         <div id="stepOtp" style="display: none">
           <div class="otp-section">
             <div class="info-message" style="color: #0ff; margin-bottom: 4px">
@@ -487,14 +322,8 @@
             </div>
             <div class="email-display" id="emailDisplay"></div>
             <div class="otp-field-group">
-              <input
-                type="text"
-                id="otpInput"
-                class="otp-input"
-                placeholder="6-digit OTP"
-                maxlength="6"
-                autocomplete="off"
-              />
+              <input type="text" id="otpInput" class="otp-input"
+                placeholder="6-digit OTP" maxlength="6" autocomplete="off" />
               <button id="verifyOtpBtn" class="small-neon">
                 <i class="fas fa-check-circle"></i> Verify
               </button>
@@ -512,58 +341,154 @@
         </div>
 
         <div class="powered">
-          <i class="fas fa-bolt"></i> Powered By JSL FastLine • Quantum
-          Encryption
+          <i class="fas fa-bolt"></i> Powered By JSL FastLine • Quantum Encryption
         </div>
       </div>
     </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        // ── State ──────────────────────────────────────────
-        let currentOtp = null;
+    <!-- Firebase (needed to check if profile exists) -->
+    <script type="importmap">
+      {
+        "imports": {
+          "firebase/app":       "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { initializeApp } from "firebase/app";
+      import { getFirestore, doc, getDoc } from "firebase/firestore";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyC3HO1BY4rw1uVlZnRn4qG3XpxipFzDs0M",
+        authDomain: "vertex-chamber-993f6.firebaseapp.com",
+        projectId: "vertex-chamber-993f6",
+        storageBucket: "vertex-chamber-993f6.firebasestorage.app",
+        messagingSenderId: "950688239086",
+        appId: "1:950688239086:web:13b11f2581e908dabed2ff"
+      };
+      const app = initializeApp(firebaseConfig);
+      const db  = getFirestore(app);
+
+      // ── Session key helpers ──────────────────────────────
+      const SESSION_EMAIL_KEY    = "vertex_session_email";
+      const SESSION_EXPIRY_KEY   = "vertex_session_expiry";
+      const SESSION_DURATION_MS  = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+      function saveSession(email) {
+        localStorage.setItem(SESSION_EMAIL_KEY,  email);
+        localStorage.setItem(SESSION_EXPIRY_KEY, Date.now() + SESSION_DURATION_MS);
+      }
+
+      function getSession() {
+        const email  = localStorage.getItem(SESSION_EMAIL_KEY);
+        const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY_KEY) || "0");
+        if (email && Date.now() < expiry) return email;
+        // Expired — clear it
+        localStorage.removeItem(SESSION_EMAIL_KEY);
+        localStorage.removeItem(SESSION_EXPIRY_KEY);
+        return null;
+      }
+
+      // ── Redirect helpers ────────────────────────────────
+      // After login, we check if the user already has a username set.
+      // If YES  → go to splash / main chamber
+      // If NO   → go to profile.html to set up their username
+      async function redirectAfterLogin(email) {
+        showLoader("ACCESS GRANTED", "Checking your profile…");
+        try {
+          // Derive the same email-based userId used in profile.js
+          const userId = emailToId(email);
+          const userRef = doc(db, "users", userId);
+          const snap    = await getDoc(userRef);
+
+          if (snap.exists() && snap.data().username) {
+            // Profile complete → enter chamber
+            setTimeout(() => { window.location.href = "splash.html"; }, 800);
+          } else {
+            // New user or incomplete profile → set up profile
+            setTimeout(() => { window.location.href = "profile.html"; }, 800);
+          }
+        } catch (err) {
+          console.error("Redirect check error:", err);
+          setTimeout(() => { window.location.href = "profile.html"; }, 800);
+        }
+      }
+
+      // Convert email → safe Firestore document ID
+      function emailToId(email) {
+        return email.toLowerCase().replace(/[^a-z0-9]/g, "_");
+      }
+
+      // ── On page load: check existing session ────────────
+      window.addEventListener("DOMContentLoaded", () => {
+        const savedEmail = getSession();
+        if (savedEmail) {
+          // Show returning-user banner
+          document.getElementById("sessionBanner").style.display   = "flex";
+          document.getElementById("sessionEmailDisplay").textContent = savedEmail;
+          document.getElementById("sendOtpBtn").style.display       = "none";
+          document.getElementById("enterChamberBtn").style.display  = "flex";
+          document.getElementById("switchAccountBtn").style.display = "flex";
+          document.getElementById("emailInput").value               = savedEmail;
+          document.getElementById("emailInput").disabled            = true;
+
+          // "Enter Chamber" click
+          document.getElementById("enterChamberBtn").addEventListener("click", () => {
+            redirectAfterLogin(savedEmail);
+          });
+
+          // "Login with different email" — clears session and resets UI
+          document.getElementById("switchAccountBtn").addEventListener("click", () => {
+            localStorage.removeItem("vertex_session_email");
+            localStorage.removeItem("vertex_session_expiry");
+            localStorage.removeItem("vertex_username");
+            localStorage.removeItem("vertex_profile_completed");
+            localStorage.removeItem("vertex_avatar");
+            // Reset UI to fresh state
+            document.getElementById("sessionBanner").style.display   = "none";
+            document.getElementById("enterChamberBtn").style.display  = "none";
+            document.getElementById("switchAccountBtn").style.display = "none";
+            document.getElementById("sendOtpBtn").style.display       = "flex";
+            document.getElementById("emailInput").value               = "";
+            document.getElementById("emailInput").disabled            = false;
+            document.getElementById("emailInput").focus();
+          });
+        }
+
+        setupLoginFlow();
+      });
+
+      // ── Full OTP login flow ──────────────────────────────
+      function setupLoginFlow() {
+        const stepEmail      = document.getElementById("stepEmail");
+        const stepOtp        = document.getElementById("stepOtp");
+        const emailInput     = document.getElementById("emailInput");
+        const sendOtpBtn     = document.getElementById("sendOtpBtn");
+        const emailErrorMsg  = document.getElementById("emailErrorMsg");
+        const emailDisplay   = document.getElementById("emailDisplay");
+        const otpInput       = document.getElementById("otpInput");
+        const verifyOtpBtn   = document.getElementById("verifyOtpBtn");
+        const resendOtpBtn   = document.getElementById("resendOtpBtn");
+        const backToEmailBtn = document.getElementById("backToEmailBtn");
+        const otpErrorMsg    = document.getElementById("otpErrorMsg");
+
+        let currentOtp   = null;
         let currentEmail = null;
-        let otpExpiry = null;
+        let otpExpiry    = null;
         const OTP_VALID_MINUTES = 10;
 
-        // ── DOM ────────────────────────────────────────────
-        const stepEmail = document.getElementById("stepEmail");
-        const stepOtp = document.getElementById("stepOtp");
-        const emailInput = document.getElementById("emailInput");
-        const sendOtpBtn = document.getElementById("sendOtpBtn");
-        const emailErrorMsg = document.getElementById("emailErrorMsg");
-        const emailDisplay = document.getElementById("emailDisplay");
-        const otpInput = document.getElementById("otpInput");
-        const verifyOtpBtn = document.getElementById("verifyOtpBtn");
-        const resendOtpBtn = document.getElementById("resendOtpBtn");
-        const backToEmailBtn = document.getElementById("backToEmailBtn");
-        const otpErrorMsg = document.getElementById("otpErrorMsg");
-
-        // ── Helpers ────────────────────────────────────────
-        function isValidEmail(email) {
-          return /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(email);
-        }
-
-        function generateOTP() {
-          return Math.floor(100000 + Math.random() * 900000).toString();
-        }
+        function isValidEmail(e) { return /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(e); }
+        function generateOTP()   { return Math.floor(100000 + Math.random() * 900000).toString(); }
 
         function showNotification(message, color = "#0ff") {
           const n = document.createElement("div");
           Object.assign(n.style, {
-            position: "fixed",
-            top: "20px",
-            right: "20px",
-            background: "rgba(0,0,0,0.95)",
-            borderLeft: `4px solid ${color}`,
-            color: "#fff",
-            padding: "12px 20px",
-            borderRadius: "8px",
-            fontSize: "14px",
-            zIndex: "1000",
-            backdropFilter: "blur(10px)",
-            fontFamily: "Inter, monospace",
-            maxWidth: "320px",
+            position: "fixed", top: "20px", right: "20px",
+            background: "rgba(0,0,0,0.95)", borderLeft: `4px solid ${color}`,
+            color: "#fff", padding: "12px 20px", borderRadius: "8px",
+            fontSize: "14px", zIndex: "1000", backdropFilter: "blur(10px)",
+            fontFamily: "Inter, monospace", maxWidth: "320px",
           });
           n.innerHTML = `<i class="fas fa-bolt" style="color:${color};margin-right:8px;"></i>${message}`;
           document.body.appendChild(n);
@@ -579,226 +504,150 @@
 
         function transitionTo(hideEl, showEl) {
           hideEl.style.transition = "opacity 0.25s ease, transform 0.25s ease";
-          hideEl.style.opacity = "0";
-          hideEl.style.transform = "translateY(-10px)";
+          hideEl.style.opacity = "0"; hideEl.style.transform = "translateY(-10px)";
           setTimeout(() => {
             hideEl.style.display = "none";
             showEl.style.display = "block";
-            showEl.style.opacity = "0";
-            showEl.style.transform = "translateY(20px)";
+            showEl.style.opacity = "0"; showEl.style.transform = "translateY(20px)";
             setTimeout(() => {
-              showEl.style.transition =
-                "opacity 0.4s ease, transform 0.4s ease";
-              showEl.style.opacity = "1";
-              showEl.style.transform = "translateY(0)";
+              showEl.style.transition = "opacity 0.4s ease, transform 0.4s ease";
+              showEl.style.opacity = "1"; showEl.style.transform = "translateY(0)";
             }, 50);
           }, 250);
         }
 
-        // ── Send OTP via EmailJS ───────────────────────────
         async function sendOTP(email) {
-          currentOtp = generateOTP();
-          otpExpiry = Date.now() + OTP_VALID_MINUTES * 60 * 1000;
-
+          currentOtp   = generateOTP();
+          otpExpiry    = Date.now() + OTP_VALID_MINUTES * 60 * 1000;
           await emailjs.send(
             window.EMAILJS_SERVICE_ID,
             window.EMAILJS_TEMPLATE_ID,
-            {
-              to_email: email,
-              to_name: email,
-              otp_code: currentOtp,
-              app_name: "Vertex Chamber",
-            },
+            { to_email: email, to_name: email, otp_code: currentOtp, app_name: "Vertex Chamber" }
           );
-
-          // Remove the line below in production
           console.log(`[DEMO] OTP for ${email}: ${currentOtp}`);
         }
 
-        // ── Handle Send OTP ────────────────────────────────
         async function handleSendOtp() {
           const email = emailInput.value.trim();
           emailErrorMsg.innerText = "";
-
           if (!isValidEmail(email)) {
             emailErrorMsg.innerText = "⚠️ Please enter a valid email address.";
-            shake(emailInput);
-            return;
+            shake(emailInput); return;
           }
-
-          sendOtpBtn.innerHTML =
-            '<i class="fas fa-spinner fa-pulse"></i> Sending...';
-          sendOtpBtn.disabled = true;
-
+          sendOtpBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending...';
+          sendOtpBtn.disabled  = true;
           try {
             await sendOTP(email);
             currentEmail = email;
-
             emailDisplay.innerHTML = `<i class="fas fa-envelope"></i> OTP sent to <strong style="color:#fff">${email}</strong>`;
-
-            showNotification(
-              `📧 OTP sent to ${email}! Check your inbox.`,
-              "#0ff",
-            );
+            showNotification(`📧 OTP sent to ${email}! Check your inbox.`, "#0ff");
             transitionTo(stepEmail, stepOtp);
-            otpInput.value = "";
-            otpErrorMsg.innerText = "";
+            otpInput.value = ""; otpErrorMsg.innerText = "";
           } catch (err) {
-            console.error("EmailJS error:", err);
-            emailErrorMsg.innerText =
-              "❌ Failed to send OTP. Check your EmailJS config or internet connection.";
-            showNotification(
-              "Failed to send OTP: " + (err.text || err.message),
-              "#ff3366",
-            );
+            emailErrorMsg.innerText = "❌ Failed to send OTP. Check your EmailJS config or internet.";
+            showNotification("Failed to send OTP: " + (err.text || err.message), "#ff3366");
           } finally {
-            sendOtpBtn.innerHTML =
-              '<i class="fas fa-paper-plane"></i> Send OTP';
-            sendOtpBtn.disabled = false;
+            sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send OTP';
+            sendOtpBtn.disabled  = false;
           }
         }
 
-        // ── Handle Verify OTP ──────────────────────────────
         function handleVerifyOtp() {
           const entered = otpInput.value.trim();
-          otpErrorMsg.innerText = "";
-          otpErrorMsg.style.color = "#6c9eff";
-
+          otpErrorMsg.innerText = ""; otpErrorMsg.style.color = "#6c9eff";
           if (!entered || entered.length !== 6 || isNaN(entered)) {
-            otpErrorMsg.innerText =
-              "❌ Enter the 6-digit code from your email.";
-            shake(otpInput);
-            return;
+            otpErrorMsg.innerText = "❌ Enter the 6-digit code from your email.";
+            shake(otpInput); return;
           }
-
           if (Date.now() > otpExpiry) {
-            otpErrorMsg.innerText =
-              "⏳ OTP has expired. Please request a new one.";
-            shake(otpInput);
-            return;
+            otpErrorMsg.innerText = "⏳ OTP expired. Please request a new one.";
+            shake(otpInput); return;
           }
-
-          verifyOtpBtn.innerHTML =
-            '<i class="fas fa-spinner fa-pulse"></i> Verifying...';
-          verifyOtpBtn.disabled = true;
+          verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Verifying...';
+          verifyOtpBtn.disabled  = true;
 
           if (entered === currentOtp) {
             otpErrorMsg.style.color = "#0f6";
-            otpErrorMsg.innerText = "✓ Identity verified. Granting access...";
-            setTimeout(showSuccessAndRedirect, 800);
+            otpErrorMsg.innerText   = "✓ Identity verified. Granting access...";
+            // ✅ SAVE SESSION so user won't need OTP again for 30 days
+            saveSession(currentEmail);
+            setTimeout(() => redirectAfterLogin(currentEmail), 800);
           } else {
-            otpErrorMsg.innerText = "❌ Incorrect OTP. Please try again.";
+            otpErrorMsg.innerText      = "❌ Incorrect OTP. Please try again.";
             shake(otpInput);
-            verifyOtpBtn.innerHTML =
-              '<i class="fas fa-check-circle"></i> Verify';
-            verifyOtpBtn.disabled = false;
+            verifyOtpBtn.innerHTML     = '<i class="fas fa-check-circle"></i> Verify';
+            verifyOtpBtn.disabled      = false;
           }
         }
 
-        // ── Handle Resend OTP ──────────────────────────────
         async function handleResendOtp() {
-          if (!currentEmail) {
-            otpErrorMsg.innerText =
-              "Session expired. Please go back and try again.";
-            return;
-          }
-
-          resendOtpBtn.innerHTML =
-            '<i class="fas fa-spinner fa-pulse"></i> Sending...';
-          resendOtpBtn.disabled = true;
-          otpErrorMsg.innerText = "";
-
+          if (!currentEmail) { otpErrorMsg.innerText = "Session expired. Go back and try again."; return; }
+          resendOtpBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending...';
+          resendOtpBtn.disabled  = true;
+          otpErrorMsg.innerText  = "";
           try {
             await sendOTP(currentEmail);
             otpInput.value = "";
             otpErrorMsg.style.color = "#0f6";
-            otpErrorMsg.innerText = "✓ New OTP sent! Check your email.";
+            otpErrorMsg.innerText   = "✓ New OTP sent! Check your email.";
             showNotification(`📧 New OTP sent to ${currentEmail}`, "#0ff");
-            setTimeout(() => {
-              otpErrorMsg.innerText = "";
-            }, 4000);
+            setTimeout(() => { otpErrorMsg.innerText = ""; }, 4000);
           } catch (err) {
-            console.error("Resend error:", err);
             otpErrorMsg.innerText = "❌ Failed to resend. Try again.";
           } finally {
-            resendOtpBtn.innerHTML =
-              '<i class="fas fa-sync-alt"></i> Resend OTP';
-            resendOtpBtn.disabled = false;
+            resendOtpBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Resend OTP';
+            resendOtpBtn.disabled  = false;
           }
         }
 
-        // ── Back to Email ──────────────────────────────────
         function handleBack() {
-          currentOtp = null;
-          currentEmail = null;
-          otpExpiry = null;
-          emailInput.value = "";
-          emailErrorMsg.innerText = "";
+          currentOtp = null; currentEmail = null; otpExpiry = null;
+          emailInput.value = ""; emailErrorMsg.innerText = "";
           transitionTo(stepOtp, stepEmail);
         }
 
-        // ── Success & Redirect ─────────────────────────────
-        function showSuccessAndRedirect() {
-          const loader = document.createElement("div");
-          loader.className = "redirect-loading";
-          loader.innerHTML = `
-            <div style="text-align:center;">
-              <i class="fas fa-spinner fa-pulse fa-3x" style="color:#0ff;"></i>
-              <p style="margin-top:16px; letter-spacing:2px; font-weight:600;">ACCESS GRANTED</p>
-              <p style="font-size:0.8rem; opacity:0.9;">Welcome to Vertex Chamber</p>
-              <div style="margin-top:20px;">
-                <i class="fas fa-cube" style="color:#0ff;"></i>
-              </div>
-            </div>
-          `;
-          document.body.appendChild(loader);
-
-          const container = document.querySelector(".login-container");
-          container.style.transition =
-            "transform 0.5s cubic-bezier(0.2,0.9,0.4,1.1), opacity 0.5s";
-          container.style.transform = "scale(0.95)";
-          container.style.opacity = "0";
-
-          setTimeout(() => {
-            window.location.href = "splash.html";
-          }, 1500);
-        }
-
-        // ── Event Listeners ────────────────────────────────
-        sendOtpBtn.addEventListener("click", handleSendOtp);
-        verifyOtpBtn.addEventListener("click", handleVerifyOtp);
-        resendOtpBtn.addEventListener("click", handleResendOtp);
+        sendOtpBtn.addEventListener("click",     handleSendOtp);
+        verifyOtpBtn.addEventListener("click",   handleVerifyOtp);
+        resendOtpBtn.addEventListener("click",   handleResendOtp);
         backToEmailBtn.addEventListener("click", handleBack);
+        emailInput.addEventListener("keypress",  (e) => { if (e.key === "Enter") handleSendOtp(); });
+        otpInput.addEventListener("keypress",    (e) => { if (e.key === "Enter") handleVerifyOtp(); });
+        otpInput.addEventListener("input", () => { otpInput.value = otpInput.value.replace(/\D/g, ""); });
+      }
 
-        emailInput.addEventListener("keypress", (e) => {
-          if (e.key === "Enter") handleSendOtp();
-        });
-        otpInput.addEventListener("keypress", (e) => {
-          if (e.key === "Enter") handleVerifyOtp();
-        });
+      // ── Loader screen ────────────────────────────────────
+      function showLoader(title, subtitle) {
+        const loader = document.createElement("div");
+        loader.className = "redirect-loading";
+        loader.innerHTML = `
+          <div style="text-align:center;">
+            <i class="fas fa-spinner fa-pulse fa-3x" style="color:#0ff;"></i>
+            <p style="margin-top:16px; letter-spacing:2px; font-weight:600;">${title}</p>
+            <p style="font-size:0.8rem; opacity:0.9;">${subtitle}</p>
+            <div style="margin-top:20px;"><i class="fas fa-cube" style="color:#0ff;"></i></div>
+          </div>`;
+        document.body.appendChild(loader);
+        const container = document.querySelector(".login-container");
+        container.style.transition = "transform 0.5s cubic-bezier(0.2,0.9,0.4,1.1), opacity 0.5s";
+        container.style.transform = "scale(0.95)";
+        container.style.opacity   = "0";
+      }
+    </script>
 
-        // Only allow digits in OTP field
-        otpInput.addEventListener("input", () => {
-          otpInput.value = otpInput.value.replace(/\D/g, "");
-        });
-
-        // ── Particles ──────────────────────────────────────
-        const particlesContainer = document.getElementById(
-          "particles-container",
-        );
+    <script>
+      // Particles
+      document.addEventListener("DOMContentLoaded", () => {
+        const pc = document.getElementById("particles-container");
         for (let i = 0; i < 80; i++) {
-          const p = document.createElement("div");
+          const p    = document.createElement("div");
           p.classList.add("particle");
           const size = Math.random() * 4 + 1;
-          p.style.width = `${size}px`;
-          p.style.height = `${size}px`;
-          p.style.left = `${Math.random() * 100}%`;
-          p.style.animationDuration = `${Math.random() * 12 + 5}s`;
-          p.style.animationDelay = `${Math.random() * 8}s`;
-          p.style.background = `radial-gradient(circle, ${Math.random() > 0.7 ? "#0ff" : "#bc7aff"}, transparent)`;
-          particlesContainer.appendChild(p);
+          p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;` +
+            `animation-duration:${Math.random()*12+5}s;animation-delay:${Math.random()*8}s;` +
+            `background:radial-gradient(circle,${Math.random()>0.7?"#0ff":"#bc7aff"},transparent)`;
+          pc.appendChild(p);
         }
-      }); // end DOMContentLoaded
+      });
     </script>
   </body>
 </html>
