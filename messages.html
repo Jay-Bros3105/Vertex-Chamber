@@ -63,43 +63,11 @@
         overflow: hidden;
       }
 
-      /* BACK BUTTON - top left corner */
-      .back-btn {
-        position: fixed;
-        top: 16px;
-        left: 16px;
-        z-index: 10000;
-        background: rgba(0, 0, 0, 0.65);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 40px;
-        padding: 8px 18px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        font-family: "Nunito", sans-serif;
-        font-weight: 600;
-        font-size: 14px;
-        color: white;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      }
-      .back-btn i {
-        font-size: 13px;
-      }
-      .back-btn:hover {
-        background: var(--accent);
-        border-color: var(--accent);
-        transform: scale(1.02);
-      }
+      /* Legacy floating back button disabled (covered avatars). */
+      .back-btn { display: none; }
       @media (max-width: 768px) {
-        .back-btn {
-          top: 12px;
-          left: 12px;
-          padding: 6px 14px;
-          font-size: 12px;
-        }
+        /* Floating back button conflicts with avatars on mobile; use header back instead */
+        .back-btn { display: none; }
       }
 
       /* WATERMARK - repeating "Vertex Chamber" background */
@@ -475,6 +443,7 @@
         gap: 3px;
         z-index: 1;
         position: relative;
+        min-height: 0;
       }
       #chatMessages::-webkit-scrollbar {
         width: 4px;
@@ -527,6 +496,7 @@
         line-height: 1.45;
         word-break: break-word;
         position: relative;
+        cursor: pointer;
       }
       .msg-wrap.out .bubble {
         background: var(--bubble-out);
@@ -535,6 +505,27 @@
       .msg-wrap.in .bubble {
         background: var(--bubble-in);
         border-top-left-radius: 0;
+      }
+
+      .reply-preview {
+        margin-bottom: 6px;
+        padding: 6px 8px;
+        border-left: 3px solid rgba(37, 211, 102, 0.9);
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 6px;
+      }
+      .reply-preview .rp-name {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--accent);
+        margin-bottom: 2px;
+      }
+      .reply-preview .rp-text {
+        font-size: 12px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .msg-meta {
@@ -600,6 +591,7 @@
         z-index: 1;
         position: relative;
         flex-shrink: 0;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
       }
       .reply-bar {
         display: none;
@@ -793,17 +785,17 @@
         .msg-wrap {
           max-width: 85%;
         }
+
+        /* Use dynamic viewport height on mobile (prevents composer disappearing) */
+        html, body { height: 100dvh; }
+        #app { height: 100dvh; }
+        #activeChat { height: 100%; min-height: 0; }
+        .chat-header { padding-left: 8px; }
       }
     </style>
   </head>
   <body>
     <div id="app">
-      <!-- BACK BUTTON - TOP LEFT CORNER -->
-      <div class="back-btn" onclick="goBack()">
-        <i class="fas fa-arrow-left"></i>
-        <span>Back</span>
-      </div>
-
       <!-- SIDEBAR -->
       <div id="sidebar">
         <div class="sidebar-header">
@@ -812,6 +804,9 @@
             <img id="myAvatarImg" src="" alt="Me" />
           </div>
           <div class="sidebar-icons">
+            <button class="icon-btn" title="Back" onclick="goBack()">
+              <i class="fas fa-arrow-left"></i>
+            </button>
             <button class="icon-btn" title="New conversation" onclick="openNewMsgModal()">
               <i class="fas fa-message"></i>
             </button>
@@ -863,6 +858,9 @@
 
         <div id="activeChat" style="display: none; flex-direction: column; height: 100%">
           <div class="chat-header">
+            <button class="icon-btn" id="mobileChatBackBtn" title="Back to chats" onclick="backToChatList(event)" style="display:none">
+              <i class="fas fa-arrow-left"></i>
+            </button>
             <div class="chat-header-left" onclick="openCurrentProfile()">
               <div class="chat-header-avatar" id="chatHeaderAvatar">
                 <i class="fas fa-user"></i>
@@ -954,6 +952,9 @@
       // BACK FUNCTION - goes back, with safe fallback
       // ============================================================
       function goBack() {
+        // WhatsApp-style: if we're on mobile and currently viewing a chat, go back to the chat list first.
+        if (backToChatList()) return;
+
         // If user landed directly (no history), history.back() can be a no-op.
         if (window.history.length > 1) {
           window.history.back();
@@ -1023,6 +1024,53 @@
       let currentContact = null;
       let replyTarget    = null;
       let _dbRef         = null; // Firestore reference, set after init
+      let _sidebarScrollTop = 0;
+
+      function isMobile() {
+        return window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
+      }
+
+      function showSidebar() {
+        const sb = document.getElementById("sidebar");
+        if (!sb) return;
+        sb.classList.remove("hidden");
+        // restore sidebar scroll position
+        const list = document.getElementById("convList");
+        if (list) list.scrollTop = _sidebarScrollTop || 0;
+      }
+
+      function hideSidebar() {
+        const sb = document.getElementById("sidebar");
+        if (!sb) return;
+        // save sidebar scroll position
+        const list = document.getElementById("convList");
+        if (list) _sidebarScrollTop = list.scrollTop || 0;
+        sb.classList.add("hidden");
+      }
+
+      function updateMobileHeaderBack() {
+        const btn = document.getElementById("mobileChatBackBtn");
+        if (!btn) return;
+        // Only show when on mobile and chat is open AND sidebar is hidden
+        const sbHidden = document.getElementById("sidebar")?.classList.contains("hidden");
+        const chatOpen = document.getElementById("activeChat")?.style.display !== "none";
+        btn.style.display = (isMobile() && chatOpen && sbHidden) ? "flex" : "none";
+      }
+
+      function backToChatList(e) {
+        if (e) e.stopPropagation?.();
+        if (!isMobile()) return false;
+        const sb = document.getElementById("sidebar");
+        const sbHidden = sb?.classList.contains("hidden");
+        const chatOpen = document.getElementById("activeChat")?.style.display !== "none";
+        if (sbHidden && chatOpen) {
+          showSidebar();
+          updateMobileHeaderBack();
+          closeAllDropdowns();
+          return true;
+        }
+        return false;
+      }
 
       // ── Load current user's full profile from Firestore ───────────
       async function loadMyProfile(db) {
@@ -1263,7 +1311,8 @@
 
         renderMessages();
         cancelReply();
-        if (window.innerWidth <= 768) document.getElementById("sidebar").classList.add("hidden");
+        if (isMobile()) hideSidebar();
+        updateMobileHeaderBack();
 
         // Subscribe to real-time messages if Firebase is ready
         if (_dbRef) {
@@ -1319,9 +1368,30 @@
         const ticks  = isOut ? `<span class="ticks${msg.status === "read" ? " read" : ""}"><i class="fas fa-check-double"></i></span>` : "";
         const timeStr = new Date(msg.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+        // Reply preview (if this message replies to another message)
+        let replyPreview = "";
+        if (msg.replyTo) {
+          const parent = findMsg(msg.replyTo);
+          if (parent) {
+            const pName = parent.from === "me" ? "You" : (currentContact?.name || "Member");
+            const pText = parent.type === "text" ? parent.content : `[${parent.type}]`;
+            replyPreview = `
+              <div class="reply-preview">
+                <div class="rp-name">${escapeHtml(pName)}</div>
+                <div class="rp-text">${escapeHtml(pText)}</div>
+              </div>`;
+          }
+        }
+
         wrap.innerHTML = `
-          <div class="bubble">${content}</div>
+          <div class="bubble">${replyPreview}${content}</div>
           <div class="msg-meta">${timeStr} ${ticks}</div>`;
+
+        // Tap/click a message bubble to reply (WhatsApp-style)
+        wrap.querySelector(".bubble")?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          setReplyTarget(msg);
+        });
         return wrap;
       }
 
@@ -1429,6 +1499,18 @@
       function cancelReply() {
         replyTarget = null;
         document.getElementById("replyBar").classList.remove("visible");
+      }
+
+      function setReplyTarget(msg) {
+        if (!msg || !msg.id) return;
+        replyTarget = msg.id;
+        const rb = document.getElementById("replyBar");
+        const n  = document.getElementById("replyBarName");
+        const t  = document.getElementById("replyBarText");
+        if (n) n.textContent = msg.from === "me" ? "You" : (currentContact?.name || "Member");
+        if (t) t.textContent = (msg.type === "text" ? msg.content : `[${msg.type}]`) || "";
+        rb?.classList.add("visible");
+        document.getElementById("msgInput")?.focus();
       }
 
       function clearChat() {
@@ -1721,6 +1803,8 @@
         buildEmojiPicker();
         updateSendMic();
         document.addEventListener("click", handleGlobalClick);
+        updateMobileHeaderBack();
+        window.addEventListener("resize", updateMobileHeaderBack);
       });
     </script>
 
