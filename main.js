@@ -58,10 +58,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Set active navigation based on current page
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const currentPage = window.location.pathname.split('/').pop() || 'splash.html';
     document.querySelectorAll('.main-nav a').forEach(link => {
         const linkPage = link.getAttribute('href');
-        if (linkPage === currentPage || (currentPage === '' && linkPage === 'index.html')) {
+        if (linkPage === currentPage || (currentPage === '' && linkPage === 'splash.html')) {
             link.classList.add('active');
         } else {
             link.classList.remove('active');

@@ -335,7 +335,7 @@ window.saveProfile = async function () {
     setStatus("available", `<i class="fa-solid fa-circle-check"></i> Profile ${action}! @${username}`);
 
     // After profile/username setup: go to Home
-    setTimeout(() => { window.location.href = "index.html"; }, 1800);
+    setTimeout(() => { window.location.href = "splash.html"; }, 1800);
 
   } catch (err) {
     console.error("❌ Save failed:", err);

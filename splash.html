@@ -39,7 +39,7 @@
         <nav class="main-nav" id="mainNav">
           <ul>
             <li>
-              <a href="index.html" class="active"
+              <a href="splash.html" class="active"
                 ><i class="fas fa-home"></i> Home</a
               >
             </li>
@@ -66,13 +66,10 @@
         </nav>
 
         <div class="user-menu">
-          <div class="user-avatar">
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
-              alt="User Avatar"
-            />
-          </div>
-          <div class="notification-badge">3</div>
+          <button class="user-avatar" id="userAvatarBtn" type="button">
+            <img id="userAvatarImg" src="favicon.png" alt="User Avatar" />
+          </button>
+          <div class="notification-badge" id="notificationBadge" style="display:none">0</div>
         </div>
       </div>
     </header>
@@ -284,7 +281,7 @@
           <div class="footer-section">
             <h4>Platform</h4>
             <ul>
-              <li><a href="index.html">Home</a></li>
+              <li><a href="splash.html">Home</a></li>
               <li><a href="feed.html">Community Feed</a></li>
               <li><a href="workspace.html">Project Workspace</a></li>
               <li><a href="chambers.html">Chambers</a></li>
@@ -333,9 +330,9 @@
       </div>
     </footer>
 
-    <script src="js/particles.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/index.js"></script>
+    <script src="particles.js"></script>
+    <script src="main.js"></script>
+    <script src="bottom_nav.js"></script>
+    <script type="module" src="app_shell.js"></script>
   </body>
 </html>

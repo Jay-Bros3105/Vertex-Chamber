@@ -7,7 +7,7 @@
 
   function currentFile() {
     const p = window.location.pathname.split("/").pop() || "";
-    return p || "index.html";
+    return p || "splash.html";
   }
 
   function ensureStyles() {
@@ -70,7 +70,7 @@
     nav.setAttribute("aria-label", "Bottom navigation");
 
     nav.innerHTML = `
-      <a href="index.html" data-page="index.html"><i class="fas fa-house"></i><span>Home</span></a>
+      <a href="splash.html" data-page="splash.html"><i class="fas fa-house"></i><span>Home</span></a>
       <a href="feed.html" data-page="feed.html"><i class="fas fa-stream"></i><span>Feed</span></a>
       <a href="chambers.html" data-page="chambers.html"><i class="fas fa-door-closed"></i><span>Chamber</span></a>
       <a href="workspace.html" data-page="workspace.html"><i class="fas fa-code"></i><span>Workspace</span></a>

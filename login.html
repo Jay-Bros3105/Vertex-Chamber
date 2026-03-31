@@ -441,7 +441,7 @@
           const snap    = await getDoc(userRef);
           if (snap.exists() && snap.data().username) {
             // Returning user: go to Home (not Messages/Profile)
-            setTimeout(() => { window.location.href = "index.html"; }, 800);
+            setTimeout(() => { window.location.href = "splash.html"; }, 800);
           } else {
             // New user: go to Profile setup first
             setTimeout(() => { window.location.href = "profile.html"; }, 800);
