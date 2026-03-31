@@ -133,7 +133,10 @@ function renderChambers(container, chambers, myStateByChamberId) {
 
     const joinBtn =
       mine.status === "member"
-        ? `<button class="btn btn-secondary" disabled style="opacity:0.55"><i class="fas fa-check"></i> Joined</button>`
+        ? `<button class="btn btn-secondary" disabled style="opacity:0.55"><i class="fas fa-check"></i> Joined</button>
+           <button class="btn btn-primary" data-teamchat="${ch.id}">
+             <i class="fas fa-comments"></i> Open Team Chat
+           </button>`
         : mine.status === "pending"
           ? `<button class="btn btn-secondary" disabled style="opacity:0.55"><i class="fas fa-hourglass-half"></i> Pending</button>`
           : `<button class="btn btn-primary" data-join="${ch.id}"><i class="fas fa-door-open"></i> Request to Join</button>`;
@@ -185,6 +188,39 @@ function renderChambers(container, chambers, myStateByChamberId) {
     `;
     container.appendChild(card);
   });
+}
+
+async function openChamberTeamChat(chamberId, chamberName, myUserId) {
+  // Deterministic conversation id so the chamber has one shared chat.
+  const convDocId = `chamber_${chamberId}`;
+  const convRef = doc(db, "conversations", convDocId);
+
+  // Load members (soft limit to keep participants array reasonable).
+  const membersSnap = await getDocs(
+    query(collection(db, "chambers", chamberId, "members"), limit(200)),
+  ).catch(() => null);
+  const memberIds = [];
+  if (membersSnap && !membersSnap.empty) {
+    membersSnap.forEach((d) => memberIds.push(d.id));
+  }
+  if (!memberIds.includes(myUserId)) memberIds.push(myUserId);
+
+  await setDoc(
+    convRef,
+    {
+      type: "chamber",
+      chamberId,
+      name: chamberName || "Chamber Team Chat",
+      participants: memberIds,
+      updatedAt: serverTimestamp(),
+      lastMessage: "",
+      lastMessageTime: serverTimestamp(),
+    },
+    { merge: true },
+  );
+
+  // Open messages and auto-open this group conversation
+  window.location.href = `messages.html?open=${encodeURIComponent("g_" + convDocId)}`;
 }
 
 async function getMyChamberState(userId) {
@@ -426,6 +462,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (joinBtn) {
       const chamberId = joinBtn.getAttribute("data-join");
       await requestJoin(chamberId, myUserId);
+      return;
+    }
+    const teamChatBtn = e.target.closest("[data-teamchat]");
+    if (teamChatBtn) {
+      const chamberId = teamChatBtn.getAttribute("data-teamchat");
+      const chamber = (chambers || []).find((c) => c.id === chamberId);
+      await openChamberTeamChat(chamberId, chamber?.name || "Chamber Team Chat", myUserId);
       return;
     }
     const card = e.target.closest("[data-chamber]");

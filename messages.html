@@ -569,6 +569,25 @@
         margin-top: 2px;
         padding: 0 2px;
       }
+      .msg-reactions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+        padding: 0 2px;
+      }
+      .rxn-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.10);
+        font-size: 12px;
+        color: rgba(255,255,255,0.9);
+        user-select: none;
+      }
       .ticks {
         font-size: 12px;
         color: var(--tick-sent);
@@ -1006,8 +1025,8 @@
       // BACK FUNCTION - goes back, with safe fallback
       // ============================================================
       function goBack() {
-        // WhatsApp-style: if we're on mobile and currently viewing a chat, go back to the chat list first.
-        if (backToChatList()) return;
+        // WhatsApp-style: if currently viewing a chat, go back to the conversation list first.
+        if (backToConversationList()) return;
 
         // If user landed directly (no history), history.back() can be a no-op.
         if (window.history.length > 1) {
@@ -1166,25 +1185,29 @@
       function updateMobileHeaderBack() {
         const btn = document.getElementById("mobileChatBackBtn");
         if (!btn) return;
-        // Only show when on mobile and chat is open AND sidebar is hidden
-        const sbHidden = document.getElementById("sidebar")?.classList.contains("hidden");
         const chatOpen = document.getElementById("activeChat")?.style.display !== "none";
-        btn.style.display = (isMobile() && chatOpen && sbHidden) ? "flex" : "none";
+        // Show on mobile whenever chat is open (acts as "back to list")
+        btn.style.display = (isMobile() && chatOpen) ? "flex" : "none";
       }
 
       function backToChatList(e) {
         if (e) e.stopPropagation?.();
-        if (!isMobile()) return false;
-        const sb = document.getElementById("sidebar");
-        const sbHidden = sb?.classList.contains("hidden");
+        // kept for backwards compatibility; new behavior is in backToConversationList()
+        return backToConversationList(e);
+      }
+
+      function backToConversationList(e) {
+        if (e) e.stopPropagation?.();
         const chatOpen = document.getElementById("activeChat")?.style.display !== "none";
-        if (sbHidden && chatOpen) {
-          showSidebar();
-          updateMobileHeaderBack();
-          closeAllDropdowns();
-          return true;
-        }
-        return false;
+        if (!chatOpen) return false;
+
+        // Switch view: show list (sidebar) and hide chat panel
+        showSidebar();
+        document.getElementById("activeChat").style.display = "none";
+        document.getElementById("emptyChat").style.display = "flex";
+        closeAllDropdowns();
+        updateMobileHeaderBack();
+        return true;
       }
 
       // ── Load current user's full profile from Firestore ───────────
@@ -1260,14 +1283,33 @@
           });
           convRows.sort((a, b) => (b.t || 0) - (a.t || 0));
 
-          convRows.slice(0, 50).forEach(({ conv, t }) => {
-            const otherUid = conv.participants?.find(p => p !== MY_USER_ID);
-            if (!otherUid) return;
-            let meta = VC_USERS.find(u => u.uid === otherUid);
-            if (!meta) meta = { uid: otherUid, name: otherUid, avatar: null, role: "Member", status: "offline" };
-            if (!conversations[otherUid]) conversations[otherUid] = { meta, messages: [] };
-            conversations[otherUid].lastMessage = conv.lastMessage || "";
-            conversations[otherUid].lastTime    = t || 0;
+          convRows.slice(0, 50).forEach(({ id, conv, t }) => {
+            const participants = Array.isArray(conv.participants) ? conv.participants : [];
+            const isGroup = (conv.type === "chamber") || (participants.length > 2);
+            const key = isGroup ? ("g_" + id) : (participants.find(p => p !== MY_USER_ID) || null);
+            if (!key) return;
+
+            let meta = null;
+            if (isGroup) {
+              meta = {
+                uid: key,
+                name: conv.name || "Group",
+                avatar: null,
+                role: "Group chat",
+                status: "online",
+                isGroup: true,
+                groupId: id,
+                chamberId: conv.chamberId || null,
+              };
+            } else {
+              const otherUid = key;
+              meta = VC_USERS.find(u => u.uid === otherUid);
+              if (!meta) meta = { uid: otherUid, name: otherUid, avatar: null, role: "Member", status: "offline" };
+            }
+
+            if (!conversations[key]) conversations[key] = { meta, messages: [] };
+            conversations[key].lastMessage = conv.lastMessage || "";
+            conversations[key].lastTime    = t || 0;
           });
 
           renderConvList();
@@ -1321,7 +1363,10 @@
       function firestoreMsgToLocal(d) {
         const fromMe = d.senderId === MY_USER_ID;
         const isRead = fromMe
-          ? (Array.isArray(d.readBy) && d.readBy.includes(d.receiverId))
+          ? (
+              (d.receiverId && Array.isArray(d.readBy) && d.readBy.includes(d.receiverId)) ||
+              (!d.receiverId && Array.isArray(d.readBy) && d.readBy.length > 0)
+            )
           : true;
         return {
           id:      d.id,
@@ -1333,6 +1378,7 @@
           edited:  d.edited  || false,
           deleted: d.deleted || false,
           replyTo: d.replyTo || null,
+          reactions: d.reactions || null,
         };
       }
 
@@ -1426,7 +1472,7 @@
         const ha = document.getElementById("chatHeaderAvatar");
         ha.innerHTML = currentContact.avatar
           ? `<img src="${currentContact.avatar}" alt="${escapeHtml(currentContact.name)}" />`
-          : `<i class="fas fa-user"></i>`;
+          : (currentContact.isGroup ? `<i class="fas fa-users"></i>` : `<i class="fas fa-user"></i>`);
         document.getElementById("chatName").textContent   = currentContact.name;
         document.getElementById("chatStatus").textContent = "last seen recently";
 
@@ -1442,8 +1488,10 @@
         // Subscribe to real-time messages if Firebase is ready
         if (_dbRef) {
           try {
-            const convId = await getOrCreateConvId(_dbRef, MY_USER_ID, uid);
-            currentConvId = uid; // keep local uid as key
+            const convId = currentContact.isGroup
+              ? (currentContact.groupId || uid.replace(/^g_/, ""))
+              : await getOrCreateConvId(_dbRef, MY_USER_ID, uid);
+            currentConvId = uid; // key used in conversations{}
             _currentFirestoreConvDocId = convId;
             subscribeToConversation(_dbRef, convId);
           } catch (e) { console.error("selectConversation Firestore error:", e); }
@@ -1509,8 +1557,10 @@
           }
         }
 
+        const reactionsHtml = buildReactionsHtml(msg?.reactions);
         wrap.innerHTML = `
           <div class="bubble">${replyPreview}${content}</div>
+          ${reactionsHtml ? `<div class="msg-reactions">${reactionsHtml}</div>` : ``}
           <div class="msg-meta">${timeStr} ${ticks}</div>`;
 
         // Tap/click a message bubble to reply
@@ -1566,6 +1616,39 @@
         } catch (e) {
           console.error("deleteSelectedMessage:", e);
           toast("Failed to delete");
+        }
+      }
+
+      function buildReactionsHtml(reactions) {
+        if (!reactions || typeof reactions !== "object") return "";
+        const parts = [];
+        Object.entries(reactions).forEach(([emoji, arr]) => {
+          if (!Array.isArray(arr) || arr.length === 0) return;
+          parts.push(`<span class="rxn-chip">${escapeHtml(emoji)} ${arr.length}</span>`);
+        });
+        return parts.join("");
+      }
+
+      async function reactToSelectedMessage(emoji) {
+        const msg = _selectedMsgForAction;
+        closeMsgActions();
+        if (!msg || !msg.id || !_dbRef || !_currentFirestoreConvDocId) return;
+        try {
+          const ref = _dbRef
+            .collection("conversations").doc(_currentFirestoreConvDocId)
+            .collection("messages").doc(msg.id);
+          const snap = await ref.get();
+          if (!snap.exists) return;
+          const d = snap.data() || {};
+          const reactions = (d.reactions && typeof d.reactions === "object") ? { ...d.reactions } : {};
+          const list = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
+          const i = list.indexOf(MY_USER_ID);
+          if (i >= 0) list.splice(i, 1); else list.push(MY_USER_ID);
+          reactions[emoji] = list;
+          await ref.update({ reactions });
+        } catch (e) {
+          console.error("reactToSelectedMessage:", e);
+          toast("Failed to react");
         }
       }
 
@@ -1974,7 +2057,12 @@
         setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }, 2500);
       }
 
-      const EMOJIS = ["😊","😂","❤️","👍","🔥","✅","🎉","😍","🤔","💯","🚀","👏"];
+      const EMOJIS = [
+        "😀","😁","😅","😂","🤣","😊","😍","😘","😎","🤔","😮","😢","😭","😡",
+        "❤️","🧡","💛","💚","💙","💜","🤍","🖤",
+        "👍","👎","👏","🙏","💯","🔥","🎉","✨","⚡","🚀",
+        "✅","❌","⚠️","📌","📎","📷","🎥","🎧","🎤"
+      ];
       function buildEmojiPicker() {
         const picker = document.getElementById("emojiPicker");
         if (picker) {
@@ -2075,6 +2163,9 @@
               <button class="vc-close" onclick="closeMsgActions()"><i class="fas fa-times"></i></button>
             </div>
             <div class="vc-card-body">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                ${["👍","❤️","😂","😮","😢","🙏","🔥"].map(e => `<button class="icon-btn" style="width:auto;padding:10px 12px;border-radius:14px;" onclick="reactToSelectedMessage('${e}')">${e}</button>`).join("")}
+              </div>
               <div style="display:flex;flex-direction:column;gap:10px;">
                 <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;" onclick="forwardSelectedMessage()">
                   <i class="fas fa-share" style="width:18px;"></i> Forward
@@ -2095,6 +2186,15 @@
         document.addEventListener("click", handleGlobalClick);
         updateMobileHeaderBack();
         window.addEventListener("resize", updateMobileHeaderBack);
+
+        // Auto-open conversation (used by Chambers -> Open Team Chat)
+        try {
+          const openKey = new URLSearchParams(window.location.search).get("open");
+          if (openKey) {
+            // defer until conversations have loaded
+            window.__vc_open_on_ready = openKey;
+          }
+        } catch {}
       });
     </script>
 
@@ -2125,6 +2225,18 @@
       (async () => {
         await loadMyProfile(_db);
         await loadVCUsers(_db);
+        const openKey = window.__vc_open_on_ready;
+        if (openKey) {
+          // If preview doesn't exist yet, create a stub so selectConversation can open it.
+          if (!conversations[openKey]) {
+            conversations[openKey] = {
+              meta: { uid: openKey, name: "Team Chat", avatar: null, role: "Group chat", status: "online", isGroup: true, groupId: openKey.replace(/^g_/, "") },
+              messages: [],
+            };
+          }
+          selectConversation(openKey);
+          window.__vc_open_on_ready = null;
+        }
       })();
     </script>
   </body>
