@@ -791,6 +791,19 @@
         #app { height: 100dvh; }
         #activeChat { height: 100%; min-height: 0; }
         .chat-header { padding-left: 8px; }
+
+        /* Keep the composer visible on phones */
+        .input-area {
+          position: sticky;
+          bottom: 0;
+          background: var(--header-bg);
+        }
+
+        /* Prevent the mobile header back from overlapping the avatar */
+        #mobileChatBackBtn {
+          flex-shrink: 0;
+          margin-right: 2px;
+        }
       }
     </style>
   </head>
@@ -1025,6 +1038,64 @@
       let replyTarget    = null;
       let _dbRef         = null; // Firestore reference, set after init
       let _sidebarScrollTop = 0;
+      let _notifPermissionAsked = false;
+
+      function ensureNotificationPermission() {
+        if (_notifPermissionAsked) return;
+        _notifPermissionAsked = true;
+        if (!("Notification" in window)) return;
+        if (Notification.permission === "default") {
+          Notification.requestPermission().catch(() => {});
+        }
+      }
+
+      function notifyIncoming(msg) {
+        // In-page browser notifications (works while the tab is open), not push notifications.
+        if (!("Notification" in window)) return;
+        if (Notification.permission !== "granted") return;
+        if (!msg || msg.from === "me") return;
+
+        const fromName =
+          conversations[msg.from]?.meta?.name ||
+          VC_USERS.find(u => u.uid === msg.from)?.name ||
+          "New message";
+        const body = msg.type === "text" ? msg.content : `[${msg.type}]`;
+
+        const isViewingThisChat = currentConvId === msg.from;
+        if (!document.hidden && isViewingThisChat) return;
+
+        try { new Notification(fromName, { body: body || "Message received" }); } catch {}
+      }
+
+      // Swipe right to reply (touch)
+      function attachSwipeToReply(el, msg) {
+        if (!el) return;
+        let startX = 0, startY = 0, active = false, triggered = false;
+
+        const onStart = (e) => {
+          const t = e.touches ? e.touches[0] : e;
+          startX = t.clientX;
+          startY = t.clientY;
+          active = true;
+          triggered = false;
+        };
+        const onMove = (e) => {
+          if (!active || triggered) return;
+          const t = e.touches ? e.touches[0] : e;
+          const dx = t.clientX - startX;
+          const dy = t.clientY - startY;
+          if (Math.abs(dy) > 28) return;
+          if (dx > 70) {
+            triggered = true;
+            setReplyTarget(msg);
+          }
+        };
+        const onEnd = () => { active = false; };
+
+        el.addEventListener("touchstart", onStart, { passive: true });
+        el.addEventListener("touchmove", onMove, { passive: true });
+        el.addEventListener("touchend", onEnd, { passive: true });
+      }
 
       function isMobile() {
         return window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
@@ -1185,6 +1256,7 @@
                   const t = document.getElementById("typingIndicator");
                   if (c && t) { c.insertBefore(buildMsgEl(msg), t); scrollBottom(); }
                 }
+                notifyIncoming(msg);
               } else if (change.type === "modified") {
                 const idx = conversations[currentConvId]?.messages?.findIndex(m => m.id === msg.id);
                 if (idx !== undefined && idx >= 0) {
@@ -1199,13 +1271,17 @@
 
       // Convert Firestore message format → local format
       function firestoreMsgToLocal(d) {
+        const fromMe = d.senderId === MY_USER_ID;
+        const isRead = fromMe
+          ? (Array.isArray(d.readBy) && d.readBy.includes(d.receiverId))
+          : true;
         return {
           id:      d.id,
-          from:    d.senderId === MY_USER_ID ? "me" : d.senderId,
+          from:    fromMe ? "me" : d.senderId,
           type:    d.type    || "text",
           content: d.deleted ? "This message was deleted" : (d.content || ""),
           time:    d.timestamp?.toMillis?.() || Date.now(),
-          status:  d.readBy?.includes(currentConvId) ? "read" : "sent",
+          status:  isRead ? "read" : "sent",
           edited:  d.edited  || false,
           deleted: d.deleted || false,
           replyTo: d.replyTo || null,
@@ -1308,6 +1384,7 @@
 
         document.getElementById("emptyChat").style.display = "none";
         document.getElementById("activeChat").style.display = "flex";
+        ensureNotificationPermission();
 
         renderMessages();
         cancelReply();
@@ -1387,11 +1464,14 @@
           <div class="bubble">${replyPreview}${content}</div>
           <div class="msg-meta">${timeStr} ${ticks}</div>`;
 
-        // Tap/click a message bubble to reply (WhatsApp-style)
-        wrap.querySelector(".bubble")?.addEventListener("click", (e) => {
+        // Tap/click a message bubble to reply
+        const bubble = wrap.querySelector(".bubble");
+        bubble?.addEventListener("click", (e) => {
           e.stopPropagation();
           setReplyTarget(msg);
         });
+        // Swipe right to reply (modern mobile)
+        attachSwipeToReply(bubble, msg);
         return wrap;
       }
 
@@ -1406,8 +1486,9 @@
         const text = inp.value.trim();
         if (!text || !currentConvId) return;
 
+        const clientId = `msg_${Date.now()}_${MY_USER_ID}`;
         const localMsg = {
-          id:      "msg-" + Date.now(),
+          id:      clientId,
           from:    "me",
           type:    "text",
           content: text,
@@ -1428,8 +1509,8 @@
         if (_dbRef) {
           try {
             const convId = await getOrCreateConvId(_dbRef, MY_USER_ID, currentConvId);
-            const msgRef = _dbRef.collection("conversations").doc(convId).collection("messages");
-            await msgRef.add({
+            const msgCol = _dbRef.collection("conversations").doc(convId).collection("messages");
+            await msgCol.doc(clientId).set({
               conversationId: convId,
               senderId:       MY_USER_ID,
               receiverId:     currentConvId,
