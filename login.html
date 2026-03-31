@@ -440,12 +440,15 @@
           const userRef = doc(db, "users", userId);
           const snap    = await getDoc(userRef);
           if (snap.exists() && snap.data().username) {
-            setTimeout(() => { window.location.href = "messages.html"; }, 800);
+            // Returning user: go to Home (not Messages/Profile)
+            setTimeout(() => { window.location.href = "index.html"; }, 800);
           } else {
+            // New user: go to Profile setup first
             setTimeout(() => { window.location.href = "profile.html"; }, 800);
           }
         } catch (err) {
           console.error("Redirect check error:", err);
+          // Safe default: Profile setup (new user path)
           setTimeout(() => { window.location.href = "profile.html"; }, 800);
         }
       }

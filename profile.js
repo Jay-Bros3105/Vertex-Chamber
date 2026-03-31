@@ -334,8 +334,8 @@ window.saveProfile = async function () {
     if (window.showToast) window.showToast(`Profile ${action}! Welcome, @${username}`, "success");
     setStatus("available", `<i class="fa-solid fa-circle-check"></i> Profile ${action}! @${username}`);
 
-    // Redirect to chamber after short delay
-    setTimeout(() => { window.location.href = "messages.html"; }, 1800);
+    // After profile/username setup: go to Home
+    setTimeout(() => { window.location.href = "index.html"; }, 1800);
 
   } catch (err) {
     console.error("❌ Save failed:", err);
