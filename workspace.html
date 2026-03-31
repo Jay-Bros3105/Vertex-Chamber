@@ -746,13 +746,10 @@
         </nav>
 
         <div class="user-menu">
-          <div class="user-avatar">
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
-              alt="User Avatar"
-            />
-          </div>
-          <div class="notification-badge">3</div>
+          <button class="user-avatar" id="userAvatarBtn" type="button">
+            <img id="userAvatarImg" src="favicon.png" alt="User Avatar" />
+          </button>
+          <div class="notification-badge" id="notificationBadge" style="display:none">0</div>
         </div>
       </div>
     </header>
@@ -765,17 +762,18 @@
             <i class="fas fa-robot"></i>
           </div>
           <div class="project-title">
-            <h1>AI Code Assistant</h1>
-            <p>AI-powered code review and suggestion system</p>
+            <h1 id="projectName">Loading…</h1>
+            <p id="projectDesc" style="min-height: 1.2em"></p>
           </div>
         </div>
 
         <div class="project-status">
-          <span class="status-badge status-building">
-            <i class="fas fa-hammer"></i> Building
+          <span class="status-badge status-building" id="projectStatusBadge">
+            <i class="fas fa-spinner fa-pulse"></i> Loading
           </span>
           <span
             class="status-badge"
+            id="projectVisibilityBadge"
             style="
               background: rgba(138, 43, 226, 0.1);
               color: var(--accent-secondary);
@@ -829,213 +827,67 @@
       <div class="tab-content active" id="tasks-tab">
         <div class="kanban-board">
           <!-- To Do Column -->
-          <div class="glass-card kanban-column">
+          <div class="glass-card kanban-column" data-status="todo">
             <div class="column-header">
               <div class="column-title">
                 <i class="fas fa-circle" style="color: #ff5757"></i>
                 <span>To Do</span>
-                <span class="task-count">3</span>
+                <span class="task-count">0</span>
               </div>
               <button class="task-action-btn">
                 <i class="fas fa-plus"></i>
               </button>
             </div>
 
-            <div class="task-list" id="todo-list">
-              <div class="task-card" draggable="true">
-                <div class="task-header">
-                  <div>
-                    <div class="task-title">Implement User Authentication</div>
-                    <div class="task-priority priority-high">High</div>
-                  </div>
-                  <div class="task-actions">
-                    <button class="task-action-btn">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="task-description">
-                  Set up JWT-based authentication with email verification
-                </div>
-                <div class="task-footer">
-                  <div class="task-assignees">
-                    <div class="assignee-avatar">
-                      <img
-                        src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=50&q=80"
-                        alt="Assignee"
-                      />
-                    </div>
-                  </div>
-                  <div class="task-date">Due: Oct 15</div>
-                </div>
-              </div>
-
-              <div class="task-card" draggable="true">
-                <div class="task-header">
-                  <div>
-                    <div class="task-title">Design Database Schema</div>
-                    <div class="task-priority priority-medium">Medium</div>
-                  </div>
-                  <div class="task-actions">
-                    <button class="task-action-btn">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="task-description">
-                  Create MongoDB schema for code snippets and user profiles
-                </div>
-                <div class="task-footer">
-                  <div class="task-assignees">
-                    <div class="assignee-avatar">
-                      <img
-                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=50&q=80"
-                        alt="Assignee"
-                      />
-                    </div>
-                  </div>
-                  <div class="task-date">Due: Oct 20</div>
-                </div>
-              </div>
-            </div>
+            <div class="task-list" id="todo-list"></div>
           </div>
 
           <!-- In Progress Column -->
-          <div class="glass-card kanban-column">
+          <div class="glass-card kanban-column" data-status="progress">
             <div class="column-header">
               <div class="column-title">
                 <i class="fas fa-circle" style="color: #ffc107"></i>
                 <span>In Progress</span>
-                <span class="task-count">2</span>
+                <span class="task-count">0</span>
               </div>
               <button class="task-action-btn">
                 <i class="fas fa-plus"></i>
               </button>
             </div>
 
-            <div class="task-list" id="progress-list">
-              <div class="task-card" draggable="true">
-                <div class="task-header">
-                  <div>
-                    <div class="task-title">AI Model Integration</div>
-                    <div class="task-priority priority-high">High</div>
-                  </div>
-                  <div class="task-actions">
-                    <button class="task-action-btn">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="task-description">
-                  Integrate OpenAI API for code analysis and suggestions
-                </div>
-                <div class="task-footer">
-                  <div class="task-assignees">
-                    <div class="assignee-avatar">
-                      <img
-                        src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=50&q=80"
-                        alt="Assignee"
-                      />
-                    </div>
-                    <div class="assignee-avatar">
-                      <img
-                        src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=50&q=80"
-                        alt="Assignee"
-                      />
-                    </div>
-                  </div>
-                  <div class="task-date">Due: Oct 25</div>
-                </div>
-              </div>
-            </div>
+            <div class="task-list" id="progress-list"></div>
           </div>
 
           <!-- Review Column -->
-          <div class="glass-card kanban-column">
+          <div class="glass-card kanban-column" data-status="review">
             <div class="column-header">
               <div class="column-title">
                 <i class="fas fa-circle" style="color: #00d4ff"></i>
                 <span>Review</span>
-                <span class="task-count">1</span>
+                <span class="task-count">0</span>
               </div>
               <button class="task-action-btn">
                 <i class="fas fa-plus"></i>
               </button>
             </div>
 
-            <div class="task-list" id="review-list">
-              <div class="task-card" draggable="true">
-                <div class="task-header">
-                  <div>
-                    <div class="task-title">Frontend UI Components</div>
-                    <div class="task-priority priority-medium">Medium</div>
-                  </div>
-                  <div class="task-actions">
-                    <button class="task-action-btn">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="task-description">
-                  Create React components for code editor interface
-                </div>
-                <div class="task-footer">
-                  <div class="task-assignees">
-                    <div class="assignee-avatar">
-                      <img
-                        src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=50&q=80"
-                        alt="Assignee"
-                      />
-                    </div>
-                  </div>
-                  <div class="task-date">Due: Oct 18</div>
-                </div>
-              </div>
-            </div>
+            <div class="task-list" id="review-list"></div>
           </div>
 
           <!-- Done Column -->
-          <div class="glass-card kanban-column">
+          <div class="glass-card kanban-column" data-status="done">
             <div class="column-header">
               <div class="column-title">
                 <i class="fas fa-circle" style="color: #4caf50"></i>
                 <span>Done</span>
-                <span class="task-count">4</span>
+                <span class="task-count">0</span>
               </div>
               <button class="task-action-btn">
                 <i class="fas fa-plus"></i>
               </button>
             </div>
 
-            <div class="task-list" id="done-list">
-              <div class="task-card" draggable="true">
-                <div class="task-header">
-                  <div>
-                    <div class="task-title">Project Setup</div>
-                    <div class="task-priority priority-low">Low</div>
-                  </div>
-                  <div class="task-actions">
-                    <button class="task-action-btn">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="task-description">
-                  Initialize project structure and development environment
-                </div>
-                <div class="task-footer">
-                  <div class="task-assignees">
-                    <div class="assignee-avatar">
-                      <img
-                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=50&q=80"
-                        alt="Assignee"
-                      />
-                    </div>
-                  </div>
-                  <div class="task-date">Completed: Oct 10</div>
-                </div>
-              </div>
-            </div>
+            <div class="task-list" id="done-list"></div>
           </div>
         </div>
       </div>
@@ -1613,349 +1465,7 @@ AI-powered code review and suggestion system</textarea
 
     <script src="js/particles.js"></script>
     <script src="js/main.js"></script>
-    <script>
-      // Workspace functionality
-      document.addEventListener("DOMContentLoaded", function () {
-        // Tab switching
-        const tabs = document.querySelectorAll(".workspace-tab");
-        const tabContents = document.querySelectorAll(".tab-content");
-
-        tabs.forEach((tab) => {
-          tab.addEventListener("click", function () {
-            const tabId = this.getAttribute("data-tab");
-
-            // Update active tab
-            tabs.forEach((t) => t.classList.remove("active"));
-            this.classList.add("active");
-
-            // Show corresponding content
-            tabContents.forEach((content) => {
-              content.classList.remove("active");
-              if (content.id === `${tabId}-tab`) {
-                content.classList.add("active");
-              }
-            });
-          });
-        });
-
-        // Kanban board drag and drop
-        const taskCards = document.querySelectorAll(".task-card");
-        const columns = document.querySelectorAll(".kanban-column");
-
-        taskCards.forEach((card) => {
-          card.addEventListener("dragstart", function (e) {
-            e.dataTransfer.setData("text/plain", this.id);
-            this.classList.add("dragging");
-          });
-
-          card.addEventListener("dragend", function () {
-            this.classList.remove("dragging");
-          });
-        });
-
-        columns.forEach((column) => {
-          column.addEventListener("dragover", function (e) {
-            e.preventDefault();
-            this.classList.add("drag-over");
-          });
-
-          column.addEventListener("dragleave", function () {
-            this.classList.remove("drag-over");
-          });
-
-          column.addEventListener("drop", function (e) {
-            e.preventDefault();
-            this.classList.remove("drag-over");
-
-            const taskId = e.dataTransfer.getData("text/plain");
-            const task = document.getElementById(taskId);
-
-            if (task) {
-              const taskList = this.querySelector(".task-list");
-              taskList.appendChild(task);
-
-              // Update task count
-              updateTaskCounts();
-
-              // Show notification
-              showNotification("Task moved successfully");
-            }
-          });
-        });
-
-        // Chat functionality
-        const chatMessageInput = document.getElementById("chatMessage");
-        const sendMessageBtn = document.getElementById("sendMessage");
-
-        if (sendMessageBtn) {
-          sendMessageBtn.addEventListener("click", function () {
-            const message = chatMessageInput.value.trim();
-            if (message) {
-              addMessageToChat("You", message, true);
-              chatMessageInput.value = "";
-
-              // Simulate reply after 1 second
-              setTimeout(() => {
-                const replies = [
-                  "Got it, thanks for the update!",
-                  "I'll check that right away.",
-                  "Good point, let's discuss in the meeting.",
-                  "Can you share more details about this?",
-                ];
-                const randomReply =
-                  replies[Math.floor(Math.random() * replies.length)];
-                addMessageToChat("Alex Morgan", randomReply, false);
-              }, 1000);
-            }
-          });
-
-          chatMessageInput.addEventListener("keypress", function (e) {
-            if (e.key === "Enter") {
-              sendMessageBtn.click();
-            }
-          });
-        }
-
-        // Create task button
-        document
-          .getElementById("createTaskBtn")
-          ?.addEventListener("click", function () {
-            showCreateTaskModal();
-          });
-
-        // Update task counts
-        function updateTaskCounts() {
-          columns.forEach((column) => {
-            const taskList = column.querySelector(".task-list");
-            const taskCount = column.querySelector(".task-count");
-            if (taskList && taskCount) {
-              const tasks = taskList.querySelectorAll(".task-card").length;
-              taskCount.textContent = tasks;
-            }
-          });
-        }
-
-        // Add message to chat
-        function addMessageToChat(sender, content, isOutgoing) {
-          const chatMessages = document.querySelector(".chat-messages");
-          if (!chatMessages) return;
-
-          const messageDiv = document.createElement("div");
-          messageDiv.className = `message ${isOutgoing ? "message-outgoing" : "message-incoming"}`;
-
-          const now = new Date();
-          const timeString = now.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-
-          messageDiv.innerHTML = `
-                    <div class="message-sender">${sender}</div>
-                    <div class="message-content">${content}</div>
-                    <div class="message-time">${timeString}</div>
-                `;
-
-          chatMessages.appendChild(messageDiv);
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        // Show notification
-        function showNotification(message) {
-          const notification = document.createElement("div");
-          notification.className = "notification";
-          notification.textContent = message;
-          notification.style.position = "fixed";
-          notification.style.bottom = "20px";
-          notification.style.right = "20px";
-          notification.style.background =
-            "linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))";
-          notification.style.color = "white";
-          notification.style.padding = "12px 20px";
-          notification.style.borderRadius = "8px";
-          notification.style.zIndex = "1000";
-          notification.style.boxShadow = "0 5px 15px rgba(0, 0, 0, 0.3)";
-          notification.style.animation = "slideIn 0.3s ease";
-
-          document.body.appendChild(notification);
-
-          setTimeout(() => {
-            notification.style.animation = "slideOut 0.3s ease";
-            setTimeout(() => {
-              if (notification.parentNode) {
-                document.body.removeChild(notification);
-              }
-            }, 300);
-          }, 3000);
-        }
-
-        // Create task modal
-        function showCreateTaskModal() {
-          const modal = document.createElement("div");
-          modal.className = "modal";
-          modal.style.position = "fixed";
-          modal.style.top = "0";
-          modal.style.left = "0";
-          modal.style.width = "100%";
-          modal.style.height = "100%";
-          modal.style.background = "rgba(0, 0, 0, 0.8)";
-          modal.style.display = "flex";
-          modal.style.alignItems = "center";
-          modal.style.justifyContent = "center";
-          modal.style.zIndex = "10000";
-          modal.style.backdropFilter = "blur(10px)";
-
-          modal.innerHTML = `
-                    <div class="glass-card" style="padding: 40px; max-width: 500px; width: 90%; margin: 20px;">
-                        <h2 style="margin-bottom: 20px; font-size: 28px;">Create New <span class="gradient-text">Task</span></h2>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Task Title</label>
-                            <input type="text" id="taskTitle" class="glass-card" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white;" placeholder="Enter task title">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Description</label>
-                            <textarea id="taskDescription" class="glass-card" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white; min-height: 100px;" placeholder="Enter task description"></textarea>
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Priority</label>
-                                <select id="taskPriority" class="glass-card" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white;">
-                                    <option value="low">Low</option>
-                                    <option value="medium" selected>Medium</option>
-                                    <option value="high">High</option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Due Date</label>
-                                <input type="date" id="taskDueDate" class="glass-card" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white;">
-                            </div>
-                        </div>
-                        
-                        <div style="display: flex; gap: 15px; justify-content: flex-end;">
-                            <button class="btn btn-secondary" id="cancelTask">
-                                Cancel
-                            </button>
-                            <button class="btn btn-primary" id="saveTask">
-                                <i class="fas fa-plus"></i> Create Task
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-          document.body.appendChild(modal);
-
-          // Set default due date to tomorrow
-          const tomorrow = new Date();
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          const dueDateInput = modal.querySelector("#taskDueDate");
-          if (dueDateInput) {
-            dueDateInput.value = tomorrow.toISOString().split("T")[0];
-          }
-
-          // Modal event listeners
-          modal
-            .querySelector("#cancelTask")
-            .addEventListener("click", function () {
-              document.body.removeChild(modal);
-            });
-
-          modal
-            .querySelector("#saveTask")
-            .addEventListener("click", function () {
-              const title = modal.querySelector("#taskTitle").value;
-              const description = modal.querySelector("#taskDescription").value;
-              const priority = modal.querySelector("#taskPriority").value;
-              const dueDate = modal.querySelector("#taskDueDate").value;
-
-              if (!title.trim()) {
-                alert("Please enter a task title");
-                return;
-              }
-
-              // Create new task card
-              const todoList = document.querySelector("#todo-list");
-              if (todoList) {
-                const taskId = "task-" + Date.now();
-                const taskCard = document.createElement("div");
-                taskCard.className = "task-card";
-                taskCard.id = taskId;
-                taskCard.draggable = true;
-
-                const priorityClass =
-                  priority === "high"
-                    ? "priority-high"
-                    : priority === "medium"
-                      ? "priority-medium"
-                      : "priority-low";
-                const priorityText =
-                  priority.charAt(0).toUpperCase() + priority.slice(1);
-
-                const dueDateFormatted = new Date(dueDate).toLocaleDateString(
-                  "en-US",
-                  {
-                    month: "short",
-                    day: "numeric",
-                  },
-                );
-
-                taskCard.innerHTML = `
-                            <div class="task-header">
-                                <div>
-                                    <div class="task-title">${title}</div>
-                                    <div class="task-priority ${priorityClass}">${priorityText}</div>
-                                </div>
-                                <div class="task-actions">
-                                    <button class="task-action-btn">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="task-description">${description || "No description"}</div>
-                            <div class="task-footer">
-                                <div class="task-assignees">
-                                    <div class="assignee-avatar">
-                                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=50&q=80" alt="Assignee">
-                                    </div>
-                                </div>
-                                <div class="task-date">Due: ${dueDateFormatted}</div>
-                            </div>
-                        `;
-
-                todoList.appendChild(taskCard);
-
-                // Add drag and drop to new task
-                taskCard.addEventListener("dragstart", function (e) {
-                  e.dataTransfer.setData("text/plain", this.id);
-                  this.classList.add("dragging");
-                });
-
-                taskCard.addEventListener("dragend", function () {
-                  this.classList.remove("dragging");
-                });
-
-                // Update task counts
-                updateTaskCounts();
-
-                // Close modal and show notification
-                document.body.removeChild(modal);
-                showNotification("Task created successfully!");
-              }
-            });
-
-          // Close modal when clicking outside
-          modal.addEventListener("click", function (e) {
-            if (e.target === modal) {
-              document.body.removeChild(modal);
-            }
-          });
-        }
-
-        // Initialize task counts
-        updateTaskCounts();
-      });
-    </script>
+    <script type="module" src="app_shell.js"></script>
+    <script type="module" src="workspace_page.js"></script>
   </body>
 </html>

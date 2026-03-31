@@ -341,13 +341,10 @@
         </nav>
 
         <div class="user-menu">
-          <div class="user-avatar">
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
-              alt="User Avatar"
-            />
-          </div>
-          <div class="notification-badge">3</div>
+          <button class="user-avatar" id="userAvatarBtn" type="button">
+            <img id="userAvatarImg" src="favicon.png" alt="User Avatar" />
+          </button>
+          <div class="notification-badge" id="notificationBadge" style="display:none">0</div>
         </div>
       </div>
     </header>
@@ -813,63 +810,7 @@
 
     <script src="js/particles.js"></script>
     <script src="js/main.js"></script>
-    <script>
-      // Additional feed functionality
-      document.addEventListener("DOMContentLoaded", function () {
-        // Find team button
-        document
-          .getElementById("findTeamBtn")
-          ?.addEventListener("click", function () {
-            window.location.href = "chambers.html#join-chamber";
-          });
-
-        // Filter tag selection
-        document.querySelectorAll(".filter-tag").forEach((tag) => {
-          tag.addEventListener("click", function () {
-            document
-              .querySelectorAll(".filter-tag")
-              .forEach((t) => t.classList.remove("active"));
-            this.classList.add("active");
-          });
-        });
-
-        // Action buttons (like, save, etc.)
-        document.querySelectorAll(".action-btn").forEach((btn) => {
-          btn.addEventListener("click", function () {
-            const icon = this.querySelector("i");
-
-            if (icon.classList.contains("far")) {
-              // Toggle like
-              if (icon.classList.contains("fa-heart")) {
-                icon.className = "fas fa-heart";
-                const count = this.textContent.trim();
-                const num = parseInt(count) + 1;
-                this.innerHTML = `<i class="fas fa-heart"></i> ${num}`;
-              }
-              // Toggle save
-              else if (icon.classList.contains("fa-bookmark")) {
-                icon.className = "fas fa-bookmark";
-                this.innerHTML = '<i class="fas fa-bookmark"></i> Saved';
-                this.classList.add("active");
-              }
-            } else {
-              // Untoggle like
-              if (icon.classList.contains("fa-heart")) {
-                icon.className = "far fa-heart";
-                const count = this.textContent.trim();
-                const num = parseInt(count) - 1;
-                this.innerHTML = `<i class="far fa-heart"></i> ${num}`;
-              }
-              // Untoggle save
-              else if (icon.classList.contains("fa-bookmark")) {
-                icon.className = "far fa-bookmark";
-                this.innerHTML = '<i class="far fa-bookmark"></i> Save';
-                this.classList.remove("active");
-              }
-            }
-          });
-        });
-      });
-    </script>
+    <script type="module" src="app_shell.js"></script>
+    <script type="module" src="feed_page.js"></script>
   </body>
 </html>
