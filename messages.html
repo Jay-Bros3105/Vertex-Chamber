@@ -591,7 +591,8 @@
         z-index: 1;
         position: relative;
         flex-shrink: 0;
-        padding-bottom: env(safe-area-inset-bottom, 0px);
+        /* Keep composer above iOS safe-area + mobile bottom tab bar (bottom_nav.js) */
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--vc-bottom-nav-h, 0px));
       }
       .reply-bar {
         display: none;
@@ -1037,6 +1038,9 @@
       let currentContact = null;
       let replyTarget    = null;
       let _dbRef         = null; // Firestore reference, set after init
+      let _currentFirestoreConvDocId = null; // conversations/{convId} doc id for open chat
+      let _selectedMsgForAction = null;
+      let _forwardPayload = null; // { type, content }
       let _sidebarScrollTop = 0;
       let _notifPermissionAsked = false;
 
@@ -1236,6 +1240,7 @@
       function subscribeToConversation(db, conversationId) {
         // Unsubscribe previous listener
         if (_activeConvListener) { _activeConvListener(); _activeConvListener = null; }
+        _currentFirestoreConvDocId = conversationId;
 
         _activeConvListener = db
           .collection("conversations").doc(conversationId)
@@ -1396,6 +1401,7 @@
           try {
             const convId = await getOrCreateConvId(_dbRef, MY_USER_ID, uid);
             currentConvId = uid; // keep local uid as key
+            _currentFirestoreConvDocId = convId;
             subscribeToConversation(_dbRef, convId);
           } catch (e) { console.error("selectConversation Firestore error:", e); }
         }
@@ -1472,7 +1478,135 @@
         });
         // Swipe right to reply (modern mobile)
         attachSwipeToReply(bubble, msg);
+
+        // Long-press / right-click message actions (delete/forward)
+        bubble?.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          openMsgActions(msg);
+        });
+        let _lpTimer = null;
+        bubble?.addEventListener("touchstart", () => {
+          _lpTimer = setTimeout(() => openMsgActions(msg), 520);
+        }, { passive: true });
+        bubble?.addEventListener("touchend", () => { if (_lpTimer) clearTimeout(_lpTimer); }, { passive: true });
+        bubble?.addEventListener("touchmove", () => { if (_lpTimer) clearTimeout(_lpTimer); }, { passive: true });
         return wrap;
+      }
+
+      // ── Message actions modal ─────────────────────────────────────
+      function openMsgActions(msg) {
+        _selectedMsgForAction = msg;
+        closeAllDropdowns();
+        document.getElementById("msgActionModal")?.classList.add("open");
+      }
+      function closeMsgActions() {
+        document.getElementById("msgActionModal")?.classList.remove("open");
+        _selectedMsgForAction = null;
+      }
+
+      async function deleteSelectedMessage() {
+        const msg = _selectedMsgForAction;
+        closeMsgActions();
+        if (!msg || !msg.id || !_dbRef || !_currentFirestoreConvDocId) return;
+        if (!confirm("Delete this message?")) return;
+        try {
+          await _dbRef
+            .collection("conversations").doc(_currentFirestoreConvDocId)
+            .collection("messages").doc(msg.id)
+            .update({
+              deleted: true,
+              deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              deletedBy: MY_USER_ID,
+              content: "This message was deleted",
+            });
+          toast("Message deleted");
+        } catch (e) {
+          console.error("deleteSelectedMessage:", e);
+          toast("Failed to delete");
+        }
+      }
+
+      function forwardSelectedMessage() {
+        const msg = _selectedMsgForAction;
+        closeMsgActions();
+        if (!msg) return;
+        _forwardPayload = { type: msg.type || "text", content: msg.content || "" };
+        openForwardModal();
+      }
+
+      function openForwardModal() {
+        if (!VC_USERS || VC_USERS.length === 0) {
+          toast("No users available to forward to.");
+          return;
+        }
+        const search = document.getElementById("nmSearch");
+        if (search) search.value = "";
+        renderForwardList(VC_USERS);
+        document.getElementById("newMsgModal").style.display = "flex";
+        const header = document.querySelector("#newMsgModal .nm-header h3");
+        if (header) header.textContent = "Forward to…";
+      }
+
+      function renderForwardList(users) {
+        const list = document.getElementById("nmList");
+        if (!list) return;
+        if (!users || users.length === 0) {
+          list.innerHTML = `<div class="nm-empty"><i class="fas fa-user-slash"></i><h4>No members found</h4></div>`;
+          return;
+        }
+        list.innerHTML = users.map(u => `
+          <div class="nm-item" onclick="forwardToUser('${u.uid}')">
+            <div class="nm-avatar">${u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />` : `<i class="fas fa-user"></i>`}</div>
+            <div style="flex:1">
+              <div class="nm-name">@${escapeHtml(u.name)}</div>
+              <div class="nm-role">${escapeHtml(u.role || "Member")}</div>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      // Override search to work for forward mode too
+      const _filterNewMsgBase = filterNewMsg;
+      function filterNewMsg(q) {
+        const base = VC_USERS.filter(u =>
+          u.name.toLowerCase().includes(q.toLowerCase()) ||
+          (u.role || "").toLowerCase().includes(q.toLowerCase())
+        );
+        if (_forwardPayload) renderForwardList(base);
+        else _filterNewMsgBase(q);
+      }
+
+      async function forwardToUser(uid) {
+        const payload = _forwardPayload;
+        _forwardPayload = null;
+        closeNewMsgModal();
+        if (!payload || !payload.content || !_dbRef) return;
+        try {
+          const convId = await getOrCreateConvId(_dbRef, MY_USER_ID, uid);
+          const clientId = `msg_${Date.now()}_${MY_USER_ID}`;
+          await _dbRef.collection("conversations").doc(convId).collection("messages").doc(clientId).set({
+            conversationId: convId,
+            senderId:       MY_USER_ID,
+            receiverId:     uid,
+            content:        payload.content,
+            type:           payload.type || "text",
+            replyTo:        null,
+            forwarded:      true,
+            readBy:         [MY_USER_ID],
+            deleted:        false,
+            edited:         false,
+            timestamp:      firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          await _dbRef.collection("conversations").doc(convId).update({
+            lastMessage:     payload.type === "text" ? payload.content : `[${payload.type}]`,
+            lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
+            lastSenderId:    MY_USER_ID,
+          });
+          toast("Forwarded");
+        } catch (e) {
+          console.error("forwardToUser:", e);
+          toast("Failed to forward");
+        }
       }
 
       function scrollBottom() {
@@ -1873,6 +2007,28 @@
                   <div class="vc-contact-meta" id="contactModalEmail"></div>
                   <div class="vc-contact-meta" id="contactModalBio"></div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
+
+      // Message action modal (Delete / Forward)
+      document.body.insertAdjacentHTML("beforeend", `
+        <div class="vc-modal" id="msgActionModal" onclick="if(event.target.id==='msgActionModal') closeMsgActions()">
+          <div class="vc-card" role="dialog" aria-modal="true" aria-label="Message actions">
+            <div class="vc-card-head">
+              <h3><i class="fas fa-message" style="margin-right:8px;color:#25d366"></i>Message</h3>
+              <button class="vc-close" onclick="closeMsgActions()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="vc-card-body">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;" onclick="forwardSelectedMessage()">
+                  <i class="fas fa-share" style="width:18px;"></i> Forward
+                </button>
+                <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;border-color:rgba(255,77,109,0.35);color:#ff4d6d;" onclick="deleteSelectedMessage()">
+                  <i class="fas fa-trash" style="width:18px;"></i> Delete
+                </button>
               </div>
             </div>
           </div>
