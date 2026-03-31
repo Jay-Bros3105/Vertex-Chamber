@@ -390,6 +390,37 @@
         z-index: 1;
         gap: 12px;
       }
+
+      /* Reply banner (WhatsApp-style, pinned under header) */
+      .reply-top {
+        display: none;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: rgba(32, 44, 51, 0.92);
+        border-bottom: 1px solid var(--divider);
+        z-index: 1;
+        backdrop-filter: blur(10px);
+      }
+      .reply-top.visible { display: flex; }
+      .reply-top .rt-icon { color: var(--accent); font-size: 16px; }
+      .reply-top .rt-info { flex: 1; min-width: 0; }
+      .reply-top .rt-name { color: var(--accent); font-size: 12px; font-weight: 800; }
+      .reply-top .rt-text {
+        font-size: 13px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .reply-top .rt-close {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 18px;
+        padding: 6px;
+      }
       .chat-header-left {
         display: flex;
         align-items: center;
@@ -906,6 +937,15 @@
             </div>
           </div>
 
+          <div class="reply-top" id="replyTop">
+            <i class="fas fa-reply rt-icon"></i>
+            <div class="rt-info">
+              <div class="rt-name" id="replyTopName">—</div>
+              <div class="rt-text" id="replyTopText">—</div>
+            </div>
+            <button class="rt-close" onclick="cancelReply()"><i class="fas fa-times"></i></button>
+          </div>
+
           <div id="chatMessages">
             <div class="typing-wrap" id="typingIndicator">
               <div class="typing-bubble">
@@ -1206,25 +1246,28 @@
       // ── Load recent conversations (so sidebar shows chat history) ─
       async function loadConversationPreviews(db) {
         try {
+          // Avoid relying on composite indexes. Fetch then sort locally.
           const snap = await db.collection("conversations")
             .where("participants", "array-contains", MY_USER_ID)
-            .orderBy("lastMessageTime", "desc")
-            .limit(50)
+            .limit(100)
             .get();
 
+          const convRows = [];
           snap.forEach(doc => {
             const conv = doc.data();
-            const otherUid = conv.participants.find(p => p !== MY_USER_ID);
+            const t = conv.lastMessageTime?.toMillis?.() || 0;
+            convRows.push({ id: doc.id, conv, t });
+          });
+          convRows.sort((a, b) => (b.t || 0) - (a.t || 0));
+
+          convRows.slice(0, 50).forEach(({ conv, t }) => {
+            const otherUid = conv.participants?.find(p => p !== MY_USER_ID);
             if (!otherUid) return;
-            // Find or create meta for this contact
             let meta = VC_USERS.find(u => u.uid === otherUid);
-            if (!meta) {
-              meta = { uid: otherUid, name: otherUid, avatar: null, role: "Member", status: "offline" };
-            }
+            if (!meta) meta = { uid: otherUid, name: otherUid, avatar: null, role: "Member", status: "offline" };
             if (!conversations[otherUid]) conversations[otherUid] = { meta, messages: [] };
-            // Store last message preview
             conversations[otherUid].lastMessage = conv.lastMessage || "";
-            conversations[otherUid].lastTime    = conv.lastMessageTime?.toMillis?.() || 0;
+            conversations[otherUid].lastTime    = t || 0;
           });
 
           renderConvList();
@@ -1714,6 +1757,7 @@
       function cancelReply() {
         replyTarget = null;
         document.getElementById("replyBar").classList.remove("visible");
+        document.getElementById("replyTop").classList.remove("visible");
       }
 
       function setReplyTarget(msg) {
@@ -1725,6 +1769,15 @@
         if (n) n.textContent = msg.from === "me" ? "You" : (currentContact?.name || "Member");
         if (t) t.textContent = (msg.type === "text" ? msg.content : `[${msg.type}]`) || "";
         rb?.classList.add("visible");
+
+        // Keep a pinned banner under the header (does not disappear while typing)
+        const rTop = document.getElementById("replyTop");
+        const rN   = document.getElementById("replyTopName");
+        const rT   = document.getElementById("replyTopText");
+        if (rN) rN.textContent = msg.from === "me" ? "You" : (currentContact?.name || "Member");
+        if (rT) rT.textContent = (msg.type === "text" ? msg.content : `[${msg.type}]`) || "";
+        rTop?.classList.add("visible");
+
         document.getElementById("msgInput")?.focus();
       }
 
