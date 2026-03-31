@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Messages | Vertex Chamber</title>
     <link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
     <link
@@ -54,6 +54,7 @@
         background: var(--chat-bg);
         font-family: "Nunito", sans-serif;
         color: var(--text-primary);
+        touch-action: manipulation;
       }
 
       #app {
@@ -748,11 +749,23 @@
         border: none;
         color: white;
         font-size: 18px;
+        line-height: 1;
+        padding: 0;
         cursor: pointer;
         display: none;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+      }
+      .send-btn i { font-size: 18px; line-height: 1; }
+
+      @media (max-width: 420px) {
+        .send-btn {
+          width: 44px;
+          height: 44px;
+          min-width: 44px;
+          min-height: 44px;
+        }
       }
 
       .empty-chat {
@@ -1269,6 +1282,14 @@
       // ── Load recent conversations (so sidebar shows chat history) ─
       async function loadConversationPreviews(db) {
         try {
+          // Loading state (avoid "No conversations" while syncing)
+          const empty = document.getElementById("sidebarEmpty");
+          if (empty) {
+            const h = empty.querySelector("h4");
+            if (h) h.textContent = "Loading conversations…";
+            empty.style.display = "flex";
+          }
+
           // Avoid relying on composite indexes. Fetch then sort locally.
           const snap = await db.collection("conversations")
             .where("participants", "array-contains", MY_USER_ID)
@@ -1768,12 +1789,15 @@
         // Persist to Firestore
         if (_dbRef) {
           try {
-            const convId = await getOrCreateConvId(_dbRef, MY_USER_ID, currentConvId);
+            const isGroup = !!(currentContact && currentContact.isGroup);
+            const convId = isGroup
+              ? (_currentFirestoreConvDocId || currentContact.groupId || String(currentConvId).replace(/^g_/, ""))
+              : await getOrCreateConvId(_dbRef, MY_USER_ID, currentConvId);
             const msgCol = _dbRef.collection("conversations").doc(convId).collection("messages");
             await msgCol.doc(clientId).set({
               conversationId: convId,
               senderId:       MY_USER_ID,
-              receiverId:     currentConvId,
+              receiverId:     isGroup ? null : currentConvId,
               content:        text,
               type:           "text",
               replyTo:        replyTarget || null,
@@ -1789,6 +1813,19 @@
               lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
               lastSenderId:    MY_USER_ID,
             });
+
+            // Unread indicator for receiver (red dot via notifications) — direct messages only
+            if (!isGroup) {
+              await _dbRef.collection("notifications").add({
+                userId: currentConvId,
+                read: false,
+                type: "message",
+                fromUserId: MY_USER_ID,
+                conversationId: convId,
+                messageId: clientId,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              });
+            }
           } catch (e) { console.error("sendMessage Firestore error:", e); }
         }
       }
@@ -2187,6 +2224,11 @@
         updateMobileHeaderBack();
         window.addEventListener("resize", updateMobileHeaderBack);
 
+        // Best-effort: avoid pinch-zoom on some mobile browsers
+        document.addEventListener("gesturestart", (e) => e.preventDefault(), { passive: false });
+        document.addEventListener("gesturechange", (e) => e.preventDefault(), { passive: false });
+        document.addEventListener("gestureend", (e) => e.preventDefault(), { passive: false });
+
         // Auto-open conversation (used by Chambers -> Open Team Chat)
         try {
           const openKey = new URLSearchParams(window.location.search).get("open");
@@ -2223,6 +2265,24 @@
 
       // Load data once DOM + Firebase are both ready
       (async () => {
+        // Clear unread message dot when user opens Messages tab
+        try {
+          const q = await _db.collection("notifications")
+            .where("userId", "==", MY_USER_ID)
+            .where("read", "==", false)
+            .get();
+          const batch = _db.batch();
+          let touched = 0;
+          q.forEach((d) => {
+            const data = d.data() || {};
+            if (data.type !== "message") return;
+            batch.update(d.ref, { read: true, readAt: firebase.firestore.FieldValue.serverTimestamp() });
+            touched++;
+          });
+          if (touched) await batch.commit();
+          localStorage.setItem("vertex_unread_messages_count", "0");
+        } catch {}
+
         await loadMyProfile(_db);
         await loadVCUsers(_db);
         const openKey = window.__vc_open_on_ready;

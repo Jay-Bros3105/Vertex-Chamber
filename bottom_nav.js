@@ -50,6 +50,18 @@
         text-transform: uppercase;
       }
       #${NAV_ID} a i { font-size: 18px; }
+      #${NAV_ID} a { position: relative; }
+      #${NAV_ID} .vc-nav-dot {
+        position: absolute;
+        top: 10px;
+        right: calc(50% - 18px);
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #ff2e55;
+        box-shadow: 0 0 0 2px rgba(11, 15, 26, 0.92), 0 8px 18px rgba(255, 46, 85, 0.25);
+        display: none;
+      }
       #${NAV_ID} a.active {
         color: #fff;
       }
@@ -74,7 +86,11 @@
       <a href="feed.html" data-page="feed.html"><i class="fas fa-stream"></i><span>Feed</span></a>
       <a href="chambers.html" data-page="chambers.html"><i class="fas fa-door-closed"></i><span>Chamber</span></a>
       <a href="workspace.html" data-page="workspace.html"><i class="fas fa-code"></i><span>Workspace</span></a>
-      <a href="messages.html" data-page="messages.html"><i class="fas fa-comments"></i><span>Messages</span></a>
+      <a href="messages.html" data-page="messages.html" data-nav="messages">
+        <i class="fas fa-comments"></i>
+        <span class="vc-nav-dot" aria-hidden="true"></span>
+        <span>Messages</span>
+      </a>
       <a href="profile.html" data-page="profile.html"><i class="fas fa-user"></i><span>Profile</span></a>
     `;
 
@@ -85,6 +101,19 @@
     nav.querySelectorAll("a").forEach((a) => {
       if (a.getAttribute("data-page") === file) a.classList.add("active");
     });
+
+    function updateDot() {
+      try {
+        const n = parseInt(localStorage.getItem("vertex_unread_messages_count") || "0", 10) || 0;
+        const dot = nav.querySelector('[data-nav="messages"] .vc-nav-dot');
+        const onMessages = file === "messages.html";
+        if (dot) dot.style.display = (!onMessages && n > 0) ? "block" : "none";
+      } catch {}
+    }
+    updateDot();
+    window.addEventListener("storage", updateDot);
+    document.addEventListener("visibilitychange", updateDot);
+    window.addEventListener("vc:unreadMessages", updateDot);
   }
 
   // Do not show on login page

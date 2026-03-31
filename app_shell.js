@@ -164,6 +164,17 @@ async function loadAndApplyUser() {
         const n = snap.size || 0;
         badge.textContent = String(n);
         badge.style.display = n > 0 ? "flex" : "none";
+
+        // Unread messages red dot (bottom nav)
+        try {
+          let msgN = 0;
+          snap.forEach((d) => {
+            const data = d.data() || {};
+            if (data.type === "message") msgN++;
+          });
+          localStorage.setItem("vertex_unread_messages_count", String(msgN));
+          window.dispatchEvent(new CustomEvent("vc:unreadMessages", { detail: { count: msgN } }));
+        } catch {}
       });
     } catch {
       badge.style.display = "none";
