@@ -89,7 +89,6 @@
       }
       .tagline { font-size: 0.7rem; letter-spacing: 2px; color: #6c8eff; text-transform: uppercase; margin-top: 4px; }
 
-      /* ── Session banner ── */
       .session-banner {
         background: rgba(0, 255, 179, 0.08);
         border: 1px solid rgba(0, 255, 179, 0.3);
@@ -105,7 +104,6 @@
       .session-banner i { font-size: 1rem; flex-shrink: 0; }
       .session-banner strong { color: #fff; }
 
-      /* ── Switch account pill ── */
       .switch-account-pill {
         display: flex;
         align-items: center;
@@ -213,6 +211,19 @@
         color: #6c9eff; text-align: center; min-height: 18px;
       }
 
+      /* ── OTP persistence notice ── */
+      .otp-persist-notice {
+        font-size: 0.72rem;
+        color: rgba(0,255,179,0.7);
+        text-align: center;
+        margin-top: 10px;
+        padding: 8px 12px;
+        background: rgba(0,255,179,0.06);
+        border-radius: 8px;
+        border: 1px solid rgba(0,255,179,0.15);
+      }
+      .otp-persist-notice i { margin-right: 5px; }
+
       .action-buttons { display: flex; gap: 12px; margin-top: 12px; }
       .action-buttons .small-neon { flex: 1; text-align: center; }
 
@@ -260,12 +271,9 @@
     <!-- EmailJS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script>
-      // =====================================================
-      // 📧 EMAILJS CONFIGURATION
-      // =====================================================
-      window.EMAILJS_PUBLIC_KEY  = "srQo3QulZIh_t9kZE";   // 🔁 replace with yours
-      window.EMAILJS_SERVICE_ID  = "service_pn792k9";       // 🔁 replace with yours
-      window.EMAILJS_TEMPLATE_ID = "template_dmkj7iy";      // 🔁 replace with yours
+      window.EMAILJS_PUBLIC_KEY  = "srQo3QulZIh_t9kZE";
+      window.EMAILJS_SERVICE_ID  = "service_pn792k9";
+      window.EMAILJS_TEMPLATE_ID = "template_dmkj7iy";
       emailjs.init(window.EMAILJS_PUBLIC_KEY);
     </script>
   </head>
@@ -287,7 +295,6 @@
 
         <!-- ── STEP 1: Email Entry ── -->
         <div id="stepEmail">
-          <!-- Session banner: shown if a session already exists -->
           <div class="session-banner" id="sessionBanner" style="display:none">
             <i class="fas fa-user-check"></i>
             <span>Welcome back, <strong id="sessionEmailDisplay">—</strong><br>
@@ -303,11 +310,9 @@
           <button id="sendOtpBtn" class="neon-btn">
             <i class="fas fa-paper-plane"></i> Send OTP
           </button>
-          <!-- "Enter Chamber" button shown when session is already saved -->
           <button id="enterChamberBtn" class="neon-btn" style="display:none; border-color:#00ffb3; color:#00ffb3; margin-top:10px;">
             <i class="fas fa-door-open"></i> Enter Chamber
           </button>
-          <!-- "Login with different email" — shown alongside the Enter Chamber button -->
           <button id="switchAccountBtn" class="switch-account-pill" style="display:none;">
             <i class="fas fa-user-plus"></i> Login with different Email
           </button>
@@ -323,10 +328,16 @@
             <div class="email-display" id="emailDisplay"></div>
             <div class="otp-field-group">
               <input type="text" id="otpInput" class="otp-input"
-                placeholder="6-digit OTP" maxlength="6" autocomplete="off" />
+                placeholder="6-digit OTP" maxlength="6" autocomplete="one-time-code"
+                inputmode="numeric" />
               <button id="verifyOtpBtn" class="small-neon">
                 <i class="fas fa-check-circle"></i> Verify
               </button>
+            </div>
+            <!-- Notice reminding user the OTP is saved if they switch apps -->
+            <div class="otp-persist-notice">
+              <i class="fas fa-info-circle"></i>
+              Your OTP session is saved — go check your email and come back freely.
             </div>
             <div class="action-buttons">
               <button id="resendOtpBtn" class="small-neon">
@@ -346,7 +357,7 @@
       </div>
     </div>
 
-    <!-- Firebase (needed to check if profile exists) -->
+    <!-- Firebase -->
     <script type="importmap">
       {
         "imports": {
@@ -370,10 +381,16 @@
       const app = initializeApp(firebaseConfig);
       const db  = getFirestore(app);
 
-      // ── Session key helpers ──────────────────────────────
-      const SESSION_EMAIL_KEY    = "vertex_session_email";
-      const SESSION_EXPIRY_KEY   = "vertex_session_expiry";
-      const SESSION_DURATION_MS  = 30 * 24 * 60 * 60 * 1000; // 30 days
+      // ── Long-term session (localStorage — 30 days) ────────
+      const SESSION_EMAIL_KEY   = "vertex_session_email";
+      const SESSION_EXPIRY_KEY  = "vertex_session_expiry";
+      const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
+
+      // ── Short-term OTP state (sessionStorage — survives app-switch, cleared on tab close) ──
+      // KEY FIX: we use sessionStorage (not localStorage) to preserve the pending OTP
+      // when the user switches to their email app and comes back. sessionStorage survives
+      // app backgrounding on mobile, but is cleared when the tab is closed.
+      const OTP_STATE_KEY = "vertex_pending_otp";
 
       function saveSession(email) {
         localStorage.setItem(SESSION_EMAIL_KEY,  email);
@@ -384,29 +401,47 @@
         const email  = localStorage.getItem(SESSION_EMAIL_KEY);
         const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY_KEY) || "0");
         if (email && Date.now() < expiry) return email;
-        // Expired — clear it
         localStorage.removeItem(SESSION_EMAIL_KEY);
         localStorage.removeItem(SESSION_EXPIRY_KEY);
         return null;
       }
 
-      // ── Redirect helpers ────────────────────────────────
-      // After login, we check if the user already has a username set.
-      // If YES  → go to splash / main chamber
-      // If NO   → go to profile.html to set up their username
+      // Save pending OTP to sessionStorage so switching to email app doesn't lose it
+      function saveOtpState(email, otp, expiry) {
+        sessionStorage.setItem(OTP_STATE_KEY, JSON.stringify({ email, otp, expiry }));
+      }
+
+      function getOtpState() {
+        try {
+          const raw = sessionStorage.getItem(OTP_STATE_KEY);
+          if (!raw) return null;
+          const state = JSON.parse(raw);
+          // Only return if not expired
+          if (Date.now() > state.expiry) {
+            sessionStorage.removeItem(OTP_STATE_KEY);
+            return null;
+          }
+          return state;
+        } catch { return null; }
+      }
+
+      function clearOtpState() {
+        sessionStorage.removeItem(OTP_STATE_KEY);
+      }
+
+      function emailToId(email) {
+        return email.toLowerCase().replace(/[^a-z0-9]/g, "_");
+      }
+
       async function redirectAfterLogin(email) {
         showLoader("ACCESS GRANTED", "Checking your profile…");
         try {
-          // Derive the same email-based userId used in profile.js
           const userId = emailToId(email);
           const userRef = doc(db, "users", userId);
           const snap    = await getDoc(userRef);
-
           if (snap.exists() && snap.data().username) {
-            // Profile complete → enter chamber
-            setTimeout(() => { window.location.href = "splash.html"; }, 800);
+            setTimeout(() => { window.location.href = "messages.html"; }, 800);
           } else {
-            // New user or incomplete profile → set up profile
             setTimeout(() => { window.location.href = "profile.html"; }, 800);
           }
         } catch (err) {
@@ -415,16 +450,9 @@
         }
       }
 
-      // Convert email → safe Firestore document ID
-      function emailToId(email) {
-        return email.toLowerCase().replace(/[^a-z0-9]/g, "_");
-      }
-
-      // ── On page load: check existing session ────────────
       window.addEventListener("DOMContentLoaded", () => {
         const savedEmail = getSession();
         if (savedEmail) {
-          // Show returning-user banner
           document.getElementById("sessionBanner").style.display   = "flex";
           document.getElementById("sessionEmailDisplay").textContent = savedEmail;
           document.getElementById("sendOtpBtn").style.display       = "none";
@@ -433,19 +461,17 @@
           document.getElementById("emailInput").value               = savedEmail;
           document.getElementById("emailInput").disabled            = true;
 
-          // "Enter Chamber" click
           document.getElementById("enterChamberBtn").addEventListener("click", () => {
             redirectAfterLogin(savedEmail);
           });
 
-          // "Login with different email" — clears session and resets UI
           document.getElementById("switchAccountBtn").addEventListener("click", () => {
             localStorage.removeItem("vertex_session_email");
             localStorage.removeItem("vertex_session_expiry");
             localStorage.removeItem("vertex_username");
             localStorage.removeItem("vertex_profile_completed");
             localStorage.removeItem("vertex_avatar");
-            // Reset UI to fresh state
+            clearOtpState();
             document.getElementById("sessionBanner").style.display   = "none";
             document.getElementById("enterChamberBtn").style.display  = "none";
             document.getElementById("switchAccountBtn").style.display = "none";
@@ -456,11 +482,10 @@
           });
         }
 
-        setupLoginFlow();
+        setupLoginFlow(saveSession, redirectAfterLogin, saveOtpState, getOtpState, clearOtpState);
       });
 
-      // ── Full OTP login flow ──────────────────────────────
-      function setupLoginFlow() {
+      function setupLoginFlow(saveSession, redirectAfterLogin, saveOtpState, getOtpState, clearOtpState) {
         const stepEmail      = document.getElementById("stepEmail");
         const stepOtp        = document.getElementById("stepOtp");
         const emailInput     = document.getElementById("emailInput");
@@ -473,10 +498,23 @@
         const backToEmailBtn = document.getElementById("backToEmailBtn");
         const otpErrorMsg    = document.getElementById("otpErrorMsg");
 
-        let currentOtp   = null;
-        let currentEmail = null;
-        let otpExpiry    = null;
         const OTP_VALID_MINUTES = 10;
+
+        // ── Restore any pending OTP session (KEY FIX) ────────
+        // If user already sent an OTP and switched to email, we restore
+        // the OTP step so they can paste right in.
+        const pendingOtp = getOtpState();
+        if (pendingOtp) {
+          // Restore OTP step immediately
+          stepEmail.style.display = "none";
+          stepOtp.style.display   = "block";
+          emailDisplay.innerHTML  = `<i class="fas fa-envelope"></i> OTP sent to <strong style="color:#fff">${pendingOtp.email}</strong>`;
+          otpInput.value          = "";
+          otpErrorMsg.innerText   = "";
+
+          // Focus OTP input with a short delay (iOS needs this)
+          setTimeout(() => otpInput.focus(), 300);
+        }
 
         function isValidEmail(e) { return /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(e); }
         function generateOTP()   { return Math.floor(100000 + Math.random() * 900000).toString(); }
@@ -517,14 +555,17 @@
         }
 
         async function sendOTP(email) {
-          currentOtp   = generateOTP();
-          otpExpiry    = Date.now() + OTP_VALID_MINUTES * 60 * 1000;
+          const otp    = generateOTP();
+          const expiry = Date.now() + OTP_VALID_MINUTES * 60 * 1000;
           await emailjs.send(
             window.EMAILJS_SERVICE_ID,
             window.EMAILJS_TEMPLATE_ID,
-            { to_email: email, to_name: email, otp_code: currentOtp, app_name: "Vertex Chamber" }
+            { to_email: email, to_name: email, otp_code: otp, app_name: "Vertex Chamber" }
           );
-          console.log(`[DEMO] OTP for ${email}: ${currentOtp}`);
+          // Persist OTP state so switching apps doesn't lose it
+          saveOtpState(email, otp, expiry);
+          console.log(`[DEMO] OTP for ${email}: ${otp}`);
+          return { otp, expiry };
         }
 
         async function handleSendOtp() {
@@ -538,11 +579,11 @@
           sendOtpBtn.disabled  = true;
           try {
             await sendOTP(email);
-            currentEmail = email;
             emailDisplay.innerHTML = `<i class="fas fa-envelope"></i> OTP sent to <strong style="color:#fff">${email}</strong>`;
             showNotification(`📧 OTP sent to ${email}! Check your inbox.`, "#0ff");
             transitionTo(stepEmail, stepOtp);
             otpInput.value = ""; otpErrorMsg.innerText = "";
+            setTimeout(() => otpInput.focus(), 400);
           } catch (err) {
             emailErrorMsg.innerText = "❌ Failed to send OTP. Check your EmailJS config or internet.";
             showNotification("Failed to send OTP: " + (err.text || err.message), "#ff3366");
@@ -555,42 +596,54 @@
         function handleVerifyOtp() {
           const entered = otpInput.value.trim();
           otpErrorMsg.innerText = ""; otpErrorMsg.style.color = "#6c9eff";
+
+          // Read LIVE from sessionStorage in case of page-restore
+          const state = getOtpState();
+          if (!state) {
+            otpErrorMsg.innerText = "⏳ OTP session expired. Please go back and request a new one.";
+            shake(otpInput); return;
+          }
+
           if (!entered || entered.length !== 6 || isNaN(entered)) {
             otpErrorMsg.innerText = "❌ Enter the 6-digit code from your email.";
             shake(otpInput); return;
           }
-          if (Date.now() > otpExpiry) {
+          if (Date.now() > state.expiry) {
+            clearOtpState();
             otpErrorMsg.innerText = "⏳ OTP expired. Please request a new one.";
             shake(otpInput); return;
           }
+
           verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Verifying...';
           verifyOtpBtn.disabled  = true;
 
-          if (entered === currentOtp) {
+          if (entered === state.otp) {
             otpErrorMsg.style.color = "#0f6";
             otpErrorMsg.innerText   = "✓ Identity verified. Granting access...";
-            // ✅ SAVE SESSION so user won't need OTP again for 30 days
-            saveSession(currentEmail);
-            setTimeout(() => redirectAfterLogin(currentEmail), 800);
+            saveSession(state.email);
+            clearOtpState();
+            setTimeout(() => redirectAfterLogin(state.email), 800);
           } else {
-            otpErrorMsg.innerText      = "❌ Incorrect OTP. Please try again.";
+            otpErrorMsg.innerText  = "❌ Incorrect OTP. Please try again.";
             shake(otpInput);
-            verifyOtpBtn.innerHTML     = '<i class="fas fa-check-circle"></i> Verify';
-            verifyOtpBtn.disabled      = false;
+            verifyOtpBtn.innerHTML = '<i class="fas fa-check-circle"></i> Verify';
+            verifyOtpBtn.disabled  = false;
           }
         }
 
         async function handleResendOtp() {
-          if (!currentEmail) { otpErrorMsg.innerText = "Session expired. Go back and try again."; return; }
+          const state = getOtpState();
+          const email = state?.email || emailInput.value.trim();
+          if (!email) { otpErrorMsg.innerText = "Session expired. Go back and try again."; return; }
           resendOtpBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending...';
           resendOtpBtn.disabled  = true;
           otpErrorMsg.innerText  = "";
           try {
-            await sendOTP(currentEmail);
+            await sendOTP(email);
             otpInput.value = "";
             otpErrorMsg.style.color = "#0f6";
             otpErrorMsg.innerText   = "✓ New OTP sent! Check your email.";
-            showNotification(`📧 New OTP sent to ${currentEmail}`, "#0ff");
+            showNotification(`📧 New OTP sent to ${email}`, "#0ff");
             setTimeout(() => { otpErrorMsg.innerText = ""; }, 4000);
           } catch (err) {
             otpErrorMsg.innerText = "❌ Failed to resend. Try again.";
@@ -601,7 +654,7 @@
         }
 
         function handleBack() {
-          currentOtp = null; currentEmail = null; otpExpiry = null;
+          clearOtpState();
           emailInput.value = ""; emailErrorMsg.innerText = "";
           transitionTo(stepOtp, stepEmail);
         }
@@ -615,7 +668,6 @@
         otpInput.addEventListener("input", () => { otpInput.value = otpInput.value.replace(/\D/g, ""); });
       }
 
-      // ── Loader screen ────────────────────────────────────
       function showLoader(title, subtitle) {
         const loader = document.createElement("div");
         loader.className = "redirect-loading";
@@ -635,7 +687,6 @@
     </script>
 
     <script>
-      // Particles
       document.addEventListener("DOMContentLoaded", () => {
         const pc = document.getElementById("particles-container");
         for (let i = 0; i < 80; i++) {

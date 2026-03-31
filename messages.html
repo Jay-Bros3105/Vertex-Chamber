@@ -828,7 +828,7 @@
               <i class="fas fa-star"></i>Starred messages
             </div>
             <div class="dm-sep"></div>
-            <div class="dm-item" onclick="toast('Help coming soon'); closeAllDropdowns();">
+            <div class="dm-item" onclick="openHelp();">
               <i class="fas fa-circle-question"></i>Help
             </div>
           </div>
@@ -951,102 +951,266 @@
 
     <script>
       // ============================================================
-      // BACK FUNCTION - simply goes back to previous page
+      // BACK FUNCTION - goes back, with safe fallback
       // ============================================================
       function goBack() {
-        window.history.back();
-      }
-
-      // ============================================================
-      // DROPDOWN MENU FUNCTIONS - only show on click
-      // ============================================================
-      function toggleSidebarMenu(event) {
-        event.stopPropagation();
-        const menu = document.getElementById('sidebarMenu');
-        const isOpen = menu.classList.contains('open');
-        closeAllDropdowns();
-        if (!isOpen) {
-          menu.classList.add('open');
-        }
-      }
-
-      function toggleChatMenu(event) {
-        event.stopPropagation();
-        const menu = document.getElementById('chatMenu');
-        const isOpen = menu.classList.contains('open');
-        closeAllDropdowns();
-        if (!isOpen) {
-          menu.classList.add('open');
-        }
-      }
-
-      function closeAllDropdowns() {
-        document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('open'));
-        const emojiPicker = document.getElementById('emojiPicker');
-        if (emojiPicker) emojiPicker.classList.remove('open');
-      }
-
-      function handleGlobalClick(e) {
-        if (!e.target.closest('.dropdown-menu') && !e.target.closest('.icon-btn')) {
-          closeAllDropdowns();
-        }
-      }
-
-      // ============================================================
-      // CHAT FUNCTIONALITY
-      // ============================================================
-      const CURRENT_USER = {
-        uid: "current_user",
-        name: "You",
-        avatar: null,
-        role: "Vertex Chamber Member",
-        bio: "Hey there! I am using Vertex Chamber.",
-      };
-
-      let VC_USERS = [];
-      let conversations = {};
-      let currentConvId = null;
-      let currentContact = null;
-      let replyTarget = null;
-
-      const SAMPLE_USERS = [
-        { uid: "user1", name: "Alex Morgan", role: "Product Manager", avatar: null, status: "online", bio: "Building great products", joined: "Member since 2024" },
-        { uid: "user2", name: "Jordan Lee", role: "Lead Developer", avatar: null, status: "online", bio: "Full-stack dev", joined: "Member since 2024" },
-        { uid: "user3", name: "Casey Taylor", role: "UX Designer", avatar: null, status: "away", bio: "Designing experiences", joined: "Member since 2024" },
-        { uid: "user4", name: "Riley Chen", role: "Community Manager", avatar: null, status: "offline", bio: "Community first", joined: "Member since 2024" }
-      ];
-
-      async function loadVCUsers() {
-        VC_USERS = [...SAMPLE_USERS];
-        VC_USERS.forEach((u) => {
-          if (!conversations[u.uid])
-            conversations[u.uid] = { meta: u, messages: [] };
-        });
-        renderNmList(VC_USERS);
-        renderConvList();
-      }
-
-      function renderConvList() {
-        const list = document.getElementById("convList");
-        const empty = document.getElementById("sidebarEmpty");
-
-        const active = Object.values(conversations)
-          .filter((c) => c.messages.length > 0)
-          .sort((a, b) => (b.messages.at(-1)?.time || 0) - (a.messages.at(-1)?.time || 0));
-
-        list.querySelectorAll(".conv-item").forEach((el) => el.remove());
-
-        if (active.length === 0) {
-          empty.style.display = "flex";
+        // If user landed directly (no history), history.back() can be a no-op.
+        if (window.history.length > 1) {
+          window.history.back();
           return;
         }
-        empty.style.display = "none";
 
-        active.forEach((conv) => {
-          const u = conv.meta;
-          const lastMsg = conv.messages.at(-1);
-          const preview = lastMsg ? (lastMsg.type === "text" ? lastMsg.content : `[${lastMsg.type}]`) : "";
-          const timeStr = lastMsg ? new Date(lastMsg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+        // Prefer a same-origin referrer if present.
+        const ref = document.referrer || "";
+        try {
+          if (ref) {
+            const refUrl = new URL(ref, window.location.href);
+            if (refUrl.origin === window.location.origin) {
+              window.location.href = refUrl.href;
+              return;
+            }
+          }
+        } catch {}
+
+        // Final fallback: return to a sensible hub page.
+        window.location.href = "workspace.html";
+      }
+
+      // ============================================================
+      // CHAT FUNCTIONALITY — Firebase-Powered (Real Users)
+      // ============================================================
+
+      // ── Session ──────────────────────────────────────────────────
+      const SESSION_EMAIL_KEY  = "vertex_session_email";
+      const SESSION_EXPIRY_KEY = "vertex_session_expiry";
+
+      function getSessionEmail() {
+        const email  = localStorage.getItem(SESSION_EMAIL_KEY);
+        const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY_KEY) || "0");
+        if (email && Date.now() < expiry) return email;
+        return null;
+      }
+
+      function emailToId(email) {
+        return email.toLowerCase().replace(/[^a-z0-9]/g, "_");
+      }
+
+      // Guard: redirect to login if not authenticated
+      const _sessionEmail = getSessionEmail();
+      if (!_sessionEmail) {
+        window.location.href = "login.html";
+      }
+
+      const MY_USER_ID = emailToId(_sessionEmail || "");
+
+      // ── Firebase setup (compat CDN, loaded below) ─────────────────
+      // Firebase is loaded via <script> tags (compat v9 API) at the bottom.
+      // We reference firebase.firestore() after DOMContentLoaded.
+
+      // ── App state ─────────────────────────────────────────────────
+      let CURRENT_USER = {
+        uid:    MY_USER_ID,
+        name:   localStorage.getItem("vertex_username") || "You",
+        avatar: localStorage.getItem("vertex_avatar")   || null,
+        role:   "Vertex Chamber Member",
+        bio:    "",
+        email:  _sessionEmail,
+      };
+
+      let VC_USERS    = [];   // All other registered members
+      let conversations = {}; // Local message cache per uid
+      let currentConvId = null;
+      let currentContact = null;
+      let replyTarget    = null;
+      let _dbRef         = null; // Firestore reference, set after init
+
+      // ── Load current user's full profile from Firestore ───────────
+      async function loadMyProfile(db) {
+        try {
+          const snap = await db.collection("users").doc(MY_USER_ID).get();
+          if (snap.exists) {
+            const d = snap.data();
+            CURRENT_USER.name   = d.username || CURRENT_USER.name;
+            CURRENT_USER.avatar = d.avatarBase64 || null;
+            CURRENT_USER.bio    = d.bio || "";
+            // Update sidebar avatar
+            const avatarEl = document.querySelector(".my-avatar");
+            if (avatarEl && CURRENT_USER.avatar) {
+              avatarEl.innerHTML = `<img src="${CURRENT_USER.avatar}" alt="me" />`;
+              avatarEl.classList.add("has-photo");
+            }
+          }
+        } catch (e) { console.warn("loadMyProfile:", e); }
+      }
+
+      // ── Load ALL registered chamber members from Firestore ────────
+      // This is what makes everyone visible to each other (like WhatsApp contacts)
+      async function loadVCUsers(db) {
+        try {
+          // Load all users present in the system.
+          // If a user hasn't completed profile setup yet, we still show them using email as a label.
+          const snap = await db.collection("users").get();
+
+          VC_USERS = [];
+          snap.forEach(doc => {
+            const d = doc.data();
+            // Exclude self
+            if (doc.id === MY_USER_ID) return;
+            VC_USERS.push({
+              uid:    doc.id,
+              name:   d.username || d.email || "Member",
+              avatar: d.avatarBase64 || null,
+              role:   d.profileCompleted ? (d.bio || "Vertex Chamber Member") : "Member (profile not set)",
+              bio:    d.bio || "",
+              status: "offline",   // Real-time presence can be added later
+              email:  d.email      || "",
+            });
+            if (!conversations[doc.id]) {
+              conversations[doc.id] = { meta: VC_USERS[VC_USERS.length - 1], messages: [] };
+            }
+          });
+
+          console.log(`✅ Loaded ${VC_USERS.length} chamber members`);
+          renderNmList(VC_USERS);
+          loadConversationPreviews(db);
+        } catch (e) {
+          console.error("loadVCUsers error:", e);
+          // Graceful: show empty state
+          renderNmList([]);
+        }
+      }
+
+      // ── Load recent conversations (so sidebar shows chat history) ─
+      async function loadConversationPreviews(db) {
+        try {
+          const snap = await db.collection("conversations")
+            .where("participants", "array-contains", MY_USER_ID)
+            .orderBy("lastMessageTime", "desc")
+            .limit(50)
+            .get();
+
+          snap.forEach(doc => {
+            const conv = doc.data();
+            const otherUid = conv.participants.find(p => p !== MY_USER_ID);
+            if (!otherUid) return;
+            // Find or create meta for this contact
+            let meta = VC_USERS.find(u => u.uid === otherUid);
+            if (!meta) {
+              meta = { uid: otherUid, name: otherUid, avatar: null, role: "Member", status: "offline" };
+            }
+            if (!conversations[otherUid]) conversations[otherUid] = { meta, messages: [] };
+            // Store last message preview
+            conversations[otherUid].lastMessage = conv.lastMessage || "";
+            conversations[otherUid].lastTime    = conv.lastMessageTime?.toMillis?.() || 0;
+          });
+
+          renderConvList();
+        } catch (e) {
+          console.warn("loadConversationPreviews:", e);
+          renderConvList();
+        }
+      }
+
+      // ── Subscribe to real-time messages for a conversation ────────
+      let _activeConvListener = null;
+
+      function subscribeToConversation(db, conversationId) {
+        // Unsubscribe previous listener
+        if (_activeConvListener) { _activeConvListener(); _activeConvListener = null; }
+
+        _activeConvListener = db
+          .collection("conversations").doc(conversationId)
+          .collection("messages")
+          .orderBy("timestamp", "asc")
+          .limit(100)
+          .onSnapshot(snapshot => {
+            snapshot.docChanges().forEach(change => {
+              const data = { ...change.doc.data(), id: change.doc.id };
+              const msg  = firestoreMsgToLocal(data);
+
+              if (change.type === "added") {
+                const existing = conversations[currentConvId]?.messages?.find(m => m.id === msg.id);
+                if (!existing) {
+                  if (!conversations[currentConvId]) conversations[currentConvId] = { meta: currentContact, messages: [] };
+                  conversations[currentConvId].messages.push(msg);
+                  const c = document.getElementById("chatMessages");
+                  const t = document.getElementById("typingIndicator");
+                  if (c && t) { c.insertBefore(buildMsgEl(msg), t); scrollBottom(); }
+                }
+              } else if (change.type === "modified") {
+                const idx = conversations[currentConvId]?.messages?.findIndex(m => m.id === msg.id);
+                if (idx !== undefined && idx >= 0) {
+                  conversations[currentConvId].messages[idx] = msg;
+                  refreshMsg(msg.id);
+                }
+              }
+            });
+            renderConvList();
+          }, err => console.error("Conv listener error:", err));
+      }
+
+      // Convert Firestore message format → local format
+      function firestoreMsgToLocal(d) {
+        return {
+          id:      d.id,
+          from:    d.senderId === MY_USER_ID ? "me" : d.senderId,
+          type:    d.type    || "text",
+          content: d.deleted ? "This message was deleted" : (d.content || ""),
+          time:    d.timestamp?.toMillis?.() || Date.now(),
+          status:  d.readBy?.includes(currentConvId) ? "read" : "sent",
+          edited:  d.edited  || false,
+          deleted: d.deleted || false,
+          replyTo: d.replyTo || null,
+        };
+      }
+
+      // ── Get or create a conversation doc ─────────────────────────
+      async function getOrCreateConvId(db, uid1, uid2) {
+        const convId = [uid1, uid2].sort().join("_");
+        const ref    = db.collection("conversations").doc(convId);
+        const snap   = await ref.get();
+        if (!snap.exists) {
+          await ref.set({
+            participants:     [uid1, uid2],
+            createdAt:        firebase.firestore.FieldValue.serverTimestamp(),
+            lastMessage:      "",
+            lastMessageTime:  firebase.firestore.FieldValue.serverTimestamp(),
+            lastSenderId:     null,
+          });
+        }
+        return convId;
+      }
+
+      // ── Render sidebar conversation list ─────────────────────────
+      function renderConvList() {
+        const list  = document.getElementById("convList");
+        const empty = document.getElementById("sidebarEmpty");
+        if (!list) return;
+
+        const active = Object.values(conversations)
+          .filter(c => c.messages.length > 0 || c.lastMessage)
+          .sort((a, b) => {
+            const aT = a.messages.at?.(-1)?.time || a.lastTime || 0;
+            const bT = b.messages.at?.(-1)?.time || b.lastTime || 0;
+            return bT - aT;
+          });
+
+        list.querySelectorAll(".conv-item").forEach(el => el.remove());
+
+        if (active.length === 0) {
+          if (empty) empty.style.display = "flex";
+          return;
+        }
+        if (empty) empty.style.display = "none";
+
+        active.forEach(conv => {
+          const u       = conv.meta;
+          const lastMsg = conv.messages.at?.(-1);
+          const preview = lastMsg
+            ? (lastMsg.type === "text" ? lastMsg.content : `[${lastMsg.type}]`)
+            : (conv.lastMessage || "");
+          const timeMs  = lastMsg?.time || conv.lastTime || 0;
+          const timeStr = timeMs ? new Date(timeMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
 
           const item = document.createElement("div");
           item.className = `conv-item${u.uid === currentConvId ? " active" : ""}`;
@@ -1071,53 +1235,63 @@
       }
 
       function filterConvs(q) {
-        document.querySelectorAll(".conv-item").forEach((el) => {
+        document.querySelectorAll(".conv-item").forEach(el => {
           const name = el.querySelector(".conv-name")?.textContent.toLowerCase() || "";
           el.style.display = name.includes(q.toLowerCase()) ? "" : "none";
         });
       }
 
-      function selectConversation(uid) {
-        currentConvId = uid;
-        currentContact = conversations[uid]?.meta || VC_USERS.find((u) => u.uid === uid);
+      // ── Select / open a conversation ──────────────────────────────
+      async function selectConversation(uid) {
+        currentConvId  = uid;
+        currentContact = conversations[uid]?.meta || VC_USERS.find(u => u.uid === uid);
         if (!currentContact) return;
-
         if (!conversations[uid]) conversations[uid] = { meta: currentContact, messages: [] };
 
-        document.querySelectorAll(".conv-item").forEach((el) => el.classList.remove("active"));
+        document.querySelectorAll(".conv-item").forEach(el => el.classList.remove("active"));
         document.getElementById("conv-" + uid)?.classList.add("active");
 
         const ha = document.getElementById("chatHeaderAvatar");
-        ha.innerHTML = currentContact.avatar ? `<img src="${currentContact.avatar}" alt="${escapeHtml(currentContact.name)}" />` : `<i class="fas fa-user"></i>`;
-        document.getElementById("chatName").textContent = currentContact.name;
-        document.getElementById("chatStatus").textContent = { online: "online", away: "away", offline: "last seen recently" }[currentContact.status] || "last seen recently";
+        ha.innerHTML = currentContact.avatar
+          ? `<img src="${currentContact.avatar}" alt="${escapeHtml(currentContact.name)}" />`
+          : `<i class="fas fa-user"></i>`;
+        document.getElementById("chatName").textContent   = currentContact.name;
+        document.getElementById("chatStatus").textContent = "last seen recently";
 
         document.getElementById("emptyChat").style.display = "none";
-        const ac = document.getElementById("activeChat");
-        ac.style.display = "flex";
+        document.getElementById("activeChat").style.display = "flex";
 
         renderMessages();
         cancelReply();
         if (window.innerWidth <= 768) document.getElementById("sidebar").classList.add("hidden");
+
+        // Subscribe to real-time messages if Firebase is ready
+        if (_dbRef) {
+          try {
+            const convId = await getOrCreateConvId(_dbRef, MY_USER_ID, uid);
+            currentConvId = uid; // keep local uid as key
+            subscribeToConversation(_dbRef, convId);
+          } catch (e) { console.error("selectConversation Firestore error:", e); }
+        }
       }
 
       function renderMessages() {
         const container = document.getElementById("chatMessages");
-        const typing = document.getElementById("typingIndicator");
+        const typing    = document.getElementById("typingIndicator");
         container.innerHTML = "";
         container.appendChild(typing);
 
         const msgs = conversations[currentConvId]?.messages || [];
         let lastDateLabel = null;
 
-        msgs.forEach((msg) => {
-          const date = new Date(msg.time);
+        msgs.forEach(msg => {
+          const date  = new Date(msg.time);
           const today = new Date();
           let label = "";
           if (date.toDateString() === today.toDateString()) label = "Today";
           else if (date.toDateString() === new Date(today.setDate(today.getDate() - 1)).toDateString()) label = "Yesterday";
           else label = date.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
-          
+
           if (label !== lastDateLabel) {
             const sep = document.createElement("div");
             sep.className = "date-sep";
@@ -1132,7 +1306,7 @@
 
       function buildMsgEl(msg) {
         const isOut = msg.from === "me";
-        const wrap = document.createElement("div");
+        const wrap  = document.createElement("div");
         wrap.className = `msg-wrap ${isOut ? "out" : "in"}`;
         wrap.id = "msg-" + msg.id;
 
@@ -1142,8 +1316,8 @@
           if (msg.edited) content += ` <span class="edited-tag">(edited)</span>`;
         }
 
-        const ticks = isOut ? `<span class="ticks${msg.status === "read" ? " read" : ""}"><i class="fas fa-check-double"></i></span>` : "";
-        const timeStr = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const ticks  = isOut ? `<span class="ticks${msg.status === "read" ? " read" : ""}"><i class="fas fa-check-double"></i></span>` : "";
+        const timeStr = new Date(msg.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
         wrap.innerHTML = `
           <div class="bubble">${content}</div>
@@ -1156,35 +1330,62 @@
         c.scrollTop = c.scrollHeight;
       }
 
-      function sendTextMessage() {
-        const inp = document.getElementById("msgInput");
+      // ── Send a message ────────────────────────────────────────────
+      async function sendTextMessage() {
+        const inp  = document.getElementById("msgInput");
         const text = inp.value.trim();
         if (!text || !currentConvId) return;
 
-        const msg = {
-          id: "msg-" + Date.now(),
-          from: "me",
-          type: "text",
+        const localMsg = {
+          id:      "msg-" + Date.now(),
+          from:    "me",
+          type:    "text",
           content: text,
-          time: Date.now(),
-          status: "sent",
+          time:    Date.now(),
+          status:  "sent",
           replyTo: replyTarget,
         };
-        pushMessage(msg);
+
+        // Optimistic local update
+        pushMessage(localMsg);
         inp.value = "";
         inp.style.height = "";
         cancelReply();
         updateSendMic();
         renderConvList();
 
-        setTimeout(() => {
-          msg.status = "read";
-          refreshMsg(msg.id);
-        }, 1000);
+        // Persist to Firestore
+        if (_dbRef) {
+          try {
+            const convId = await getOrCreateConvId(_dbRef, MY_USER_ID, currentConvId);
+            const msgRef = _dbRef.collection("conversations").doc(convId).collection("messages");
+            await msgRef.add({
+              conversationId: convId,
+              senderId:       MY_USER_ID,
+              receiverId:     currentConvId,
+              content:        text,
+              type:           "text",
+              replyTo:        replyTarget || null,
+              reactions:      {},
+              readBy:         [MY_USER_ID],
+              deleted:        false,
+              edited:         false,
+              timestamp:      firebase.firestore.FieldValue.serverTimestamp(),
+            });
+            // Update conversation preview
+            await _dbRef.collection("conversations").doc(convId).update({
+              lastMessage:     text,
+              lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
+              lastSenderId:    MY_USER_ID,
+            });
+          } catch (e) { console.error("sendMessage Firestore error:", e); }
+        }
       }
 
       function pushMessage(msg) {
         if (!conversations[currentConvId]) conversations[currentConvId] = { meta: currentContact, messages: [] };
+        // Avoid duplicate if real-time listener fires first
+        if (conversations[currentConvId].messages.find(m => m.id === msg.id)) return;
         conversations[currentConvId].messages.push(msg);
         const c = document.getElementById("chatMessages");
         const t = document.getElementById("typingIndicator");
@@ -1201,7 +1402,7 @@
 
       function findMsg(id) {
         for (const conv of Object.values(conversations)) {
-          const m = conv.messages?.find((x) => x.id === id);
+          const m = conv.messages?.find(x => x.id === id);
           if (m) return m;
         }
         return null;
@@ -1222,7 +1423,7 @@
       function updateSendMic() {
         const val = document.getElementById("msgInput").value.trim();
         document.getElementById("sendBtn").style.display = val ? "flex" : "none";
-        document.getElementById("micBtn").style.display = val ? "none" : "flex";
+        document.getElementById("micBtn").style.display  = val ? "none"  : "flex";
       }
 
       function cancelReply() {
@@ -1242,25 +1443,25 @@
       function openNewMsgModal() {
         document.getElementById("nmSearch").value = "";
         renderNmList(VC_USERS);
-        document.getElementById("newMsgModal").classList.add("open");
+        document.getElementById("newMsgModal").style.display = "flex";
       }
 
       function closeNewMsgModal() {
-        document.getElementById("newMsgModal").classList.remove("open");
+        document.getElementById("newMsgModal").style.display = "none";
       }
 
       function renderNmList(users) {
         const list = document.getElementById("nmList");
         if (!list) return;
         if (!users || users.length === 0) {
-          list.innerHTML = `<div class="nm-empty"><i class="fas fa-user-slash"></i><h4>No members found</h4></div>`;
+          list.innerHTML = `<div class="nm-empty"><i class="fas fa-user-slash"></i><h4>No members found</h4><p style="font-size:12px;color:#8696a0;margin-top:6px;">Be the first — invite friends to join Vertex Chamber!</p></div>`;
           return;
         }
         list.innerHTML = users.map(u => `
           <div class="nm-item" onclick="startNewConv('${u.uid}')">
-            <div class="nm-avatar">${u.avatar ? `<img src="${u.avatar}" />` : `<i class="fas fa-user"></i>`}</div>
+            <div class="nm-avatar">${u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />` : `<i class="fas fa-user"></i>`}</div>
             <div style="flex:1">
-              <div class="nm-name">${escapeHtml(u.name)}</div>
+              <div class="nm-name">@${escapeHtml(u.name)}</div>
               <div class="nm-role">${escapeHtml(u.role || "Member")}</div>
             </div>
           </div>
@@ -1268,7 +1469,10 @@
       }
 
       function filterNewMsg(q) {
-        renderNmList(VC_USERS.filter(u => u.name.toLowerCase().includes(q.toLowerCase()) || (u.role || "").toLowerCase().includes(q.toLowerCase())));
+        renderNmList(VC_USERS.filter(u =>
+          u.name.toLowerCase().includes(q.toLowerCase()) ||
+          (u.role || "").toLowerCase().includes(q.toLowerCase())
+        ));
       }
 
       function startNewConv(uid) {
@@ -1281,13 +1485,16 @@
       function toggleEmoji(e) {
         e.stopPropagation();
         const picker = document.getElementById("emojiPicker");
-        const btn = document.getElementById("emojiToggleBtn");
-        const rect = btn.getBoundingClientRect();
+        const btn    = document.getElementById("emojiToggleBtn");
+        const rect   = btn.getBoundingClientRect();
         picker.style.bottom = window.innerHeight - rect.top + 8 + "px";
-        picker.style.left = rect.left + "px";
+        picker.style.left   = rect.left + "px";
         const isOpen = picker.classList.contains("open");
         closeAllDropdowns();
-        if (!isOpen) picker.classList.add("open");
+        if (!isOpen) {
+          picker.classList.add("open");
+          picker.style.display = "flex";
+        }
       }
 
       function insertEmoji(em) {
@@ -1304,26 +1511,105 @@
         input.value = "";
       }
 
-      function toggleRecord() {
-        toast("Voice recording demo");
-      }
-
-      function startVideoCall() {
-        toast("Video call demo");
-      }
-
-      function startVoiceCall() {
-        toast("Voice call demo");
-      }
+      function toggleRecord()     { toast("Voice recording — coming soon"); }
+      function startVideoCall()   { toast("Video call — coming soon"); }
+      function startVoiceCall()   { toast("Voice call — coming soon"); }
 
       function openCurrentProfile() {
         if (currentContact) openProfile(currentContact.uid);
       }
 
       function openProfile(uid) {
-        const c = uid === "me" ? CURRENT_USER : conversations[uid]?.meta || VC_USERS.find(u => u.uid === uid);
+        if (uid === "me") {
+          window.location.href = "profile.html";
+          return;
+        }
+        const c = conversations[uid]?.meta || VC_USERS.find(u => u.uid === uid);
         if (!c) return;
-        toast(`Profile: ${c.name}`);
+        openContactInfoModal(c);
+      }
+
+      // ── Dropdowns / menus ────────────────────────────────────────
+      function closeAllDropdowns() {
+        document.getElementById("sidebarMenu")?.classList.remove("open");
+        document.getElementById("chatMenu")?.classList.remove("open");
+        const picker = document.getElementById("emojiPicker");
+        picker?.classList.remove("open");
+        if (picker) picker.style.display = "none";
+      }
+
+      function toggleSidebarMenu(e) {
+        e?.stopPropagation?.();
+        const menu = document.getElementById("sidebarMenu");
+        const shouldOpen = !menu?.classList.contains("open");
+        closeAllDropdowns();
+        if (shouldOpen) menu?.classList.add("open");
+      }
+
+      function toggleChatMenu(e) {
+        e?.stopPropagation?.();
+        const menu = document.getElementById("chatMenu");
+        const shouldOpen = !menu?.classList.contains("open");
+        closeAllDropdowns();
+        if (shouldOpen) menu?.classList.add("open");
+      }
+
+      function handleGlobalClick(e) {
+        // If click happens inside a dropdown/menu button, ignore.
+        const menu = document.getElementById("sidebarMenu");
+        const chat = document.getElementById("chatMenu");
+        const menuBtn = document.getElementById("menuBtn");
+        const chatBtn = document.getElementById("chatMenuBtn");
+        const emojiPicker = document.getElementById("emojiPicker");
+        const emojiBtn = document.getElementById("emojiToggleBtn");
+
+        const t = e.target;
+        const inside =
+          menu?.contains(t) ||
+          chat?.contains(t) ||
+          emojiPicker?.contains(t) ||
+          menuBtn?.contains(t) ||
+          chatBtn?.contains(t) ||
+          emojiBtn?.contains(t);
+
+        if (!inside) closeAllDropdowns();
+
+        // If emoji picker is open, ensure it's visible.
+        if (emojiPicker?.classList.contains("open")) {
+          emojiPicker.style.display = "flex";
+        }
+      }
+
+      // ── Help + Contact info modals ───────────────────────────────
+      function openHelp() {
+        closeAllDropdowns();
+        document.getElementById("helpModal")?.classList.add("open");
+      }
+      function closeHelp() {
+        document.getElementById("helpModal")?.classList.remove("open");
+      }
+
+      function openContactInfoModal(contact) {
+        const modal = document.getElementById("contactModal");
+        if (!modal) return;
+        const avatar = document.getElementById("contactModalAvatar");
+        const name   = document.getElementById("contactModalName");
+        const email  = document.getElementById("contactModalEmail");
+        const bio    = document.getElementById("contactModalBio");
+
+        if (avatar) {
+          avatar.innerHTML = contact.avatar
+            ? `<img src="${contact.avatar}" alt="${escapeHtml(contact.name)}" />`
+            : `<i class="fas fa-user"></i>`;
+        }
+        if (name)  name.textContent  = contact.name || "Member";
+        if (email) email.textContent = contact.email || "";
+        if (bio)   bio.textContent   = contact.bio || contact.role || "Vertex Chamber Member";
+
+        modal.classList.add("open");
+      }
+      function closeContactInfo() {
+        document.getElementById("contactModal")?.classList.remove("open");
       }
 
       function escapeHtml(str) {
@@ -1335,13 +1621,10 @@
         el.className = "toast";
         el.textContent = msg;
         document.body.appendChild(el);
-        setTimeout(() => {
-          el.style.opacity = "0";
-          setTimeout(() => el.remove(), 300);
-        }, 2500);
+        setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }, 2500);
       }
 
-      const EMOJIS = ["😊", "😂", "❤️", "👍", "🔥", "✅", "🎉", "😍", "🤔", "💯", "🚀", "👏"];
+      const EMOJIS = ["😊","😂","❤️","👍","🔥","✅","🎉","😍","🤔","💯","🚀","👏"];
       function buildEmojiPicker() {
         const picker = document.getElementById("emojiPicker");
         if (picker) {
@@ -1349,16 +1632,16 @@
         }
       }
 
-      // New message modal HTML
+      // ── New message modal ─────────────────────────────────────────
       const modalHtml = `
         <div id="newMsgModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:600; align-items:center; justify-content:center;">
           <div class="nm-card" style="background:#1a2530; border-radius:14px; width:90%; max-width:460px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden;">
             <div class="nm-header" style="display:flex; align-items:center; gap:12px; padding:16px 20px; background:#00897b;">
-              <h3 style="font-size:17px; color:white; flex:1;">Find a Member</h3>
+              <h3 style="font-size:17px; color:white; flex:1;">Chamber Members</h3>
               <button class="nm-close" onclick="closeNewMsgModal()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;"><i class="fas fa-times"></i></button>
             </div>
             <div class="nm-search" style="padding:12px 16px;">
-              <input type="text" id="nmSearch" placeholder="Search by name..." oninput="filterNewMsg(this.value)" style="width:100%; background:#2a3942; border:none; border-radius:8px; padding:10px 16px; color:white; font-family:inherit;">
+              <input type="text" id="nmSearch" placeholder="Search members..." oninput="filterNewMsg(this.value)" style="width:100%; background:#2a3942; border:none; border-radius:8px; padding:10px 16px; color:white; font-family:inherit;">
             </div>
             <div class="nm-list" id="nmList" style="flex:1; overflow-y:auto;"></div>
           </div>
@@ -1370,21 +1653,104 @@
       style.textContent = `
         .nm-item { display: flex; align-items: center; gap: 14px; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid rgba(134,150,160,0.15); }
         .nm-item:hover { background: rgba(255,255,255,0.05); }
-        .nm-avatar { width: 46px; height: 46px; border-radius: 50%; background: #2a3942; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #8696a0; flex-shrink: 0; }
+        .nm-avatar { width: 46px; height: 46px; border-radius: 50%; background: #2a3942; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #8696a0; flex-shrink: 0; overflow:hidden; }
         .nm-name { font-weight: 700; font-size: 15px; color: #e9edef; }
         .nm-role { font-size: 12px; color: #8696a0; }
         .nm-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 12px; color: #8696a0; text-align: center; }
         .ep-emoji { font-size: 23px; cursor: pointer; background: none; border: none; padding: 3px 5px; }
         .ep-emoji:hover { transform: scale(1.35); }
+        #emojiPicker.open { display: flex !important; }
+        /* Help / Contact modals */
+        .vc-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:700; align-items:center; justify-content:center; }
+        .vc-modal.open { display:flex; }
+        .vc-card { width:92%; max-width:520px; background:#1a2530; border-radius:16px; border:1px solid rgba(255,255,255,0.08); overflow:hidden; box-shadow:0 18px 60px rgba(0,0,0,0.55); }
+        .vc-card-head { display:flex; align-items:center; gap:12px; padding:14px 18px; background:#233138; }
+        .vc-card-head h3 { font-size:15px; font-weight:800; margin:0; flex:1; }
+        .vc-close { background:none; border:none; color:#e9edef; font-size:20px; cursor:pointer; padding:6px; }
+        .vc-card-body { padding:16px 18px; color:#e9edef; }
+        .vc-help-list { margin:0; padding-left:18px; color:#8696a0; font-size:13px; line-height:1.7; }
+        .vc-contact-row { display:flex; gap:14px; align-items:center; }
+        .vc-contact-avatar { width:56px; height:56px; border-radius:50%; background:#2a3942; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; color:#8696a0; font-size:22px; }
+        .vc-contact-avatar img { width:100%; height:100%; object-fit:cover; }
+        .vc-contact-name { font-size:16px; font-weight:800; }
+        .vc-contact-meta { color:#8696a0; font-size:12px; margin-top:2px; }
       `;
       document.head.appendChild(style);
 
+      // ── Help + Contact modal markup ───────────────────────────────
+      document.body.insertAdjacentHTML("beforeend", `
+        <div class="vc-modal" id="helpModal" onclick="if(event.target.id==='helpModal') closeHelp()">
+          <div class="vc-card" role="dialog" aria-modal="true" aria-label="Help">
+            <div class="vc-card-head">
+              <h3><i class="fas fa-circle-question" style="margin-right:8px;color:#25d366"></i>Help</h3>
+              <button class="vc-close" onclick="closeHelp()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="vc-card-body">
+              <ul class="vc-help-list">
+                <li>Use <b>Find a member</b> to search all registered users and start a chat.</li>
+                <li>Click a conversation on the left to open it.</li>
+                <li>Press <b>Enter</b> to send, <b>Shift + Enter</b> for a new line.</li>
+                <li>Use the <b>three dots</b> menus for profile/contact info and actions.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="vc-modal" id="contactModal" onclick="if(event.target.id==='contactModal') closeContactInfo()">
+          <div class="vc-card" role="dialog" aria-modal="true" aria-label="Contact info">
+            <div class="vc-card-head">
+              <h3><i class="fas fa-user" style="margin-right:8px;color:#25d366"></i>Contact info</h3>
+              <button class="vc-close" onclick="closeContactInfo()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="vc-card-body">
+              <div class="vc-contact-row">
+                <div class="vc-contact-avatar" id="contactModalAvatar"><i class="fas fa-user"></i></div>
+                <div style="min-width:0">
+                  <div class="vc-contact-name" id="contactModalName">—</div>
+                  <div class="vc-contact-meta" id="contactModalEmail"></div>
+                  <div class="vc-contact-meta" id="contactModalBio"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
+
+      // ── Init on DOM ready ─────────────────────────────────────────
       document.addEventListener("DOMContentLoaded", () => {
-        loadVCUsers();
         buildEmojiPicker();
         updateSendMic();
         document.addEventListener("click", handleGlobalClick);
       });
+    </script>
+
+    <!-- Firebase Compat SDK (needed for firebase.firestore() style API) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+      // Initialize Firebase after compat scripts load
+      const _firebaseConfig = {
+        apiKey:            "AIzaSyC3HO1BY4rw1uVlZnRn4qG3XpxipFzDs0M",
+        authDomain:        "vertex-chamber-993f6.firebaseapp.com",
+        projectId:         "vertex-chamber-993f6",
+        storageBucket:     "vertex-chamber-993f6.firebasestorage.app",
+        messagingSenderId: "950688239086",
+        appId:             "1:950688239086:web:13b11f2581e908dabed2ff",
+      };
+
+      // Only initialize if not already done
+      if (!firebase.apps.length) {
+        firebase.initializeApp(_firebaseConfig);
+      }
+
+      const _db = firebase.firestore();
+      _dbRef     = _db; // Make available to chat functions
+
+      // Load data once DOM + Firebase are both ready
+      (async () => {
+        await loadMyProfile(_db);
+        await loadVCUsers(_db);
+      })();
     </script>
   </body>
 </html>
