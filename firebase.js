@@ -9,7 +9,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore }  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth }       from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey:            "AIzaSyC3HO1BY4rw1uVlZnRn4qG3XpxipFzDs0M",
   authDomain:        "vertex-chamber-993f6.firebaseapp.com",
   databaseURL:       "https://vertex-chamber-993f6-default-rtdb.firebaseio.com",
@@ -20,10 +20,10 @@ const firebaseConfig = {
   measurementId:     "G-4HBWZ7432G"
 };
 
-const app = initializeApp(firebaseConfig);
+export const firebaseApp = initializeApp(firebaseConfig);
 
-export const db   = getFirestore(app);
-export const auth = getAuth(app);
+export const db   = getFirestore(firebaseApp);
+export const auth = getAuth(firebaseApp);
 
 // ── Shared session helpers (used by all pages) ──────────
 export const SESSION_EMAIL_KEY   = "vertex_session_email";

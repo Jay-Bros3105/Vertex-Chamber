@@ -4,8 +4,9 @@
 // - Sets default avatar until user uploads one
 // - Wires the top-right avatar dropdown (Profile / Edit photo / Sign out)
 
-import { db, getSessionEmail, emailToId } from "./firebase.js";
+import { db, getSessionEmail, emailToId, firebaseApp } from "./firebase.js";
 import { doc, getDoc, setDoc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
 const DEFAULT_AVATAR_SVG = encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
@@ -179,6 +180,32 @@ async function loadAndApplyUser() {
     } catch {
       badge.style.display = "none";
     }
+  }
+
+  // Register for real device push notifications (FCM)
+  try {
+    if ("serviceWorker" in navigator) {
+      await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+    }
+    if ("Notification" in window && Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+
+    const vapidKey = window.VERTEX_VAPID_KEY || localStorage.getItem("vertex_vapid_key") || "";
+    if (Notification.permission === "granted" && vapidKey) {
+      const messaging = getMessaging(firebaseApp);
+      const token = await getToken(messaging, { vapidKey });
+      if (token) {
+        await setDoc(userRef, { fcmTokens: { [token]: true } }, { merge: true });
+      }
+      onMessage(messaging, () => {
+        // Foreground push messages are still handled by the browser notification UI.
+      });
+    } else {
+      // If no VAPID key provided, we simply don't register (developer must add key).
+    }
+  } catch {
+    // best-effort
   }
 }
 

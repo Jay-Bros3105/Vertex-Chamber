@@ -371,6 +371,26 @@
         color: var(--text-secondary);
         flex-shrink: 0;
       }
+      .conv-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+      .conv-unread {
+        min-width: 18px;
+        height: 18px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: #ff2e55;
+        color: #fff;
+        font-weight: 900;
+        font-size: 11px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+      }
       .conv-preview {
         font-size: 13px;
         color: var(--text-secondary);
@@ -1450,6 +1470,7 @@
             : (conv.lastMessage || "");
           const timeMs  = lastMsg?.time || conv.lastTime || 0;
           const timeStr = timeMs ? new Date(timeMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+          const unreadN = conv.unreadCount || 0;
 
           const item = document.createElement("div");
           item.className = `conv-item${u.uid === currentConvId ? " active" : ""}`;
@@ -1465,7 +1486,10 @@
             <div class="conv-info">
               <div class="conv-top">
                 <span class="conv-name">${escapeHtml(u.name)}</span>
-                <span class="conv-time">${timeStr}</span>
+                <span class="conv-right">
+                  <span class="conv-time">${timeStr}</span>
+                  <span class="conv-unread" style="${unreadN > 0 ? "display:inline-flex" : "display:none"}">${unreadN > 99 ? "99+" : unreadN}</span>
+                </span>
               </div>
               <div class="conv-preview">${escapeHtml(preview)}</div>
             </div>`;
@@ -1515,8 +1539,74 @@
             currentConvId = uid; // key used in conversations{}
             _currentFirestoreConvDocId = convId;
             subscribeToConversation(_dbRef, convId);
+            await markConversationRead(_dbRef, convId, uid);
           } catch (e) { console.error("selectConversation Firestore error:", e); }
         }
+      }
+
+      async function markConversationRead(db, convDocId, convKey) {
+        try {
+          const snap = await db
+            .collection("conversations").doc(convDocId)
+            .collection("messages")
+            .orderBy("timestamp", "desc")
+            .limit(80)
+            .get();
+          if (snap.empty) return;
+          const batch = db.batch();
+          let touched = 0;
+          snap.forEach((d) => {
+            const m = d.data() || {};
+            if (m.senderId === MY_USER_ID) return;
+            const readBy = Array.isArray(m.readBy) ? m.readBy : [];
+            if (readBy.includes(MY_USER_ID)) return;
+            batch.update(d.ref, { readBy: firebase.firestore.FieldValue.arrayUnion(MY_USER_ID) });
+            touched++;
+          });
+          if (touched) await batch.commit();
+          if (conversations[convKey]) conversations[convKey].unreadCount = 0;
+          renderConvList();
+        } catch {}
+      }
+
+      async function loadUnreadCounts(db) {
+        // Compute unread per conversation for the sidebar
+        const convDocs = [];
+        try {
+          const snap = await db.collection("conversations")
+            .where("participants", "array-contains", MY_USER_ID)
+            .limit(50)
+            .get();
+          snap.forEach((d) => convDocs.push({ id: d.id, data: d.data() || {} }));
+        } catch {
+          return;
+        }
+
+        await Promise.all(convDocs.map(async ({ id, data }) => {
+          const participants = Array.isArray(data.participants) ? data.participants : [];
+          const isGroup = (data.type === "chamber") || (participants.length > 2);
+          const key = isGroup ? ("g_" + id) : (participants.find(p => p !== MY_USER_ID) || null);
+          if (!key || !conversations[key]) return;
+
+          try {
+            const msgSnap = await db
+              .collection("conversations").doc(id)
+              .collection("messages")
+              .orderBy("timestamp", "desc")
+              .limit(60)
+              .get();
+            let unread = 0;
+            msgSnap.forEach((m) => {
+              const d = m.data() || {};
+              if (d.senderId === MY_USER_ID) return;
+              const readBy = Array.isArray(d.readBy) ? d.readBy : [];
+              if (!readBy.includes(MY_USER_ID)) unread++;
+            });
+            conversations[key].unreadCount = unread;
+          } catch {}
+        }));
+
+        renderConvList();
       }
 
       function renderMessages() {
@@ -2244,6 +2334,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="bottom_nav.js"></script>
+    <script src="push_config.js"></script>
     <script>
       // Initialize Firebase after compat scripts load
       const _firebaseConfig = {
@@ -2285,6 +2376,7 @@
 
         await loadMyProfile(_db);
         await loadVCUsers(_db);
+        await loadUnreadCounts(_db);
         const openKey = window.__vc_open_on_ready;
         if (openKey) {
           // If preview doesn't exist yet, create a stub so selectConversation can open it.
