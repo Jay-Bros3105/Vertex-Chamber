@@ -330,8 +330,112 @@ function ensureAdminPanel() {
       Chamber Admin · Pending Requests
     </h3>
     <div id="adminRequests" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <div style="height:1px;background:rgba(255,255,255,0.10);margin:16px 0;"></div>
+    <h3 style="margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+      <i class="fas fa-people-group" style="color:var(--accent-primary)"></i>
+      Team Formation & Invitations
+    </h3>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+      <input id="teamNameInput" class="glass-card" placeholder="Team name (e.g. Build Squad)" style="padding:10px 12px;min-width:220px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:#fff;border-radius:10px;" />
+      <button class="btn btn-primary" id="createTeamBtn"><i class="fas fa-plus"></i> Create Team</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+      <select id="teamSelect" class="glass-card" style="padding:10px 12px;min-width:220px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:#fff;border-radius:10px;">
+        <option value="">Select team…</option>
+      </select>
+      <input id="inviteUserInput" class="glass-card" placeholder="@username or email" style="padding:10px 12px;min-width:220px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:#fff;border-radius:10px;" />
+      <button class="btn btn-secondary" id="inviteTeamBtn"><i class="fas fa-user-plus"></i> Invite Member</button>
+    </div>
+    <div id="teamList" style="display:flex;flex-direction:column;gap:10px;"></div>
   `;
   joinSection.querySelector(".join-content")?.appendChild(wrap);
+}
+
+async function createTeam(chamberId, teamName, creatorId) {
+  const name = String(teamName || "").trim();
+  if (!name) throw new Error("Team name required");
+  const teamId = `team_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+  const teamRef = doc(db, "chambers", chamberId, "teams", teamId);
+  await setDoc(teamRef, {
+    name,
+    chamberId,
+    createdBy: creatorId,
+    createdAt: serverTimestamp(),
+  }, { merge: true });
+  await setDoc(doc(db, "chambers", chamberId, "teams", teamId, "members", creatorId), {
+    userId: creatorId,
+    role: "lead",
+    joinedAt: serverTimestamp(),
+  }, { merge: true });
+  return teamId;
+}
+
+async function inviteToTeam(chamberId, teamId, inviterId, userIdentifier) {
+  const raw = String(userIdentifier || "").trim();
+  if (!raw) throw new Error("Enter @username or email");
+  let userId = null;
+  if (raw.includes("@") && raw.includes(".")) {
+    userId = emailToId(raw.toLowerCase());
+  } else {
+    const uname = raw.replace(/^@/, "");
+    const q = query(collection(db, "users"), where("username", "==", uname), limit(1));
+    const snap = await getDocs(q);
+    if (!snap.empty) userId = snap.docs[0].id;
+  }
+  if (!userId) throw new Error("User not found");
+
+  // Save invitation + notification
+  await setDoc(doc(db, "chambers", chamberId, "teams", teamId, "invites", userId), {
+    teamId,
+    chamberId,
+    invitedUserId: userId,
+    invitedBy: inviterId,
+    status: "pending",
+    createdAt: serverTimestamp(),
+  }, { merge: true });
+
+  await setDoc(doc(collection(db, "notifications")), {
+    userId,
+    read: false,
+    type: "team_invite",
+    title: "Team invitation",
+    body: "You were invited to join a chamber team.",
+    createdAt: serverTimestamp(),
+    meta: { chamberId, teamId, invitedBy: inviterId },
+  }, { merge: true });
+}
+
+async function listTeams(chamberId) {
+  const snap = await getDocs(query(collection(db, "chambers", chamberId, "teams"), orderBy("createdAt", "desc"), limit(50)));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+function renderTeamOptions(selectEl, teams) {
+  if (!selectEl) return;
+  selectEl.innerHTML = `<option value="">Select team…</option>` + teams
+    .map((t) => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.name || t.id)}</option>`)
+    .join("");
+}
+
+function renderTeamsList(container, teams) {
+  if (!container) return;
+  if (!teams.length) {
+    container.innerHTML = `<div style="color:var(--text-secondary);font-size:13px;">No teams yet in this chamber.</div>`;
+    return;
+  }
+  container.innerHTML = teams
+    .map((t) => `
+      <div class="glass-card" style="padding:12px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;">
+        <div style="min-width:0;">
+          <div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(t.name || "Team")}</div>
+          <div style="font-size:12px;color:var(--text-secondary);">${escapeHtml(t.id)}</div>
+        </div>
+        <a href="messages.html?open=${encodeURIComponent("g_chamber_" + (t.chamberId || ""))}" class="btn btn-secondary btn-sm">
+          <i class="fas fa-comments"></i> Discuss
+        </a>
+      </div>
+    `)
+    .join("");
 }
 
 function renderAdminRequests(container, items) {
@@ -397,10 +501,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   const joinNowBtn = document.getElementById("joinNowBtn");
   const adminPanel = document.getElementById("adminPanel");
   const adminRequests = document.getElementById("adminRequests");
+  const createTeamBtn = document.getElementById("createTeamBtn");
+  const inviteTeamBtn = document.getElementById("inviteTeamBtn");
+  const teamNameInput = document.getElementById("teamNameInput");
+  const teamSelect = document.getElementById("teamSelect");
+  const inviteUserInput = document.getElementById("inviteUserInput");
+  const teamList = document.getElementById("teamList");
+  let latestChambers = [];
 
   const chambersQ = query(collection(db, "chambers"), orderBy("name", "asc"));
   onSnapshot(chambersQ, async (snap) => {
     const chambers = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    latestChambers = chambers;
 
     // Determine selected chamber (keep previous if exists)
     if (!selectedChamberId || !chambers.find((c) => c.id === selectedChamberId)) {
@@ -452,6 +564,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           );
           renderAdminRequests(adminRequests, rows);
         });
+
+        const teams = await listTeams(selectedChamberId).catch(() => []);
+        renderTeamOptions(teamSelect, teams);
+        renderTeamsList(teamList, teams);
+      } else {
+        renderTeamOptions(teamSelect, []);
+        renderTeamsList(teamList, []);
       }
     }
   });
@@ -467,7 +586,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const teamChatBtn = e.target.closest("[data-teamchat]");
     if (teamChatBtn) {
       const chamberId = teamChatBtn.getAttribute("data-teamchat");
-      const chamber = (chambers || []).find((c) => c.id === chamberId);
+      const chamber = (latestChambers || []).find((c) => c.id === chamberId);
       await openChamberTeamChat(chamberId, chamber?.name || "Chamber Team Chat", myUserId);
       return;
     }
@@ -499,6 +618,37 @@ document.addEventListener("DOMContentLoaded", async () => {
       const target = deny.getAttribute("data-deny");
       await decideRequest(selectedChamberId, target, myUserId, "rejected");
       toast("Denied.");
+    }
+  });
+
+  createTeamBtn?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (!selectedChamberId) return;
+    const name = teamNameInput?.value || "";
+    try {
+      await createTeam(selectedChamberId, name, myUserId);
+      if (teamNameInput) teamNameInput.value = "";
+      const teams = await listTeams(selectedChamberId).catch(() => []);
+      renderTeamOptions(teamSelect, teams);
+      renderTeamsList(teamList, teams);
+      toast("Team created");
+    } catch (err) {
+      toast(err?.message || "Failed to create team");
+    }
+  });
+
+  inviteTeamBtn?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (!selectedChamberId) return;
+    const teamId = teamSelect?.value || "";
+    const target = inviteUserInput?.value || "";
+    if (!teamId) { toast("Select a team first"); return; }
+    try {
+      await inviteToTeam(selectedChamberId, teamId, myUserId, target);
+      if (inviteUserInput) inviteUserInput.value = "";
+      toast("Invitation sent");
+    } catch (err) {
+      toast(err?.message || "Invite failed");
     }
   });
 });

@@ -198,11 +198,23 @@ async function loadAndApplyUser() {
       if (token) {
         await setDoc(userRef, { fcmTokens: { [token]: true } }, { merge: true });
       }
-      onMessage(messaging, () => {
-        // Foreground push messages are still handled by the browser notification UI.
+      onMessage(messaging, (payload) => {
+        // Foreground popup too (background/closed tab handled by service worker)
+        try {
+          const d = payload?.data || {};
+          const title = payload?.notification?.title || "Vertex Chamber";
+          const body =
+            payload?.notification?.body ||
+            `Hello Vertex Chamber Member (${username || "Member"}), Youve received a message from (${d.senderName || "a member"})`;
+          if (Notification.permission === "granted") {
+            new Notification(title, { body });
+          }
+        } catch {}
       });
     } else {
-      // If no VAPID key provided, we simply don't register (developer must add key).
+      if (!vapidKey) {
+        console.warn("Push disabled: missing window.VERTEX_VAPID_KEY in push_config.js");
+      }
     }
   } catch {
     // best-effort

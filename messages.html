@@ -2093,6 +2093,16 @@
       }
 
       let _storageRef = null;
+      const MAX_INLINE_FILE_BYTES = 700 * 1024;
+
+      function fileToDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(String(r.result || ""));
+          r.onerror = reject;
+          r.readAsDataURL(file);
+        });
+      }
 
       async function handleFileUpload(input, type) {
         const file = input.files[0];
@@ -2163,6 +2173,66 @@
           toast("Sent");
         } catch (e) {
           console.error("handleFileUpload:", e);
+          const msg = String(e?.message || "");
+          const isBucketIssue =
+            msg.includes("no-cost Storage buckets") ||
+            msg.includes("no default bucket") ||
+            msg.includes("storage/unknown");
+
+          // Fallback for projects where Cloud Storage bucket is unavailable in selected region.
+          if (isBucketIssue) {
+            try {
+              if ((file.size || 0) > MAX_INLINE_FILE_BYTES) {
+                toast("Storage bucket unavailable. File too large for fallback.");
+                return;
+              }
+              const dataUrl = await fileToDataUrl(file);
+              const msgType = (type === "image") ? "image" : "file";
+              const previewText = msgType === "image" ? "📷 Photo" : `📎 ${file.name}`;
+              await _dbRef.collection("conversations").doc(convId).collection("messages").doc(clientId).set({
+                conversationId: convId,
+                senderId: MY_USER_ID,
+                receiverId: isGroup ? null : currentConvId,
+                type: msgType,
+                content: "",
+                url: dataUrl,
+                fileName: file.name || null,
+                fileSize: typeof file.size === "number" ? file.size : null,
+                mime: file.type || null,
+                replyTo: replyTarget || null,
+                reactions: {},
+                readBy: [MY_USER_ID],
+                deleted: false,
+                edited: false,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              });
+              await _dbRef.collection("conversations").doc(convId).set({
+                lastMessage: previewText,
+                lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
+                lastSenderId: MY_USER_ID,
+              }, { merge: true });
+              pushMessage({
+                id: clientId,
+                from: "me",
+                type: msgType,
+                content: previewText,
+                url: dataUrl,
+                fileName: file.name || null,
+                fileSize: typeof file.size === "number" ? file.size : null,
+                mime: file.type || null,
+                time: Date.now(),
+                status: "sent",
+                replyTo: replyTarget,
+                reactions: {},
+              });
+              cancelReply();
+              renderConvList();
+              toast("Sent (fallback mode)");
+              return;
+            } catch (fallbackErr) {
+              console.error("fallback upload error:", fallbackErr);
+            }
+          }
           toast("Upload failed");
         }
       }

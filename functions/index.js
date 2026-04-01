@@ -68,6 +68,7 @@ exports.notifyOnNewMessage = onDocumentCreated(
           senderName,
           url: `/messages.html`,
           convId,
+          click_action: "/messages.html",
         },
       }),
     );
