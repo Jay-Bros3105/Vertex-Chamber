@@ -1,8 +1,8 @@
 {
   "name": "Vertex Chamber",
   "short_name": "Vertex",
-  "description": "Collaborate in chambers, workspace, and messages.",
-  "start_url": "/splash.html",
+  "description": "Powered By JSL FastLine.",
+  "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0B0F1A",

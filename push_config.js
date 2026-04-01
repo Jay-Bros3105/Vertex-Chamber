@@ -17,3 +17,58 @@ window.VERTEX_ICE_SERVERS = [
   { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }
 ];
 
+/*
+READY-TO-PASTE TURN BLOCKS (pick one provider)
+Exact format used by this project: window.VERTEX_ICE_SERVERS = [ ... ];
+
+1) Twilio Network Traversal Service
+-----------------------------------
+Server-side (recommended): fetch ICE servers from Twilio API and inject dynamically.
+Static example shape:
+window.VERTEX_ICE_SERVERS = [
+  { urls: ["stun:global.stun.twilio.com:3478"] },
+  {
+    urls: ["turn:global.turn.twilio.com:3478?transport=udp", "turn:global.turn.twilio.com:3478?transport=tcp"],
+    username: "TWILIO_GENERATED_USERNAME",
+    credential: "TWILIO_GENERATED_CREDENTIAL"
+  },
+  {
+    urls: ["turns:global.turn.twilio.com:443?transport=tcp"],
+    username: "TWILIO_GENERATED_USERNAME",
+    credential: "TWILIO_GENERATED_CREDENTIAL"
+  }
+];
+
+2) Nym TURN
+-----------
+window.VERTEX_ICE_SERVERS = [
+  { urls: ["stun:stun.nymtech.net:3478"] },
+  {
+    urls: ["turn:turn.nymtech.net:3478?transport=udp", "turn:turn.nymtech.net:3478?transport=tcp"],
+    username: "YOUR_NYM_USERNAME",
+    credential: "YOUR_NYM_PASSWORD"
+  },
+  {
+    urls: ["turns:turn.nymtech.net:5349?transport=tcp"],
+    username: "YOUR_NYM_USERNAME",
+    credential: "YOUR_NYM_PASSWORD"
+  }
+];
+
+3) Cloudflare Realtime TURN
+---------------------------
+window.VERTEX_ICE_SERVERS = [
+  { urls: ["stun:stun.cloudflare.com:3478"] },
+  {
+    urls: ["turn:turn.cloudflare.com:3478?transport=udp", "turn:turn.cloudflare.com:3478?transport=tcp"],
+    username: "YOUR_CF_TURN_USERNAME",
+    credential: "YOUR_CF_TURN_CREDENTIAL"
+  },
+  {
+    urls: ["turns:turn.cloudflare.com:5349?transport=tcp"],
+    username: "YOUR_CF_TURN_USERNAME",
+    credential: "YOUR_CF_TURN_CREDENTIAL"
+  }
+];
+*/
+
