@@ -2251,9 +2251,39 @@
       let _callIceUnsubs = [];
       let _localStream = null;
       let _remoteStream = null;
+      let _remoteAudioEl = null;
 
       function _stunConfig() {
-        return { iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }] };
+        const configured = Array.isArray(window.VERTEX_ICE_SERVERS) && window.VERTEX_ICE_SERVERS.length
+          ? window.VERTEX_ICE_SERVERS
+          : [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }];
+        return {
+          iceServers: configured,
+          iceCandidatePoolSize: 10,
+          bundlePolicy: "max-bundle",
+          rtcpMuxPolicy: "require",
+        };
+      }
+
+      function applyPcStateHandlers() {
+        if (!_pc) return;
+        _pc.oniceconnectionstatechange = () => {
+          const st = _pc.iceConnectionState || "";
+          if (st === "connected" || st === "completed") setCallStatus("connected");
+          if (st === "disconnected") setCallStatus("connecting");
+          if (st === "failed") {
+            setCallStatus("Connection failed");
+            toast("Call path failed. Add TURN servers in push_config.js for internet-wide calls.");
+          }
+        };
+        _pc.onconnectionstatechange = () => {
+          const st = _pc.connectionState || "";
+          if (st === "connected") setCallStatus("connected");
+          if (st === "failed") {
+            setCallStatus("Connection failed");
+            toast("Call connection failed");
+          }
+        };
       }
 
       async function startVideoCall() { await startCall("video"); }
@@ -2269,11 +2299,14 @@
 
         openCallUi(kind, "calling");
 
-        const constraints = kind === "video" ? { audio: true, video: true } : { audio: true, video: false };
+        const constraints = kind === "video"
+          ? { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: { facingMode: "user" } }
+          : { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false };
         _localStream = await navigator.mediaDevices.getUserMedia(constraints);
         attachLocalStream(_localStream);
 
         _pc = new RTCPeerConnection(_stunConfig());
+        applyPcStateHandlers();
         _remoteStream = new MediaStream();
         attachRemoteStream(_remoteStream);
 
@@ -2352,11 +2385,14 @@
 
         openCallUi(kind, "connecting");
 
-        const constraints = kind === "video" ? { audio: true, video: true } : { audio: true, video: false };
+        const constraints = kind === "video"
+          ? { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: { facingMode: "user" } }
+          : { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false };
         _localStream = await navigator.mediaDevices.getUserMedia(constraints);
         attachLocalStream(_localStream);
 
         _pc = new RTCPeerConnection(_stunConfig());
+        applyPcStateHandlers();
         _remoteStream = new MediaStream();
         attachRemoteStream(_remoteStream);
 
@@ -2451,6 +2487,7 @@
         const rv = document.getElementById("remoteVideo");
         if (lv) lv.srcObject = null;
         if (rv) rv.srcObject = null;
+        if (_remoteAudioEl) _remoteAudioEl.srcObject = null;
       }
 
       function attachLocalStream(stream) {
@@ -2466,6 +2503,14 @@
         if (rv) {
           rv.srcObject = stream;
           rv.play?.().catch(() => {});
+        }
+        if (!_remoteAudioEl) {
+          _remoteAudioEl = document.getElementById("remoteAudio");
+        }
+        if (_remoteAudioEl) {
+          _remoteAudioEl.srcObject = stream;
+          _remoteAudioEl.muted = false;
+          _remoteAudioEl.play?.().catch(() => {});
         }
       }
 
@@ -2785,6 +2830,7 @@
                 <div class="call-stage">
                   <video id="remoteVideo" playsinline autoplay></video>
                   <video id="localVideo" playsinline autoplay></video>
+                  <audio id="remoteAudio" autoplay></audio>
                 </div>
                 <div class="call-accept" id="callAcceptRow">
                   <button class="futur-btn hang" onclick="declineIncomingCall()"><i class="fas fa-phone-slash"></i>&nbsp;Hang Up</button>
