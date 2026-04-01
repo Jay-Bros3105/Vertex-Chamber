@@ -5,7 +5,7 @@
 // - Wires the top-right avatar dropdown (Profile / Edit photo / Sign out)
 
 import { db, getSessionEmail, emailToId, firebaseApp } from "./firebase.js";
-import { doc, getDoc, setDoc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, getDoc, setDoc, collection, query, where, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
 const DEFAULT_AVATAR_SVG = encodeURIComponent(`
@@ -108,6 +108,39 @@ function toggleAvatarMenu() {
   m.style.display = m.style.display === "block" ? "none" : "block";
 }
 
+function ensureIncomingCallBanner() {
+  if (document.getElementById("vcIncomingCallBanner")) return;
+  const wrap = document.createElement("div");
+  wrap.id = "vcIncomingCallBanner";
+  wrap.style.cssText = `
+    position:fixed;right:16px;bottom:92px;z-index:10000;display:none;
+    width:min(92vw,360px);border-radius:18px;padding:14px;
+    background:linear-gradient(140deg, rgba(0,212,255,0.18), rgba(138,43,226,0.18));
+    border:1px solid rgba(255,255,255,0.22);backdrop-filter:blur(12px);
+    box-shadow:0 20px 60px rgba(0,0,0,0.55);
+  `;
+  wrap.innerHTML = `
+    <div style="display:flex;gap:12px;align-items:center;">
+      <div id="vcCallAvatar" style="width:54px;height:54px;border-radius:50%;overflow:hidden;background:#1f2b3d;display:flex;align-items:center;justify-content:center;">
+        <i class="fas fa-user" style="color:#c7d6ff"></i>
+      </div>
+      <div style="min-width:0;flex:1;">
+        <div style="font-weight:900;">Incoming Call</div>
+        <div id="vcCallName" style="font-size:13px;color:#d9e5ff;">Member</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
+      <button id="vcDeclineCallBtn" style="border:none;border-radius:999px;padding:10px 14px;background:#ff2e55;color:white;font-weight:800;cursor:pointer;">
+        Hang Up
+      </button>
+      <button id="vcAcceptCallBtn" style="border:none;border-radius:999px;padding:10px 14px;background:linear-gradient(135deg,#00d4ff,#7f5cff);color:white;font-weight:800;cursor:pointer;">
+        Accept
+      </button>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+}
+
 async function loadAndApplyUser() {
   const email = getSessionEmail();
   if (!email) {
@@ -202,12 +235,35 @@ async function loadAndApplyUser() {
         // Foreground popup too (background/closed tab handled by service worker)
         try {
           const d = payload?.data || {};
-          const title = payload?.notification?.title || "Vertex Chamber";
-          const body =
-            payload?.notification?.body ||
-            `Hello Vertex Chamber Member (${username || "Member"}), Youve received a message from (${d.senderName || "a member"})`;
+          const isCall = d.type === "call";
+          const title = payload?.notification?.title || (isCall ? "Incoming Call" : "Vertex Chamber");
+          const body = payload?.notification?.body || (
+            isCall
+              ? `${d.callerName || "Member"} is calling you now.`
+              : `Hello Vertex Chamber Member (${username || "Member"}), Youve received a message from (${d.senderName || "a member"})`
+          );
           if (Notification.permission === "granted") {
-            new Notification(title, { body });
+            new Notification(title, { body, requireInteraction: !!isCall });
+          }
+          if (isCall) {
+            ensureIncomingCallBanner();
+            const b = document.getElementById("vcIncomingCallBanner");
+            const n = document.getElementById("vcCallName");
+            const a = document.getElementById("vcCallAvatar");
+            if (n) n.textContent = d.callerName || "Member";
+            if (a) {
+              if (d.callerAvatar) a.innerHTML = `<img src="${d.callerAvatar}" alt="caller" style="width:100%;height:100%;object-fit:cover;">`;
+              else a.innerHTML = `<i class="fas fa-user" style="color:#c7d6ff"></i>`;
+            }
+            const callId = d.callId || "";
+            const accept = document.getElementById("vcAcceptCallBtn");
+            const decline = document.getElementById("vcDeclineCallBtn");
+            if (accept) accept.onclick = () => { window.location.href = `messages.html?incomingCall=${encodeURIComponent(callId)}`; };
+            if (decline) decline.onclick = async () => {
+              try { await updateDoc(doc(db, "calls", callId), { status: "declined" }); } catch {}
+              if (b) b.style.display = "none";
+            };
+            if (b) b.style.display = "block";
           }
         } catch {}
       });
@@ -219,6 +275,45 @@ async function loadAndApplyUser() {
   } catch {
     // best-effort
   }
+
+  // In-app ringing for users on other tabs/pages
+  try {
+    ensureIncomingCallBanner();
+    const incomingQ = query(collection(db, "calls"), where("calleeId", "==", userId), where("status", "==", "ringing"));
+    onSnapshot(incomingQ, async (snap) => {
+      for (const ch of snap.docChanges()) {
+        if (ch.type !== "added") continue;
+        const d = ch.doc.data() || {};
+        const callId = ch.doc.id;
+        let callerName = d.callerId || "Member";
+        let callerAvatar = "";
+        try {
+          const c = await getDoc(doc(db, "users", d.callerId || ""));
+          if (c.exists()) {
+            const cd = c.data() || {};
+            callerName = cd.username || callerName;
+            callerAvatar = cd.avatarBase64 || "";
+          }
+        } catch {}
+        const b = document.getElementById("vcIncomingCallBanner");
+        const n = document.getElementById("vcCallName");
+        const a = document.getElementById("vcCallAvatar");
+        if (n) n.textContent = callerName;
+        if (a) {
+          if (callerAvatar) a.innerHTML = `<img src="${callerAvatar}" alt="caller" style="width:100%;height:100%;object-fit:cover;">`;
+          else a.innerHTML = `<i class="fas fa-user" style="color:#c7d6ff"></i>`;
+        }
+        const accept = document.getElementById("vcAcceptCallBtn");
+        const decline = document.getElementById("vcDeclineCallBtn");
+        if (accept) accept.onclick = () => { window.location.href = `messages.html?incomingCall=${encodeURIComponent(callId)}`; };
+        if (decline) decline.onclick = async () => {
+          try { await updateDoc(doc(db, "calls", callId), { status: "declined" }); } catch {}
+          if (b) b.style.display = "none";
+        };
+        if (b) b.style.display = "block";
+      }
+    });
+  } catch {}
 }
 
 function wireAvatarButton() {

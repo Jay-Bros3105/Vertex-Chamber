@@ -2425,6 +2425,11 @@
         m.setAttribute("data-kind", kind);
         document.getElementById("callKind").textContent = kind === "video" ? "Video call" : "Voice call";
         document.getElementById("callPeer").textContent = currentContact?.name || "Member";
+        const a = document.getElementById("callCenterAvatar");
+        if (a) {
+          if (currentContact?.avatar) a.innerHTML = `<img src="${currentContact.avatar}" alt="peer">`;
+          else a.innerHTML = `<i class="fas fa-user"></i>`;
+        }
         setCallStatus(state);
         document.getElementById("callAcceptRow").style.display = "none";
       }
@@ -2467,9 +2472,15 @@
         if (!m) return;
         m.classList.add("open");
         const callerId = data.callerId || "";
-        const callerName = VC_USERS.find(u => u.uid === callerId)?.name || callerId || "Member";
+        const caller = VC_USERS.find(u => u.uid === callerId) || null;
+        const callerName = caller?.name || data.callerName || callerId || "Member";
         document.getElementById("callPeer").textContent = callerName;
         document.getElementById("callKind").textContent = (data.kind === "video") ? "Incoming video call" : "Incoming voice call";
+        const a = document.getElementById("callCenterAvatar");
+        if (a) {
+          if (caller?.avatar || data.callerAvatar) a.innerHTML = `<img src="${caller?.avatar || data.callerAvatar}" alt="caller">`;
+          else a.innerHTML = `<i class="fas fa-user"></i>`;
+        }
         setCallStatus("ringing");
         document.getElementById("callAcceptRow").style.display = "flex";
       }
@@ -2681,10 +2692,37 @@
       #remoteVideo { height: 220px; }
       #localVideo  { width: 120px; height: 120px; position:absolute; right:18px; bottom:18px; }
       .call-stage { position:relative; }
-      .call-actions { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
-      .call-accept { display:none; gap:10px; justify-content:flex-end; }
-      .btn-danger { background:#ff2e55; border:none; color:#fff; }
-      .btn-danger:hover { filter: brightness(1.06); }
+      .call-actions { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+      .call-accept { display:none; gap:12px; justify-content:center; }
+      .call-avatar-center {
+        width: 92px; height: 92px; margin: 2px auto 8px;
+        border-radius: 50%; overflow: hidden;
+        border: 2px solid rgba(255,255,255,0.28);
+        box-shadow: 0 0 0 6px rgba(0,212,255,0.12), 0 14px 36px rgba(0,0,0,0.45);
+        background: linear-gradient(135deg, rgba(0,212,255,0.20), rgba(138,43,226,0.20));
+        display:flex; align-items:center; justify-content:center;
+      }
+      .call-avatar-center img { width:100%; height:100%; object-fit:cover; }
+      .futur-btn {
+        border: none;
+        border-radius: 999px;
+        padding: 11px 18px;
+        color: #fff;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .futur-btn.accept {
+        background: linear-gradient(135deg, #00d4ff, #7f5cff);
+        box-shadow: 0 12px 28px rgba(0,212,255,0.28);
+      }
+      .futur-btn.hang {
+        background: linear-gradient(135deg, #ff2e55, #ff7b3d);
+        box-shadow: 0 12px 28px rgba(255,46,85,0.24);
+      }
       `;
       document.head.appendChild(style);
 
@@ -2737,6 +2775,7 @@
             </div>
             <div class="vc-card-body">
               <div class="call-wrap">
+                <div class="call-avatar-center" id="callCenterAvatar"><i class="fas fa-user"></i></div>
                 <div style="display:flex;flex-direction:column;gap:4px;">
                   <div style="font-weight:900;font-size:16px;" id="callPeer">—</div>
                   <div style="color:#8696a0;font-size:12px;" id="callStatus">—</div>
@@ -2746,11 +2785,11 @@
                   <video id="localVideo" playsinline autoplay></video>
                 </div>
                 <div class="call-accept" id="callAcceptRow">
-                  <button class="btn btn-secondary" onclick="declineIncomingCall()"><i class="fas fa-xmark"></i>&nbsp;Decline</button>
-                  <button class="btn btn-primary" onclick="acceptIncomingCall()"><i class="fas fa-check"></i>&nbsp;Accept</button>
+                  <button class="futur-btn hang" onclick="declineIncomingCall()"><i class="fas fa-phone-slash"></i>&nbsp;Hang Up</button>
+                  <button class="futur-btn accept" onclick="acceptIncomingCall()"><i class="fas fa-phone"></i>&nbsp;Accept</button>
                 </div>
                 <div class="call-actions">
-                  <button class="btn btn-secondary" onclick="hangUpCall()"><i class="fas fa-phone-slash"></i>&nbsp;Hang up</button>
+                  <button class="futur-btn hang" onclick="hangUpCall()"><i class="fas fa-phone-slash"></i>&nbsp;Hang Up</button>
                 </div>
               </div>
             </div>
@@ -2857,6 +2896,16 @@
         await loadVCUsers(_db);
         await loadUnreadCounts(_db);
         watchIncomingCalls();
+        try {
+          const incomingCallId = new URLSearchParams(window.location.search).get("incomingCall");
+          if (incomingCallId) {
+            const callSnap = await _db.collection("calls").doc(incomingCallId).get();
+            if (callSnap.exists) {
+              _callDocId = incomingCallId;
+              openIncomingCallUi({ id: incomingCallId, ...callSnap.data() });
+            }
+          }
+        } catch {}
         const openKey = window.__vc_open_on_ready;
         if (openKey) {
           // If preview doesn't exist yet, create a stub so selectConversation can open it.

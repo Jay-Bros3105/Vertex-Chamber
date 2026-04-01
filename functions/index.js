@@ -1,4 +1,4 @@
-const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onDocumentCreated, onDocumentWritten } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
@@ -89,6 +89,81 @@ exports.notifyOnNewMessage = onDocumentCreated(
         invalid.map(async ({ token, uid }) => {
           try {
             await admin.firestore().collection("users").doc(uid).set(
+              { fcmTokens: { [token]: admin.firestore.FieldValue.delete() } },
+              { merge: true },
+            );
+          } catch {}
+        }),
+      );
+    }
+  },
+);
+
+exports.notifyOnIncomingCall = onDocumentWritten(
+  "calls/{callId}",
+  async (event) => {
+    const after = event.data?.after?.data() || null;
+    const before = event.data?.before?.data() || null;
+    if (!after) return;
+    if (after.status !== "ringing") return;
+    if (before && before.status === "ringing") return; // avoid duplicate ringing pushes
+
+    const callId = event.params.callId;
+    const calleeId = after.calleeId || null;
+    const callerId = after.callerId || null;
+    const kind = after.kind || "audio";
+    if (!calleeId || !callerId) return;
+
+    const [calleeSnap, callerSnap] = await Promise.all([
+      admin.firestore().collection("users").doc(calleeId).get().catch(() => null),
+      admin.firestore().collection("users").doc(callerId).get().catch(() => null),
+    ]);
+    if (!calleeSnap || !calleeSnap.exists) return;
+
+    const callee = calleeSnap.data() || {};
+    const caller = (callerSnap && callerSnap.exists) ? (callerSnap.data() || {}) : {};
+    const callerName = caller.username || "Member";
+    const callerAvatar = caller.avatarBase64 || "";
+    const calleeName = callee.username || "Vertex Chamber Member";
+    const tMap = callee.fcmTokens || {};
+    const tokens = Object.keys(tMap);
+    if (!tokens.length) return;
+
+    const title = kind === "video" ? "Incoming Video Call" : "Incoming Voice Call";
+    const body = `Hello Vertex Chamber Member (${calleeName}), ${callerName} is calling you now.`;
+    const url = `/messages.html?incomingCall=${encodeURIComponent(callId)}`;
+
+    const sends = tokens.map((token) =>
+      admin.messaging().send({
+        token,
+        notification: { title, body },
+        data: {
+          type: "call",
+          callId,
+          kind,
+          callerId,
+          callerName,
+          callerAvatar,
+          url,
+          click_action: url,
+        },
+      }),
+    );
+
+    const results = await Promise.allSettled(sends);
+    const invalid = [];
+    results.forEach((r, i) => {
+      if (r.status !== "rejected") return;
+      const code = r.reason?.errorInfo?.code || r.reason?.code || "";
+      if (code.includes("registration-token-not-registered") || code.includes("invalid-argument")) {
+        invalid.push(tokens[i]);
+      }
+    });
+    if (invalid.length) {
+      await Promise.all(
+        invalid.map(async (token) => {
+          try {
+            await admin.firestore().collection("users").doc(calleeId).set(
               { fcmTokens: { [token]: admin.firestore.FieldValue.delete() } },
               { merge: true },
             );
