@@ -218,7 +218,8 @@ async function loadAndApplyUser() {
   // Register for real device push notifications (FCM)
   try {
     if ("serviceWorker" in navigator) {
-      await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+      const swUrl = new URL("firebase-messaging-sw.js", import.meta.url).href;
+      await navigator.serviceWorker.register(swUrl);
     }
     if ("Notification" in window && Notification.permission === "default") {
       await Notification.requestPermission();
