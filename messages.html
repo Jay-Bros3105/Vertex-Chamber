@@ -1414,6 +1414,10 @@
           from:    fromMe ? "me" : d.senderId,
           type:    d.type    || "text",
           content: d.deleted ? "This message was deleted" : (d.content || ""),
+          url:     d.url || null,
+          fileName: d.fileName || null,
+          fileSize: d.fileSize || null,
+          mime:    d.mime || null,
           time:    d.timestamp?.toMillis?.() || Date.now(),
           status:  isRead ? "read" : "sent",
           edited:  d.edited  || false,
@@ -1648,6 +1652,30 @@
         if (msg.type === "text") {
           content = escapeHtml(msg.content);
           if (msg.edited) content += ` <span class="edited-tag">(edited)</span>`;
+        } else if (msg.type === "image") {
+          const safeUrl = msg.url ? escapeHtml(msg.url) : "";
+          content = safeUrl
+            ? `<a href="${safeUrl}" target="_blank" rel="noopener" style="display:block">
+                 <img src="${safeUrl}" alt="image" style="max-width:240px;width:100%;border-radius:10px;display:block" />
+               </a>`
+            : `<span style="color:rgba(255,255,255,0.7)">[image unavailable]</span>`;
+        } else if (msg.type === "file") {
+          const safeUrl = msg.url ? escapeHtml(msg.url) : "";
+          const name = escapeHtml(msg.fileName || "file");
+          const size = typeof msg.fileSize === "number"
+            ? `${Math.max(1, Math.round(msg.fileSize / 1024))} KB`
+            : "";
+          content = `
+            <div style="display:flex;align-items:center;gap:10px;min-width:200px;max-width:280px;">
+              <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-file"></i>
+              </div>
+              <div style="min-width:0;flex:1;">
+                <div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.55);">${escapeHtml(size)}</div>
+              </div>
+              ${safeUrl ? `<a class="btn btn-secondary" style="padding:8px 10px;border-radius:12px;font-size:12px;" href="${safeUrl}" target="_blank" rel="noopener">Open</a>` : ``}
+            </div>`;
         }
 
         const ticks  = isOut ? `<span class="ticks${msg.status === "read" ? " read" : ""}"><i class="fas fa-check-double"></i></span>` : "";
@@ -2064,16 +2092,318 @@
         inp.focus();
       }
 
-      function handleFileUpload(input, type) {
+      let _storageRef = null;
+
+      async function handleFileUpload(input, type) {
         const file = input.files[0];
-        if (!file || !currentConvId) return;
-        toast(`Uploaded: ${file.name}`);
         input.value = "";
+        if (!file || !currentConvId || !_dbRef) return;
+        if (!_storageRef) { toast("Storage not ready"); return; }
+
+        const isGroup = !!(currentContact && currentContact.isGroup);
+        const convId = isGroup
+          ? (_currentFirestoreConvDocId || currentContact.groupId || String(currentConvId).replace(/^g_/, ""))
+          : await getOrCreateConvId(_dbRef, MY_USER_ID, currentConvId);
+
+        const clientId = `msg_${Date.now()}_${MY_USER_ID}`;
+        const pathSafeName = String(file.name || "file").replace(/[^\w.\-]+/g, "_").slice(0, 120);
+        const objPath = `uploads/${convId}/${clientId}_${pathSafeName}`;
+
+        toast("Uploading…");
+        try {
+          const ref = _storageRef.ref().child(objPath);
+          const snap = await ref.put(file, { contentType: file.type || undefined });
+          const url = await snap.ref.getDownloadURL();
+
+          const msgType = (type === "image") ? "image" : "file";
+          const previewText = msgType === "image" ? "📷 Photo" : `📎 ${file.name}`;
+
+          // optimistic local message
+          pushMessage({
+            id: clientId,
+            from: "me",
+            type: msgType,
+            content: previewText,
+            url,
+            fileName: file.name || null,
+            fileSize: typeof file.size === "number" ? file.size : null,
+            mime: file.type || null,
+            time: Date.now(),
+            status: "sent",
+            replyTo: replyTarget,
+            reactions: {},
+          });
+          cancelReply();
+          renderConvList();
+
+          // persist
+          await _dbRef.collection("conversations").doc(convId).collection("messages").doc(clientId).set({
+            conversationId: convId,
+            senderId: MY_USER_ID,
+            receiverId: isGroup ? null : currentConvId,
+            type: msgType,
+            content: "",
+            url,
+            fileName: file.name || null,
+            fileSize: typeof file.size === "number" ? file.size : null,
+            mime: file.type || null,
+            replyTo: replyTarget || null,
+            reactions: {},
+            readBy: [MY_USER_ID],
+            deleted: false,
+            edited: false,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          await _dbRef.collection("conversations").doc(convId).set({
+            lastMessage: previewText,
+            lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
+            lastSenderId: MY_USER_ID,
+          }, { merge: true });
+
+          toast("Sent");
+        } catch (e) {
+          console.error("handleFileUpload:", e);
+          toast("Upload failed");
+        }
       }
 
-      function toggleRecord()     { toast("Voice recording — coming soon"); }
-      function startVideoCall()   { toast("Video call — coming soon"); }
-      function startVoiceCall()   { toast("Voice call — coming soon"); }
+      // ── Calls (WebRTC + Firestore signaling) ──────────────────────
+      let _pc = null;
+      let _callDocId = null;
+      let _callUnsub = null;
+      let _callIceUnsubs = [];
+      let _localStream = null;
+      let _remoteStream = null;
+
+      function _stunConfig() {
+        return { iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }] };
+      }
+
+      async function startVideoCall() { await startCall("video"); }
+      async function startVoiceCall() { await startCall("audio"); }
+
+      async function startCall(kind) {
+        if (!currentConvId || !_dbRef) return;
+        if (currentContact?.isGroup) { toast("Calls for groups coming soon"); return; }
+        const calleeId = currentConvId;
+        const convId = await getOrCreateConvId(_dbRef, MY_USER_ID, calleeId);
+        const callId = `call_${Date.now()}_${MY_USER_ID}`;
+        _callDocId = callId;
+
+        openCallUi(kind, "calling");
+
+        const constraints = kind === "video" ? { audio: true, video: true } : { audio: true, video: false };
+        _localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        attachLocalStream(_localStream);
+
+        _pc = new RTCPeerConnection(_stunConfig());
+        _remoteStream = new MediaStream();
+        attachRemoteStream(_remoteStream);
+
+        _localStream.getTracks().forEach((t) => _pc.addTrack(t, _localStream));
+        _pc.ontrack = (e) => e.streams[0].getTracks().forEach((t) => _remoteStream.addTrack(t));
+
+        const callRef = _dbRef.collection("calls").doc(callId);
+        const offerCandidates = callRef.collection("offerCandidates");
+        const answerCandidates = callRef.collection("answerCandidates");
+
+        _pc.onicecandidate = (e) => { if (e.candidate) offerCandidates.add(e.candidate.toJSON()); };
+
+        const offer = await _pc.createOffer();
+        await _pc.setLocalDescription(offer);
+
+        await callRef.set({
+          convId,
+          kind,
+          status: "ringing",
+          callerId: MY_USER_ID,
+          calleeId,
+          offer: { type: offer.type, sdp: offer.sdp },
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        _callUnsub = callRef.onSnapshot(async (snap) => {
+          const data = snap.data();
+          if (!data) return;
+          if (data.status === "ended" || data.status === "declined") {
+            toast(data.status === "declined" ? "Call declined" : "Call ended");
+            endCallUi();
+            await cleanupCall();
+            return;
+          }
+          if (data.answer && !_pc.currentRemoteDescription) {
+            await _pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+            setCallStatus("connected");
+          }
+        });
+
+        _callIceUnsubs.push(answerCandidates.onSnapshot((snap) => {
+          snap.docChanges().forEach((c) => {
+            if (c.type === "added") {
+              _pc.addIceCandidate(new RTCIceCandidate(c.doc.data())).catch(() => {});
+            }
+          });
+        }));
+      }
+
+      function watchIncomingCalls() {
+        if (!_dbRef) return;
+        // Listen for incoming ringing calls
+        _dbRef.collection("calls")
+          .where("calleeId", "==", MY_USER_ID)
+          .where("status", "==", "ringing")
+          .onSnapshot((snap) => {
+            snap.docChanges().forEach((ch) => {
+              if (ch.type !== "added") return;
+              const callId = ch.doc.id;
+              const data = ch.doc.data() || {};
+              // If already in a call UI, ignore additional
+              if (_callDocId) return;
+              _callDocId = callId;
+              openIncomingCallUi(data);
+            });
+          });
+      }
+
+      async function acceptIncomingCall() {
+        if (!_callDocId || !_dbRef) return;
+        const callRef = _dbRef.collection("calls").doc(_callDocId);
+        const snap = await callRef.get();
+        if (!snap.exists) return;
+        const data = snap.data() || {};
+        const kind = data.kind || "audio";
+
+        openCallUi(kind, "connecting");
+
+        const constraints = kind === "video" ? { audio: true, video: true } : { audio: true, video: false };
+        _localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        attachLocalStream(_localStream);
+
+        _pc = new RTCPeerConnection(_stunConfig());
+        _remoteStream = new MediaStream();
+        attachRemoteStream(_remoteStream);
+
+        _localStream.getTracks().forEach((t) => _pc.addTrack(t, _localStream));
+        _pc.ontrack = (e) => e.streams[0].getTracks().forEach((t) => _remoteStream.addTrack(t));
+
+        const offerCandidates = callRef.collection("offerCandidates");
+        const answerCandidates = callRef.collection("answerCandidates");
+        _pc.onicecandidate = (e) => { if (e.candidate) answerCandidates.add(e.candidate.toJSON()); };
+
+        await _pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+        const answer = await _pc.createAnswer();
+        await _pc.setLocalDescription(answer);
+        await callRef.update({ answer: { type: answer.type, sdp: answer.sdp }, status: "active" });
+        setCallStatus("connected");
+
+        _callIceUnsubs.push(offerCandidates.onSnapshot((snap) => {
+          snap.docChanges().forEach((c) => {
+            if (c.type === "added") {
+              _pc.addIceCandidate(new RTCIceCandidate(c.doc.data())).catch(() => {});
+            }
+          });
+        }));
+
+        _callUnsub = callRef.onSnapshot(async (s) => {
+          const d = s.data() || {};
+          if (d.status === "ended") {
+            toast("Call ended");
+            endCallUi();
+            await cleanupCall();
+          }
+        });
+      }
+
+      async function declineIncomingCall() {
+        if (!_callDocId || !_dbRef) return;
+        try { await _dbRef.collection("calls").doc(_callDocId).update({ status: "declined" }); } catch {}
+        closeIncomingCallUi();
+        _callDocId = null;
+      }
+
+      async function hangUpCall() {
+        if (_callDocId && _dbRef) {
+          try { await _dbRef.collection("calls").doc(_callDocId).update({ status: "ended" }); } catch {}
+        }
+        endCallUi();
+        await cleanupCall();
+      }
+
+      async function cleanupCall() {
+        try { _callUnsub && _callUnsub(); } catch {}
+        _callUnsub = null;
+        _callIceUnsubs.forEach((u) => { try { u(); } catch {} });
+        _callIceUnsubs = [];
+        try { _pc && _pc.close(); } catch {}
+        _pc = null;
+        try { _localStream && _localStream.getTracks().forEach((t) => t.stop()); } catch {}
+        _localStream = null;
+        _remoteStream = null;
+        _callDocId = null;
+      }
+
+      function openCallUi(kind, state) {
+        closeAllDropdowns();
+        const m = document.getElementById("callModal");
+        if (!m) return;
+        m.classList.add("open");
+        m.setAttribute("data-kind", kind);
+        document.getElementById("callKind").textContent = kind === "video" ? "Video call" : "Voice call";
+        document.getElementById("callPeer").textContent = currentContact?.name || "Member";
+        setCallStatus(state);
+        document.getElementById("callAcceptRow").style.display = "none";
+      }
+
+      function setCallStatus(state) {
+        const el = document.getElementById("callStatus");
+        if (!el) return;
+        const map = { calling: "Calling…", ringing: "Ringing…", connecting: "Connecting…", connected: "Connected" };
+        el.textContent = map[state] || state;
+      }
+
+      function endCallUi() {
+        const m = document.getElementById("callModal");
+        m?.classList.remove("open");
+        closeIncomingCallUi();
+        const lv = document.getElementById("localVideo");
+        const rv = document.getElementById("remoteVideo");
+        if (lv) lv.srcObject = null;
+        if (rv) rv.srcObject = null;
+      }
+
+      function attachLocalStream(stream) {
+        const lv = document.getElementById("localVideo");
+        if (lv) {
+          lv.srcObject = stream;
+          lv.muted = true;
+          lv.play?.().catch(() => {});
+        }
+      }
+      function attachRemoteStream(stream) {
+        const rv = document.getElementById("remoteVideo");
+        if (rv) {
+          rv.srcObject = stream;
+          rv.play?.().catch(() => {});
+        }
+      }
+
+      function openIncomingCallUi(data) {
+        const m = document.getElementById("callModal");
+        if (!m) return;
+        m.classList.add("open");
+        const callerId = data.callerId || "";
+        const callerName = VC_USERS.find(u => u.uid === callerId)?.name || callerId || "Member";
+        document.getElementById("callPeer").textContent = callerName;
+        document.getElementById("callKind").textContent = (data.kind === "video") ? "Incoming video call" : "Incoming voice call";
+        setCallStatus("ringing");
+        document.getElementById("callAcceptRow").style.display = "flex";
+      }
+      function closeIncomingCallUi() {
+        const row = document.getElementById("callAcceptRow");
+        if (row) row.style.display = "none";
+      }
+
+      function toggleRecord() { toast("Voice note recording — next"); }
 
       function openCurrentProfile() {
         if (currentContact) openProfile(currentContact.uid);
@@ -2239,6 +2569,17 @@
         .vc-contact-avatar img { width:100%; height:100%; object-fit:cover; }
         .vc-contact-name { font-size:16px; font-weight:800; }
         .vc-contact-meta { color:#8696a0; font-size:12px; margin-top:2px; }
+      /* Call UI */
+      .call-wrap { display:flex; flex-direction:column; gap:12px; }
+      .call-videos { display:flex; gap:10px; }
+      .call-videos video { background:#0b141a; border-radius:14px; border:1px solid rgba(255,255,255,0.10); width:100%; }
+      #remoteVideo { height: 220px; }
+      #localVideo  { width: 120px; height: 120px; position:absolute; right:18px; bottom:18px; }
+      .call-stage { position:relative; }
+      .call-actions { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+      .call-accept { display:none; gap:10px; justify-content:flex-end; }
+      .btn-danger { background:#ff2e55; border:none; color:#fff; }
+      .btn-danger:hover { filter: brightness(1.06); }
       `;
       document.head.appendChild(style);
 
@@ -2274,6 +2615,37 @@
                   <div class="vc-contact-name" id="contactModalName">—</div>
                   <div class="vc-contact-meta" id="contactModalEmail"></div>
                   <div class="vc-contact-meta" id="contactModalBio"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
+
+      // Call modal
+      document.body.insertAdjacentHTML("beforeend", `
+        <div class="vc-modal" id="callModal" onclick="if(event.target.id==='callModal') hangUpCall()">
+          <div class="vc-card" role="dialog" aria-modal="true" aria-label="Call">
+            <div class="vc-card-head">
+              <h3><i class="fas fa-phone" style="margin-right:8px;color:#25d366"></i><span id="callKind">Call</span></h3>
+              <button class="vc-close" onclick="hangUpCall()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="vc-card-body">
+              <div class="call-wrap">
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <div style="font-weight:900;font-size:16px;" id="callPeer">—</div>
+                  <div style="color:#8696a0;font-size:12px;" id="callStatus">—</div>
+                </div>
+                <div class="call-stage">
+                  <video id="remoteVideo" playsinline autoplay></video>
+                  <video id="localVideo" playsinline autoplay></video>
+                </div>
+                <div class="call-accept" id="callAcceptRow">
+                  <button class="btn btn-secondary" onclick="declineIncomingCall()"><i class="fas fa-xmark"></i>&nbsp;Decline</button>
+                  <button class="btn btn-primary" onclick="acceptIncomingCall()"><i class="fas fa-check"></i>&nbsp;Accept</button>
+                </div>
+                <div class="call-actions">
+                  <button class="btn btn-secondary" onclick="hangUpCall()"><i class="fas fa-phone-slash"></i>&nbsp;Hang up</button>
                 </div>
               </div>
             </div>
@@ -2333,6 +2705,7 @@
     <!-- Firebase Compat SDK (needed for firebase.firestore() style API) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <script src="bottom_nav.js"></script>
     <script src="push_config.js"></script>
     <script>
@@ -2353,6 +2726,7 @@
 
       const _db = firebase.firestore();
       _dbRef     = _db; // Make available to chat functions
+      _storageRef = firebase.storage();
 
       // Load data once DOM + Firebase are both ready
       (async () => {
@@ -2377,6 +2751,7 @@
         await loadMyProfile(_db);
         await loadVCUsers(_db);
         await loadUnreadCounts(_db);
+        watchIncomingCalls();
         const openKey = window.__vc_open_on_ready;
         if (openKey) {
           // If preview doesn't exist yet, create a stub so selectConversation can open it.
