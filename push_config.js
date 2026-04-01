@@ -4,5 +4,5 @@
 //
 // Example:
 // window.VERTEX_VAPID_KEY = "BExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-window.VERTEX_VAPID_KEY = "";
+window.VERTEX_VAPID_KEY = "BJT9eL3aF6ZduqPtf4PnlMg7VdaU6P-sj1uVvtXyKy1theLKn8cDv4Oy1f7_dpvmKMocPgMvr9HbJE9j3SzdrnI";
 
