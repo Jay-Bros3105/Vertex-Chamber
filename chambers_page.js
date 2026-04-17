@@ -329,6 +329,9 @@ function ensureAdminPanel() {
       <i class="fas fa-shield-halved" style="color:var(--accent-primary)"></i>
       Chamber Admin · Pending Requests
     </h3>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <a href="admin.html" class="btn btn-secondary btn-sm"><i class="fas fa-gauge-high"></i> Open Admin Dashboard</a>
+    </div>
     <div id="adminRequests" style="display:flex;flex-direction:column;gap:10px;"></div>
     <div style="height:1px;background:rgba(255,255,255,0.10);margin:16px 0;"></div>
     <h3 style="margin-bottom:12px;display:flex;align-items:center;gap:10px;">

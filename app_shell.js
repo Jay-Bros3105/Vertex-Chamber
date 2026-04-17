@@ -159,6 +159,11 @@ async function loadAndApplyUser() {
     const snap = await getDoc(userRef);
     if (snap.exists()) {
       const d = snap.data();
+      if (d.isBanned === true) {
+        alert("Your account has been restricted by administrators.");
+        signOut();
+        return;
+      }
       avatar = d.avatarBase64 || null;
       username = d.username || null;
     } else {

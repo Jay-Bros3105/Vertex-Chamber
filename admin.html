@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0B0F1A" />
+    <link rel="manifest" href="manifest.json" />
+    <title>Admin Dashboard | Vertex Chamber</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+      .admin-wrap { padding: 110px 0 90px; }
+      .admin-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-bottom:16px; }
+      .admin-card { padding:16px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); }
+      .admin-label { color:var(--text-secondary); font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
+      .admin-value { font-size:30px; font-weight:900; margin-top:8px; }
+      .admin-panel { padding:16px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); margin-top:12px; }
+      .admin-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.08); }
+      .admin-row:last-child { border-bottom:none; }
+      .admin-name { font-weight:800; }
+      .admin-meta { color:var(--text-secondary); font-size:12px; }
+      .pill-ban { padding:4px 10px; border-radius:999px; font-size:11px; font-weight:900; }
+      .pill-ban.ok { background:rgba(0,255,179,.14); color:#00ffb3; border:1px solid rgba(0,255,179,.35); }
+      .pill-ban.bad { background:rgba(255,77,109,.14); color:#ff4d6d; border:1px solid rgba(255,77,109,.35); }
+      #adminDenied { display:none; margin-top:120px; text-align:center; }
+    </style>
+  </head>
+  <body>
+    <canvas id="particles"></canvas>
+    <header>
+      <div class="container nav-container">
+        <div class="logo"><div class="logo-icon"><i class="fas fa-cube"></i></div><span class="gradient-text">Vertex Chamber</span></div>
+        <nav class="main-nav"><ul><li><a href="splash.html"><i class="fas fa-home"></i> Home</a></li><li><a href="chambers.html"><i class="fas fa-door-closed"></i> Chambers</a></li><li><a href="admin.html" class="active"><i class="fas fa-shield"></i> Admin</a></li></ul></nav>
+        <div class="user-menu">
+          <button class="user-avatar" id="userAvatarBtn" type="button"><img id="userAvatarImg" src="favicon.png" alt="User Avatar" /></button>
+          <div class="notification-badge" id="notificationBadge" style="display:none">0</div>
+        </div>
+      </div>
+    </header>
+
+    <section id="adminDenied" class="container">
+      <h2>Access restricted</h2>
+      <p style="color:var(--text-secondary); margin-top:8px;">You are not allowed to open the admin dashboard.</p>
+    </section>
+
+    <main id="adminMain" class="container admin-wrap" style="display:none;">
+      <h1 class="page-title">System <span class="gradient-text">Admin Dashboard</span></h1>
+      <p class="page-subtitle">Moderate users, watch platform health, and ban/unban rule violators.</p>
+      <div class="admin-grid">
+        <div class="admin-card"><div class="admin-label">Total users</div><div id="mUsers" class="admin-value">0</div></div>
+        <div class="admin-card"><div class="admin-label">Banned users</div><div id="mBanned" class="admin-value">0</div></div>
+        <div class="admin-card"><div class="admin-label">Total chambers</div><div id="mChambers" class="admin-value">0</div></div>
+        <div class="admin-card"><div class="admin-label">Pending join requests</div><div id="mPending" class="admin-value">0</div></div>
+      </div>
+
+      <section class="admin-panel">
+        <h3 style="margin-bottom:8px;"><i class="fas fa-user-shield"></i> User moderation</h3>
+        <div id="usersList"></div>
+      </section>
+    </main>
+
+    <script src="pwa.js"></script>
+    <script src="particles.js"></script>
+    <script src="main.js"></script>
+    <script src="bottom_nav.js"></script>
+    <script src="push_config.js"></script>
+    <script type="module" src="app_shell.js"></script>
+    <script type="module" src="admin.js"></script>
+  </body>
+  </html>
+

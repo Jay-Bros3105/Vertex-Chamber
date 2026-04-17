@@ -782,12 +782,37 @@
       .send-btn i { font-size: 18px; line-height: 1; }
 
       @media (max-width: 420px) {
-        .send-btn {
-          width: 44px;
-          height: 44px;
-          min-width: 44px;
-          min-height: 44px;
+        .input-row {
+          gap: 6px;
+          padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)) 8px;
         }
+        .input-side-btns {
+          gap: 0;
+        }
+        .inp-btn {
+          width: 36px;
+          height: 36px;
+          font-size: 15px;
+        }
+        .msg-input-wrap {
+          min-width: 0;
+          padding: 0 10px;
+          min-height: 40px;
+        }
+        #msgInput {
+          font-size: 14px;
+          padding: 10px 0;
+        }
+        .send-btn {
+          width: 40px;
+          height: 40px;
+          min-width: 40px;
+          min-height: 40px;
+          margin-left: 2px;
+        }
+      }
+      @media (max-width: 360px) {
+        .input-side-btns .inp-btn[title="Send image"] { display: none; }
       }
 
       .empty-chat {
@@ -1251,6 +1276,13 @@
           const snap = await db.collection("users").doc(MY_USER_ID).get();
           if (snap.exists) {
             const d = snap.data();
+            if (d.isBanned === true) {
+              alert("Your account has been restricted by administrators.");
+              localStorage.removeItem("vertex_session_email");
+              localStorage.removeItem("vertex_session_expiry");
+              window.location.href = "login.html";
+              return;
+            }
             CURRENT_USER.name   = d.username || CURRENT_USER.name;
             CURRENT_USER.avatar = d.avatarBase64 || null;
             CURRENT_USER.bio    = d.bio || "";
@@ -1353,6 +1385,8 @@
             if (!conversations[key]) conversations[key] = { meta, messages: [] };
             conversations[key].lastMessage = conv.lastMessage || "";
             conversations[key].lastTime    = t || 0;
+            const unreadMap = conv.unreadMap || {};
+            conversations[key].unreadCount = Number(unreadMap[MY_USER_ID] || 0);
           });
 
           renderConvList();
@@ -1570,6 +1604,9 @@
             touched++;
           });
           if (touched) await batch.commit();
+          await db.collection("conversations").doc(convDocId).set({
+            unreadMap: { [MY_USER_ID]: 0 },
+          }, { merge: true });
           if (conversations[convKey]) conversations[convKey].unreadCount = 0;
           renderConvList();
         } catch {}
@@ -1939,6 +1976,7 @@
               lastMessage:     text,
               lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
               lastSenderId:    MY_USER_ID,
+              ...(isGroup ? {} : { [`unreadMap.${currentConvId}`]: firebase.firestore.FieldValue.increment(1) }),
             });
 
             // Unread indicator for receiver (red dot via notifications) — direct messages only
@@ -2172,6 +2210,7 @@
             lastMessage: previewText,
             lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
             lastSenderId: MY_USER_ID,
+            ...(isGroup ? {} : { unreadMap: { [currentConvId]: firebase.firestore.FieldValue.increment(1) } }),
           }, { merge: true });
           pushMessage({
             id: clientId,
@@ -2222,6 +2261,7 @@
             lastMessage: previewText,
             lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
             lastSenderId: MY_USER_ID,
+            ...(isGroup ? {} : { unreadMap: { [currentConvId]: firebase.firestore.FieldValue.increment(1) } }),
           }, { merge: true });
           pushMessage({
             id: clientId,
@@ -2265,6 +2305,14 @@
         };
       }
 
+      function _hasTurnServer() {
+        const servers = (Array.isArray(window.VERTEX_ICE_SERVERS) ? window.VERTEX_ICE_SERVERS : []);
+        return servers.some((s) => {
+          const urls = Array.isArray(s?.urls) ? s.urls : [s?.urls];
+          return urls.some((u) => String(u || "").startsWith("turn:") || String(u || "").startsWith("turns:"));
+        });
+      }
+
       function applyPcStateHandlers() {
         if (!_pc) return;
         _pc.oniceconnectionstatechange = () => {
@@ -2292,6 +2340,9 @@
       async function startCall(kind) {
         if (!currentConvId || !_dbRef) return;
         if (currentContact?.isGroup) { toast("Group calls are not enabled in this build."); return; }
+        if (!_hasTurnServer()) {
+          toast("TURN not configured: long-distance calls may fail. Add TURN servers in push_config.js.");
+        }
         const calleeId = currentConvId;
         const convId = await getOrCreateConvId(_dbRef, MY_USER_ID, calleeId);
         const callId = `call_${Date.now()}_${MY_USER_ID}`;
@@ -2502,6 +2553,7 @@
         const rv = document.getElementById("remoteVideo");
         if (rv) {
           rv.srcObject = stream;
+          rv.muted = false;
           rv.play?.().catch(() => {});
         }
         if (!_remoteAudioEl) {
@@ -2943,7 +2995,7 @@
 
         await loadMyProfile(_db);
         await loadVCUsers(_db);
-        await loadUnreadCounts(_db);
+        // unread counts now come from conversations.unreadMap for faster startup
         watchIncomingCalls();
         try {
           const incomingCallId = new URLSearchParams(window.location.search).get("incomingCall");
