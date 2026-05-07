@@ -72,7 +72,7 @@
     btn.innerHTML = '<i class="fas fa-download"></i><span>Install App</span>';
 
     const isTouchDevice = isMobile();
-    const bottomOffset = isTouchDevice ? "88px" : "32px";
+    const bottomOffset = isTouchDevice ? "calc(88px + env(safe-area-inset-bottom, 0px))" : "32px";
     const rightOffset = isTouchDevice ? "16px" : "20px";
     const fontSize = isTouchDevice ? "12px" : "13px";
     const padding = isTouchDevice ? "10px 14px" : "10px 18px";
@@ -347,7 +347,7 @@
     const toast = document.createElement("div");
     toast.className = "vc-toast";
     toast.style.cssText = `
-      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+      position: fixed; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) translateY(20px);
       background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(0, 212, 255, 0.3);
       color: #fff; padding: 12px 24px; border-radius: 14px; font-size: 14px;
       font-family: 'Inter', sans-serif; font-weight: 500; z-index: 2147483647;
