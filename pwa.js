@@ -124,20 +124,20 @@
 
     if (isTouchDevice) {
       btn.addEventListener("touchstart", () => {
-        btn.style.transform = "scale(0.95)";
+        btn.style.transform = "translateX(-50%) scale(0.95)";
         btn.style.animation = "none";
       }, { passive: true });
       btn.addEventListener("touchend", () => {
-        btn.style.transform = "";
+        btn.style.transform = "translateX(-50%)";
         btn.style.animation = "";
       }, { passive: true });
     } else {
       btn.addEventListener("mouseenter", () => {
-        btn.style.transform = "translateY(-2px) scale(1.04)";
+        btn.style.transform = "translateX(-50%) translateY(-2px) scale(1.04)";
         btn.style.boxShadow = "0 12px 36px rgba(0, 212, 255, 0.5), 0 0 0 1px rgba(255,255,255,0.2) inset, 0 0 50px rgba(127, 92, 255, 0.3)";
       });
       btn.addEventListener("mouseleave", () => {
-        btn.style.transform = "";
+        btn.style.transform = "translateX(-50%)";
         btn.style.boxShadow = "";
       });
     }
@@ -157,8 +157,15 @@
         const { outcome } = await deferredPrompt.userChoice;
         console.log("Install outcome:", outcome);
         if (outcome === "accepted") {
-          if (btn) btn.style.display = "none";
-          showToast("App installed successfully! Check your home screen.");
+          // Show confirmation instead of hiding
+          if (btn) {
+            btn.innerHTML = '<i class="fas fa-check-circle"></i><span>Installed!</span>';
+            btn.disabled = true;
+            btn.style.opacity = "0.7";
+            btn.style.cursor = "default";
+            btn.style.animation = "none";
+          }
+          showToast("🎉 App installed successfully! Check your home screen.");
         } else {
           showToast("Install cancelled. You can always install later.");
         }
