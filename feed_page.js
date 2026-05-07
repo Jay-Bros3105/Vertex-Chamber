@@ -115,8 +115,8 @@ function renderPostCard(post, myUserId, myLikes, mySaves) {
       <button class="action-btn ${saved ? "active" : ""}" data-save="${escapeHtml(post.id)}">
         <i class="${saved ? "fas" : "far"} fa-bookmark"></i> ${saved ? "Saved" : "Save"}
       </button>
-      <a href="workspace.html" class="btn btn-primary btn-sm" style="margin-left:auto">
-        <i class="fas fa-eye"></i> Open Workspace
+      <a href="chambers.html" class="btn btn-primary btn-sm" style="margin-left:auto">
+        <i class="fas fa-eye"></i> View Chamber
       </a>
     </div>
   `;

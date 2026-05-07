@@ -1,6 +1,7 @@
 // chambers_page.js — Firestore-backed chambers + join requests
 import { db, getSessionEmail, emailToId } from "./firebase.js";
 import {
+  addDoc,
   collection,
   collectionGroup,
   doc,
@@ -273,11 +274,31 @@ async function requestJoin(chamberId, userId) {
   toast("Join request sent. Waiting for approval.");
 }
 
-// Admin panel (only shows if you are admin in that chamber)
-async function isAdmin(chamberId, userId) {
+async function logModeration({ action, actorId, targetUserId, chamberId, reason, meta = {} }) {
+  await addDoc(collection(db, "moderationLogs"), {
+    action,
+    actorId,
+    targetUserId,
+    chamberId: chamberId || null,
+    reason: String(reason || "").trim() || "No reason provided",
+    meta,
+    createdAt: serverTimestamp(),
+  });
+}
+
+// Chamber staff (admin + moderator) for chamber-scoped moderation
+async function isStaff(chamberId, userId) {
   const memRef = doc(db, "chambers", chamberId, "members", userId);
   const snap = await getDoc(memRef).catch(() => null);
-  return !!(snap && snap.exists() && (snap.data().role === "admin"));
+  if (!(snap && snap.exists())) return false;
+  const role = snap.data().role;
+  return role === "admin" || role === "moderator";
+}
+
+async function getMyChamberRole(chamberId, userId) {
+  const memRef = doc(db, "chambers", chamberId, "members", userId);
+  const snap = await getDoc(memRef).catch(() => null);
+  return (snap && snap.exists()) ? (snap.data().role || "member") : null;
 }
 
 async function decideRequest(chamberId, targetUserId, decisionUserId, decision) {
@@ -312,6 +333,15 @@ async function decideRequest(chamberId, targetUserId, decisionUserId, decision) 
     },
     { merge: true },
   );
+
+  await logModeration({
+    action: decision === "approved" ? "approve_join_request" : "deny_join_request",
+    actorId: decisionUserId,
+    targetUserId,
+    chamberId,
+    reason: decision === "approved" ? "Join request approved" : "Join request denied",
+    meta: { decision },
+  });
 }
 
 function ensureAdminPanel() {
@@ -327,12 +357,18 @@ function ensureAdminPanel() {
   wrap.innerHTML = `
     <h3 style="margin-bottom:14px;display:flex;align-items:center;gap:10px;">
       <i class="fas fa-shield-halved" style="color:var(--accent-primary)"></i>
-      Chamber Admin · Pending Requests
+      Chamber Staff · Pending Requests
     </h3>
     <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
       <a href="admin.html" class="btn btn-secondary btn-sm"><i class="fas fa-gauge-high"></i> Open Admin Dashboard</a>
     </div>
     <div id="adminRequests" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <div style="height:1px;background:rgba(255,255,255,0.10);margin:16px 0;"></div>
+    <h3 style="margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+      <i class="fas fa-user-cog" style="color:var(--accent-primary)"></i>
+      Chamber Member Roles
+    </h3>
+    <div id="staffMembers" style="display:flex;flex-direction:column;gap:10px;"></div>
     <div style="height:1px;background:rgba(255,255,255,0.10);margin:16px 0;"></div>
     <h3 style="margin-bottom:12px;display:flex;align-items:center;gap:10px;">
       <i class="fas fa-people-group" style="color:var(--accent-primary)"></i>
@@ -352,6 +388,52 @@ function ensureAdminPanel() {
     <div id="teamList" style="display:flex;flex-direction:column;gap:10px;"></div>
   `;
   joinSection.querySelector(".join-content")?.appendChild(wrap);
+}
+
+function renderStaffMembers(container, items, myRole) {
+  if (!container) return;
+  if (!items.length) {
+    container.innerHTML = `<div style="color:var(--text-secondary);font-size:13px;">No members yet.</div>`;
+    return;
+  }
+  container.innerHTML = items.map((m) => {
+    const role = m.role || "member";
+    const rolePill =
+      role === "admin"
+        ? `<span style="padding:4px 8px;border-radius:999px;border:1px solid rgba(0,212,255,.35);background:rgba(0,212,255,.12);font-size:11px;font-weight:800;">ADMIN</span>`
+        : role === "moderator"
+          ? `<span style="padding:4px 8px;border-radius:999px;border:1px solid rgba(138,43,226,.35);background:rgba(138,43,226,.12);font-size:11px;font-weight:800;">MOD</span>`
+          : `<span style="padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);font-size:11px;font-weight:800;">MEMBER</span>`;
+    const canManage = myRole === "admin" && role !== "admin";
+    return `
+      <div class="glass-card" style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="min-width:0;">
+          <div style="font-weight:800">${escapeHtml(m.userLabel || m.userId)}</div>
+          <div style="font-size:12px;color:var(--text-secondary);">${escapeHtml(m.userId)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+          ${rolePill}
+          ${canManage && role === "member" ? `<button class="btn btn-secondary btn-sm" data-promote="${escapeHtml(m.userId)}"><i class="fas fa-arrow-up"></i> Make moderator</button>` : ``}
+          ${canManage && role === "moderator" ? `<button class="btn btn-secondary btn-sm" data-demote="${escapeHtml(m.userId)}"><i class="fas fa-arrow-down"></i> Remove mod</button>` : ``}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function setMemberRole(chamberId, actorId, targetUserId, role, reason) {
+  await setDoc(
+    doc(db, "chambers", chamberId, "members", targetUserId),
+    { userId: targetUserId, role, updatedAt: serverTimestamp(), updatedBy: actorId },
+    { merge: true },
+  );
+  await logModeration({
+    action: role === "moderator" ? "promote_moderator" : "demote_moderator",
+    actorId,
+    targetUserId,
+    chamberId,
+    reason,
+  });
 }
 
 async function createTeam(chamberId, teamName, creatorId) {
@@ -504,6 +586,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const joinNowBtn = document.getElementById("joinNowBtn");
   const adminPanel = document.getElementById("adminPanel");
   const adminRequests = document.getElementById("adminRequests");
+  const staffMembers = document.getElementById("staffMembers");
   const createTeamBtn = document.getElementById("createTeamBtn");
   const inviteTeamBtn = document.getElementById("inviteTeamBtn");
   const teamNameInput = document.getElementById("teamNameInput");
@@ -511,6 +594,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const inviteUserInput = document.getElementById("inviteUserInput");
   const teamList = document.getElementById("teamList");
   let latestChambers = [];
+  let mySelectedRole = null;
 
   const chambersQ = query(collection(db, "chambers"), orderBy("name", "asc"));
   onSnapshot(chambersQ, async (snap) => {
@@ -549,11 +633,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (joinNowBtn) joinNowBtn.innerHTML = `<i class="fas fa-door-open"></i> Request to Join ${escapeHtml(name)}`;
     }
 
-    // Admin panel: show only if current user is admin for selected chamber
+    // Staff panel: show for admin/moderator in selected chamber
     if (adminPanel && adminRequests && selectedChamberId) {
-      const admin = await isAdmin(selectedChamberId, myUserId);
-      adminPanel.style.display = admin ? "block" : "none";
-      if (admin) {
+      const staff = await isStaff(selectedChamberId, myUserId);
+      mySelectedRole = await getMyChamberRole(selectedChamberId, myUserId);
+      adminPanel.style.display = staff ? "block" : "none";
+      if (staff) {
         const pendingQ = query(
           collection(db, "chambers", selectedChamberId, "joinRequests"),
           where("status", "==", "pending"),
@@ -568,10 +653,24 @@ document.addEventListener("DOMContentLoaded", async () => {
           renderAdminRequests(adminRequests, rows);
         });
 
+        const memberSnap = await getDocs(query(collection(db, "chambers", selectedChamberId, "members"), limit(200))).catch(() => null);
+        const memberRows = memberSnap
+          ? await Promise.all(memberSnap.docs.map(async (d) => {
+              const userId = d.id;
+              return {
+                userId,
+                role: d.data().role || "member",
+                userLabel: await loadUserLabel(userId),
+              };
+            }))
+          : [];
+        renderStaffMembers(staffMembers, memberRows, mySelectedRole);
+
         const teams = await listTeams(selectedChamberId).catch(() => []);
         renderTeamOptions(teamSelect, teams);
         renderTeamsList(teamList, teams);
       } else {
+        renderStaffMembers(staffMembers, [], mySelectedRole);
         renderTeamOptions(teamSelect, []);
         renderTeamsList(teamList, []);
       }
@@ -621,6 +720,30 @@ document.addEventListener("DOMContentLoaded", async () => {
       const target = deny.getAttribute("data-deny");
       await decideRequest(selectedChamberId, target, myUserId, "rejected");
       toast("Denied.");
+    }
+  });
+
+  staffMembers?.addEventListener("click", async (e) => {
+    if (!selectedChamberId) return;
+    if (mySelectedRole !== "admin") {
+      toast("Only chamber admins can manage moderator roles.");
+      return;
+    }
+    const promote = e.target.closest("[data-promote]");
+    const demote = e.target.closest("[data-demote]");
+    if (!promote && !demote) return;
+    const uid = (promote || demote).getAttribute(promote ? "data-promote" : "data-demote");
+    if (!uid || uid === myUserId) return;
+    try {
+      if (promote) {
+        await setMemberRole(selectedChamberId, myUserId, uid, "moderator", "Promoted to chamber moderator");
+        toast("Moderator role granted");
+      } else {
+        await setMemberRole(selectedChamberId, myUserId, uid, "member", "Moderator role removed");
+        toast("Moderator role removed");
+      }
+    } catch {
+      toast("Role update failed");
     }
   });
 

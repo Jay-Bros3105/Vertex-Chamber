@@ -70,6 +70,13 @@ exports.notifyOnNewMessage = onDocumentCreated(
           convId,
           click_action: "/messages.html",
         },
+        webpush: {
+          headers: { Urgency: "high", TTL: "2419200" },
+          fcmOptions: { link: "/messages.html" },
+          notification: { requireInteraction: false },
+        },
+        android: { priority: "high" },
+        apns: { headers: { "apns-priority": "10" } },
       }),
     );
 
@@ -147,6 +154,13 @@ exports.notifyOnIncomingCall = onDocumentWritten(
           url,
           click_action: url,
         },
+        webpush: {
+          headers: { Urgency: "high", TTL: "300" },
+          fcmOptions: { link: url },
+          notification: { requireInteraction: true, tag: `call_${callId}` },
+        },
+        android: { priority: "high" },
+        apns: { headers: { "apns-priority": "10" } },
       }),
     );
 

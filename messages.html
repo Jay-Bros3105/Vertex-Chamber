@@ -1,8 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <meta name="theme-color" content="#0B0F1A" />
     <link rel="manifest" href="manifest.json" />
     <title>Messages | Vertex Chamber</title>
@@ -67,10 +70,14 @@
       }
 
       /* Legacy floating back button disabled (covered avatars). */
-      .back-btn { display: none; }
+      .back-btn {
+        display: none;
+      }
       @media (max-width: 768px) {
         /* Floating back button conflicts with avatars on mobile; use header back instead */
-        .back-btn { display: none; }
+        .back-btn {
+          display: none;
+        }
       }
 
       /* WATERMARK - repeating "Vertex Chamber" background */
@@ -158,7 +165,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background var(--transition), color var(--transition);
+        transition:
+          background var(--transition),
+          color var(--transition);
       }
       .icon-btn:hover {
         background: var(--hover);
@@ -425,10 +434,22 @@
         z-index: 1;
         backdrop-filter: blur(10px);
       }
-      .reply-top.visible { display: flex; }
-      .reply-top .rt-icon { color: var(--accent); font-size: 16px; }
-      .reply-top .rt-info { flex: 1; min-width: 0; }
-      .reply-top .rt-name { color: var(--accent); font-size: 12px; font-weight: 800; }
+      .reply-top.visible {
+        display: flex;
+      }
+      .reply-top .rt-icon {
+        color: var(--accent);
+        font-size: 16px;
+      }
+      .reply-top .rt-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .reply-top .rt-name {
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 800;
+      }
       .reply-top .rt-text {
         font-size: 13px;
         color: var(--text-secondary);
@@ -605,10 +626,10 @@
         gap: 6px;
         padding: 4px 8px;
         border-radius: 999px;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         font-size: 12px;
-        color: rgba(255,255,255,0.9);
+        color: rgba(255, 255, 255, 0.9);
         user-select: none;
       }
       .ticks {
@@ -649,7 +670,9 @@
         animation-delay: 0.4s;
       }
       @keyframes tBounce {
-        0%, 80%, 100% {
+        0%,
+        80%,
+        100% {
           transform: translateY(0);
           opacity: 0.4;
         }
@@ -665,7 +688,9 @@
         position: relative;
         flex-shrink: 0;
         /* Keep composer above iOS safe-area + mobile bottom tab bar (bottom_nav.js) */
-        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--vc-bottom-nav-h, 0px));
+        padding-bottom: calc(
+          env(safe-area-inset-bottom, 0px) + var(--vc-bottom-nav-h, 0px)
+        );
       }
       .reply-bar {
         display: none;
@@ -779,7 +804,10 @@
         justify-content: center;
         flex-shrink: 0;
       }
-      .send-btn i { font-size: 18px; line-height: 1; }
+      .send-btn i {
+        font-size: 18px;
+        line-height: 1;
+      }
 
       @media (max-width: 420px) {
         .input-row {
@@ -812,7 +840,9 @@
         }
       }
       @media (max-width: 360px) {
-        .input-side-btns .inp-btn[title="Send image"] { display: none; }
+        .input-side-btns .inp-btn[title="Send image"] {
+          display: none;
+        }
       }
 
       .empty-chat {
@@ -876,7 +906,8 @@
         }
       }
 
-      #fileInput, #imgInput {
+      #fileInput,
+      #imgInput {
         display: none;
       }
 
@@ -898,10 +929,20 @@
         }
 
         /* Use dynamic viewport height on mobile (prevents composer disappearing) */
-        html, body { height: 100dvh; }
-        #app { height: 100dvh; }
-        #activeChat { height: 100%; min-height: 0; }
-        .chat-header { padding-left: 8px; }
+        html,
+        body {
+          height: 100dvh;
+        }
+        #app {
+          height: 100dvh;
+        }
+        #activeChat {
+          height: 100%;
+          min-height: 0;
+        }
+        .chat-header {
+          padding-left: 8px;
+        }
 
         /* Keep the composer visible on phones */
         .input-area {
@@ -931,23 +972,44 @@
             <button class="icon-btn" title="Back" onclick="goBack()">
               <i class="fas fa-arrow-left"></i>
             </button>
-            <button class="icon-btn" title="New conversation" onclick="openNewMsgModal()">
+            <button
+              class="icon-btn"
+              title="New conversation"
+              onclick="openNewMsgModal()"
+            >
               <i class="fas fa-message"></i>
             </button>
-            <button class="icon-btn" title="Menu" id="menuBtn" onclick="toggleSidebarMenu(event)">
+            <button
+              class="icon-btn"
+              title="Menu"
+              id="menuBtn"
+              onclick="toggleSidebarMenu(event)"
+            >
               <i class="fas fa-ellipsis-vertical"></i>
             </button>
           </div>
           <!-- DROPDOWN MENU - appears only when clicking the 3-dot icon -->
           <div class="dropdown-menu" id="sidebarMenu">
-            <div class="dm-item" onclick="openProfile('me'); closeAllDropdowns();">
+            <div
+              class="dm-item"
+              onclick="
+                openProfile('me');
+                closeAllDropdowns();
+              "
+            >
               <i class="fas fa-user"></i>My Profile
             </div>
-            <div class="dm-item" onclick="toast('Starred messages coming soon'); closeAllDropdowns();">
+            <div
+              class="dm-item"
+              onclick="
+                toast('Starred messages coming soon');
+                closeAllDropdowns();
+              "
+            >
               <i class="fas fa-star"></i>Starred messages
             </div>
             <div class="dm-sep"></div>
-            <div class="dm-item" onclick="openHelp();">
+            <div class="dm-item" onclick="openHelp()">
               <i class="fas fa-circle-question"></i>Help
             </div>
           </div>
@@ -956,7 +1018,12 @@
         <div class="search-bar">
           <div class="search-inner">
             <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Search or start new chat" oninput="filterConvs(this.value)" />
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search or start new chat"
+              oninput="filterConvs(this.value)"
+            />
           </div>
         </div>
 
@@ -977,12 +1044,24 @@
         <div class="empty-chat" id="emptyChat">
           <div class="empty-chat-icon"><i class="fas fa-comments"></i></div>
           <h3>Vertex Chamber</h3>
-          <p>Select a conversation to start messaging, or find a member to chat with.</p>
+          <p>
+            Select a conversation to start messaging, or find a member to chat
+            with.
+          </p>
         </div>
 
-        <div id="activeChat" style="display: none; flex-direction: column; height: 100%">
+        <div
+          id="activeChat"
+          style="display: none; flex-direction: column; height: 100%"
+        >
           <div class="chat-header">
-            <button class="icon-btn" id="mobileChatBackBtn" title="Back to chats" onclick="backToChatList(event)" style="display:none">
+            <button
+              class="icon-btn"
+              id="mobileChatBackBtn"
+              title="Back to chats"
+              onclick="backToChatList(event)"
+              style="display: none"
+            >
               <i class="fas fa-arrow-left"></i>
             </button>
             <div class="chat-header-left" onclick="openCurrentProfile()">
@@ -995,21 +1074,46 @@
               </div>
             </div>
             <div class="chat-header-actions">
-              <button class="icon-btn" title="Video call" onclick="startVideoCall()">
+              <button
+                class="icon-btn"
+                title="Video call"
+                onclick="startVideoCall()"
+              >
                 <i class="fas fa-video"></i>
               </button>
-              <button class="icon-btn" title="Voice call" onclick="startVoiceCall()">
+              <button
+                class="icon-btn"
+                title="Voice call"
+                onclick="startVoiceCall()"
+              >
                 <i class="fas fa-phone"></i>
               </button>
-              <button class="icon-btn" title="More options" id="chatMenuBtn" onclick="toggleChatMenu(event)">
+              <button
+                class="icon-btn"
+                title="More options"
+                id="chatMenuBtn"
+                onclick="toggleChatMenu(event)"
+              >
                 <i class="fas fa-ellipsis-vertical"></i>
               </button>
               <div class="dropdown-menu" id="chatMenu">
-                <div class="dm-item" onclick="openCurrentProfile(); closeAllDropdowns();">
+                <div
+                  class="dm-item"
+                  onclick="
+                    openCurrentProfile();
+                    closeAllDropdowns();
+                  "
+                >
                   <i class="fas fa-user"></i>Contact info
                 </div>
                 <div class="dm-sep"></div>
-                <div class="dm-item" onclick="clearChat(); closeAllDropdowns();">
+                <div
+                  class="dm-item"
+                  onclick="
+                    clearChat();
+                    closeAllDropdowns();
+                  "
+                >
                   <i class="fas fa-trash"></i>Clear chat
                 </div>
               </div>
@@ -1022,7 +1126,9 @@
               <div class="rt-name" id="replyTopName">—</div>
               <div class="rt-text" id="replyTopText">—</div>
             </div>
-            <button class="rt-close" onclick="cancelReply()"><i class="fas fa-times"></i></button>
+            <button class="rt-close" onclick="cancelReply()">
+              <i class="fas fa-times"></i>
+            </button>
           </div>
 
           <div id="chatMessages">
@@ -1048,20 +1154,47 @@
             </div>
             <div class="input-row">
               <div class="input-side-btns">
-                <button class="inp-btn" title="Emoji" id="emojiToggleBtn" onclick="toggleEmoji(event)">
+                <button
+                  class="inp-btn"
+                  title="Emoji"
+                  id="emojiToggleBtn"
+                  onclick="toggleEmoji(event)"
+                >
                   <i class="far fa-face-smile"></i>
                 </button>
-                <button class="inp-btn" title="Attach file" onclick="document.getElementById('fileInput').click()">
+                <button
+                  class="inp-btn"
+                  title="Attach file"
+                  onclick="document.getElementById('fileInput').click()"
+                >
                   <i class="fas fa-paperclip"></i>
                 </button>
-                <button class="inp-btn" title="Send image" onclick="document.getElementById('imgInput').click()">
+                <button
+                  class="inp-btn"
+                  title="Send image"
+                  onclick="document.getElementById('imgInput').click()"
+                >
                   <i class="fas fa-image"></i>
                 </button>
               </div>
               <div class="msg-input-wrap">
-                <textarea id="msgInput" rows="1" placeholder="Type a message…" onkeydown="handleInputKey(event)" oninput="autoGrow(this); updateSendMic();"></textarea>
+                <textarea
+                  id="msgInput"
+                  rows="1"
+                  placeholder="Type a message…"
+                  onkeydown="handleInputKey(event)"
+                  oninput="
+                    autoGrow(this);
+                    updateSendMic();
+                  "
+                ></textarea>
               </div>
-              <button class="inp-btn" id="micBtn" title="Voice message" onclick="toggleRecord()">
+              <button
+                class="inp-btn"
+                id="micBtn"
+                title="Voice message"
+                onclick="toggleRecord()"
+              >
                 <i class="fas fa-microphone"></i>
               </button>
               <button class="send-btn" id="sendBtn" onclick="sendTextMessage()">
@@ -1074,11 +1207,34 @@
     </div>
 
     <!-- Hidden inputs -->
-    <input type="file" id="fileInput" accept="*/*" onchange="handleFileUpload(this, 'file')" />
-    <input type="file" id="imgInput" accept="image/*" onchange="handleFileUpload(this, 'image')" />
-    
+    <input
+      type="file"
+      id="fileInput"
+      accept="*/*"
+      onchange="handleFileUpload(this, 'file')"
+    />
+    <input
+      type="file"
+      id="imgInput"
+      accept="image/*"
+      onchange="handleFileUpload(this, 'image')"
+    />
+
     <!-- Emoji picker -->
-    <div id="emojiPicker" style="display: none; position: fixed; background: #1f2c34; border-radius: 14px; padding: 14px; flex-wrap: wrap; gap: 6px; width: 288px; z-index: 1000;"></div>
+    <div
+      id="emojiPicker"
+      style="
+        display: none;
+        position: fixed;
+        background: #1f2c34;
+        border-radius: 14px;
+        padding: 14px;
+        flex-wrap: wrap;
+        gap: 6px;
+        width: 288px;
+        z-index: 1000;
+      "
+    ></div>
 
     <script>
       // ============================================================
@@ -1107,7 +1263,7 @@
         } catch {}
 
         // Final fallback: return to a sensible hub page.
-        window.location.href = "workspace.html";
+        window.location.href = "splash.html";
       }
 
       // ============================================================
@@ -1115,12 +1271,14 @@
       // ============================================================
 
       // ── Session ──────────────────────────────────────────────────
-      const SESSION_EMAIL_KEY  = "vertex_session_email";
+      const SESSION_EMAIL_KEY = "vertex_session_email";
       const SESSION_EXPIRY_KEY = "vertex_session_expiry";
 
       function getSessionEmail() {
-        const email  = localStorage.getItem(SESSION_EMAIL_KEY);
-        const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY_KEY) || "0");
+        const email = localStorage.getItem(SESSION_EMAIL_KEY);
+        const expiry = parseInt(
+          localStorage.getItem(SESSION_EXPIRY_KEY) || "0",
+        );
         if (email && Date.now() < expiry) return email;
         return null;
       }
@@ -1143,20 +1301,20 @@
 
       // ── App state ─────────────────────────────────────────────────
       let CURRENT_USER = {
-        uid:    MY_USER_ID,
-        name:   localStorage.getItem("vertex_username") || "You",
-        avatar: localStorage.getItem("vertex_avatar")   || null,
-        role:   "Vertex Chamber Member",
-        bio:    "",
-        email:  _sessionEmail,
+        uid: MY_USER_ID,
+        name: localStorage.getItem("vertex_username") || "You",
+        avatar: localStorage.getItem("vertex_avatar") || null,
+        role: "Vertex Chamber Member",
+        bio: "",
+        email: _sessionEmail,
       };
 
-      let VC_USERS    = [];   // All other registered members
+      let VC_USERS = []; // All other registered members
       let conversations = {}; // Local message cache per uid
       let currentConvId = null;
       let currentContact = null;
-      let replyTarget    = null;
-      let _dbRef         = null; // Firestore reference, set after init
+      let replyTarget = null;
+      let _dbRef = null; // Firestore reference, set after init
       let _currentFirestoreConvDocId = null; // conversations/{convId} doc id for open chat
       let _selectedMsgForAction = null;
       let _forwardPayload = null; // { type, content }
@@ -1180,20 +1338,25 @@
 
         const fromName =
           conversations[msg.from]?.meta?.name ||
-          VC_USERS.find(u => u.uid === msg.from)?.name ||
+          VC_USERS.find((u) => u.uid === msg.from)?.name ||
           "New message";
         const body = msg.type === "text" ? msg.content : `[${msg.type}]`;
 
         const isViewingThisChat = currentConvId === msg.from;
         if (!document.hidden && isViewingThisChat) return;
 
-        try { new Notification(fromName, { body: body || "Message received" }); } catch {}
+        try {
+          new Notification(fromName, { body: body || "Message received" });
+        } catch {}
       }
 
       // Swipe right to reply (touch)
       function attachSwipeToReply(el, msg) {
         if (!el) return;
-        let startX = 0, startY = 0, active = false, triggered = false;
+        let startX = 0,
+          startY = 0,
+          active = false,
+          triggered = false;
 
         const onStart = (e) => {
           const t = e.touches ? e.touches[0] : e;
@@ -1213,7 +1376,9 @@
             setReplyTarget(msg);
           }
         };
-        const onEnd = () => { active = false; };
+        const onEnd = () => {
+          active = false;
+        };
 
         el.addEventListener("touchstart", onStart, { passive: true });
         el.addEventListener("touchmove", onMove, { passive: true });
@@ -1221,7 +1386,9 @@
       }
 
       function isMobile() {
-        return window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
+        return (
+          window.matchMedia && window.matchMedia("(max-width: 768px)").matches
+        );
       }
 
       function showSidebar() {
@@ -1245,9 +1412,10 @@
       function updateMobileHeaderBack() {
         const btn = document.getElementById("mobileChatBackBtn");
         if (!btn) return;
-        const chatOpen = document.getElementById("activeChat")?.style.display !== "none";
+        const chatOpen =
+          document.getElementById("activeChat")?.style.display !== "none";
         // Show on mobile whenever chat is open (acts as "back to list")
-        btn.style.display = (isMobile() && chatOpen) ? "flex" : "none";
+        btn.style.display = isMobile() && chatOpen ? "flex" : "none";
       }
 
       function backToChatList(e) {
@@ -1258,7 +1426,8 @@
 
       function backToConversationList(e) {
         if (e) e.stopPropagation?.();
-        const chatOpen = document.getElementById("activeChat")?.style.display !== "none";
+        const chatOpen =
+          document.getElementById("activeChat")?.style.display !== "none";
         if (!chatOpen) return false;
 
         // Switch view: show list (sidebar) and hide chat panel
@@ -1283,9 +1452,9 @@
               window.location.href = "login.html";
               return;
             }
-            CURRENT_USER.name   = d.username || CURRENT_USER.name;
+            CURRENT_USER.name = d.username || CURRENT_USER.name;
             CURRENT_USER.avatar = d.avatarBase64 || null;
-            CURRENT_USER.bio    = d.bio || "";
+            CURRENT_USER.bio = d.bio || "";
             // Update sidebar avatar
             const avatarEl = document.querySelector(".my-avatar");
             if (avatarEl && CURRENT_USER.avatar) {
@@ -1293,7 +1462,9 @@
               avatarEl.classList.add("has-photo");
             }
           }
-        } catch (e) { console.warn("loadMyProfile:", e); }
+        } catch (e) {
+          console.warn("loadMyProfile:", e);
+        }
       }
 
       // ── Load ALL registered chamber members from Firestore ────────
@@ -1305,21 +1476,26 @@
           const snap = await db.collection("users").get();
 
           VC_USERS = [];
-          snap.forEach(doc => {
+          snap.forEach((doc) => {
             const d = doc.data();
             // Exclude self
             if (doc.id === MY_USER_ID) return;
             VC_USERS.push({
-              uid:    doc.id,
-              name:   d.username || d.email || "Member",
+              uid: doc.id,
+              name: d.username || d.email || "Member",
               avatar: d.avatarBase64 || null,
-              role:   d.profileCompleted ? (d.bio || "Vertex Chamber Member") : "Member (profile not set)",
-              bio:    d.bio || "",
-              status: "offline",   // Real-time presence can be added later
-              email:  d.email      || "",
+              role: d.profileCompleted
+                ? d.bio || "Vertex Chamber Member"
+                : "Member (profile not set)",
+              bio: d.bio || "",
+              status: "offline", // Real-time presence can be added later
+              email: d.email || "",
             });
             if (!conversations[doc.id]) {
-              conversations[doc.id] = { meta: VC_USERS[VC_USERS.length - 1], messages: [] };
+              conversations[doc.id] = {
+                meta: VC_USERS[VC_USERS.length - 1],
+                messages: [],
+              };
             }
           });
 
@@ -1345,13 +1521,14 @@
           }
 
           // Avoid relying on composite indexes. Fetch then sort locally.
-          const snap = await db.collection("conversations")
+          const snap = await db
+            .collection("conversations")
             .where("participants", "array-contains", MY_USER_ID)
             .limit(100)
             .get();
 
           const convRows = [];
-          snap.forEach(doc => {
+          snap.forEach((doc) => {
             const conv = doc.data();
             const t = conv.lastMessageTime?.toMillis?.() || 0;
             convRows.push({ id: doc.id, conv, t });
@@ -1359,9 +1536,13 @@
           convRows.sort((a, b) => (b.t || 0) - (a.t || 0));
 
           convRows.slice(0, 50).forEach(({ id, conv, t }) => {
-            const participants = Array.isArray(conv.participants) ? conv.participants : [];
-            const isGroup = (conv.type === "chamber") || (participants.length > 2);
-            const key = isGroup ? ("g_" + id) : (participants.find(p => p !== MY_USER_ID) || null);
+            const participants = Array.isArray(conv.participants)
+              ? conv.participants
+              : [];
+            const isGroup = conv.type === "chamber" || participants.length > 2;
+            const key = isGroup
+              ? "g_" + id
+              : participants.find((p) => p !== MY_USER_ID) || null;
             if (!key) return;
 
             let meta = null;
@@ -1378,13 +1559,21 @@
               };
             } else {
               const otherUid = key;
-              meta = VC_USERS.find(u => u.uid === otherUid);
-              if (!meta) meta = { uid: otherUid, name: otherUid, avatar: null, role: "Member", status: "offline" };
+              meta = VC_USERS.find((u) => u.uid === otherUid);
+              if (!meta)
+                meta = {
+                  uid: otherUid,
+                  name: otherUid,
+                  avatar: null,
+                  role: "Member",
+                  status: "offline",
+                };
             }
 
-            if (!conversations[key]) conversations[key] = { meta, messages: [] };
+            if (!conversations[key])
+              conversations[key] = { meta, messages: [] };
             conversations[key].lastMessage = conv.lastMessage || "";
-            conversations[key].lastTime    = t || 0;
+            conversations[key].lastTime = t || 0;
             const unreadMap = conv.unreadMap || {};
             conversations[key].unreadCount = Number(unreadMap[MY_USER_ID] || 0);
           });
@@ -1401,62 +1590,80 @@
 
       function subscribeToConversation(db, conversationId) {
         // Unsubscribe previous listener
-        if (_activeConvListener) { _activeConvListener(); _activeConvListener = null; }
+        if (_activeConvListener) {
+          _activeConvListener();
+          _activeConvListener = null;
+        }
         _currentFirestoreConvDocId = conversationId;
 
         _activeConvListener = db
-          .collection("conversations").doc(conversationId)
+          .collection("conversations")
+          .doc(conversationId)
           .collection("messages")
           .orderBy("timestamp", "asc")
           .limit(100)
-          .onSnapshot(snapshot => {
-            snapshot.docChanges().forEach(change => {
-              const data = { ...change.doc.data(), id: change.doc.id };
-              const msg  = firestoreMsgToLocal(data);
+          .onSnapshot(
+            (snapshot) => {
+              snapshot.docChanges().forEach((change) => {
+                const data = { ...change.doc.data(), id: change.doc.id };
+                const msg = firestoreMsgToLocal(data);
 
-              if (change.type === "added") {
-                const existing = conversations[currentConvId]?.messages?.find(m => m.id === msg.id);
-                if (!existing) {
-                  if (!conversations[currentConvId]) conversations[currentConvId] = { meta: currentContact, messages: [] };
-                  conversations[currentConvId].messages.push(msg);
-                  const c = document.getElementById("chatMessages");
-                  const t = document.getElementById("typingIndicator");
-                  if (c && t) { c.insertBefore(buildMsgEl(msg), t); scrollBottom(); }
+                if (change.type === "added") {
+                  const existing = conversations[currentConvId]?.messages?.find(
+                    (m) => m.id === msg.id,
+                  );
+                  if (!existing) {
+                    if (!conversations[currentConvId])
+                      conversations[currentConvId] = {
+                        meta: currentContact,
+                        messages: [],
+                      };
+                    conversations[currentConvId].messages.push(msg);
+                    const c = document.getElementById("chatMessages");
+                    const t = document.getElementById("typingIndicator");
+                    if (c && t) {
+                      c.insertBefore(buildMsgEl(msg), t);
+                      scrollBottom();
+                    }
+                  }
+                  notifyIncoming(msg);
+                } else if (change.type === "modified") {
+                  const idx = conversations[currentConvId]?.messages?.findIndex(
+                    (m) => m.id === msg.id,
+                  );
+                  if (idx !== undefined && idx >= 0) {
+                    conversations[currentConvId].messages[idx] = msg;
+                    refreshMsg(msg.id);
+                  }
                 }
-                notifyIncoming(msg);
-              } else if (change.type === "modified") {
-                const idx = conversations[currentConvId]?.messages?.findIndex(m => m.id === msg.id);
-                if (idx !== undefined && idx >= 0) {
-                  conversations[currentConvId].messages[idx] = msg;
-                  refreshMsg(msg.id);
-                }
-              }
-            });
-            renderConvList();
-          }, err => console.error("Conv listener error:", err));
+              });
+              renderConvList();
+            },
+            (err) => console.error("Conv listener error:", err),
+          );
       }
 
       // Convert Firestore message format → local format
       function firestoreMsgToLocal(d) {
         const fromMe = d.senderId === MY_USER_ID;
         const isRead = fromMe
-          ? (
-              (d.receiverId && Array.isArray(d.readBy) && d.readBy.includes(d.receiverId)) ||
-              (!d.receiverId && Array.isArray(d.readBy) && d.readBy.length > 0)
-            )
+          ? (d.receiverId &&
+              Array.isArray(d.readBy) &&
+              d.readBy.includes(d.receiverId)) ||
+            (!d.receiverId && Array.isArray(d.readBy) && d.readBy.length > 0)
           : true;
         return {
-          id:      d.id,
-          from:    fromMe ? "me" : d.senderId,
-          type:    d.type    || "text",
-          content: d.deleted ? "This message was deleted" : (d.content || ""),
-          url:     d.url || null,
+          id: d.id,
+          from: fromMe ? "me" : d.senderId,
+          type: d.type || "text",
+          content: d.deleted ? "This message was deleted" : d.content || "",
+          url: d.url || null,
           fileName: d.fileName || null,
           fileSize: d.fileSize || null,
-          mime:    d.mime || null,
-          time:    d.timestamp?.toMillis?.() || Date.now(),
-          status:  isRead ? "read" : "sent",
-          edited:  d.edited  || false,
+          mime: d.mime || null,
+          time: d.timestamp?.toMillis?.() || Date.now(),
+          status: isRead ? "read" : "sent",
+          edited: d.edited || false,
           deleted: d.deleted || false,
           replyTo: d.replyTo || null,
           reactions: d.reactions || null,
@@ -1466,15 +1673,15 @@
       // ── Get or create a conversation doc ─────────────────────────
       async function getOrCreateConvId(db, uid1, uid2) {
         const convId = [uid1, uid2].sort().join("_");
-        const ref    = db.collection("conversations").doc(convId);
-        const snap   = await ref.get();
+        const ref = db.collection("conversations").doc(convId);
+        const snap = await ref.get();
         if (!snap.exists) {
           await ref.set({
-            participants:     [uid1, uid2],
-            createdAt:        firebase.firestore.FieldValue.serverTimestamp(),
-            lastMessage:      "",
-            lastMessageTime:  firebase.firestore.FieldValue.serverTimestamp(),
-            lastSenderId:     null,
+            participants: [uid1, uid2],
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastMessage: "",
+            lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
+            lastSenderId: null,
           });
         }
         return convId;
@@ -1482,19 +1689,19 @@
 
       // ── Render sidebar conversation list ─────────────────────────
       function renderConvList() {
-        const list  = document.getElementById("convList");
+        const list = document.getElementById("convList");
         const empty = document.getElementById("sidebarEmpty");
         if (!list) return;
 
         const active = Object.values(conversations)
-          .filter(c => c.messages.length > 0 || c.lastMessage)
+          .filter((c) => c.messages.length > 0 || c.lastMessage)
           .sort((a, b) => {
             const aT = a.messages.at?.(-1)?.time || a.lastTime || 0;
             const bT = b.messages.at?.(-1)?.time || b.lastTime || 0;
             return bT - aT;
           });
 
-        list.querySelectorAll(".conv-item").forEach(el => el.remove());
+        list.querySelectorAll(".conv-item").forEach((el) => el.remove());
 
         if (active.length === 0) {
           if (empty) empty.style.display = "flex";
@@ -1502,14 +1709,21 @@
         }
         if (empty) empty.style.display = "none";
 
-        active.forEach(conv => {
-          const u       = conv.meta;
+        active.forEach((conv) => {
+          const u = conv.meta;
           const lastMsg = conv.messages.at?.(-1);
           const preview = lastMsg
-            ? (lastMsg.type === "text" ? lastMsg.content : `[${lastMsg.type}]`)
-            : (conv.lastMessage || "");
-          const timeMs  = lastMsg?.time || conv.lastTime || 0;
-          const timeStr = timeMs ? new Date(timeMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+            ? lastMsg.type === "text"
+              ? lastMsg.content
+              : `[${lastMsg.type}]`
+            : conv.lastMessage || "";
+          const timeMs = lastMsg?.time || conv.lastTime || 0;
+          const timeStr = timeMs
+            ? new Date(timeMs).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "";
           const unreadN = conv.unreadCount || 0;
 
           const item = document.createElement("div");
@@ -1538,28 +1752,36 @@
       }
 
       function filterConvs(q) {
-        document.querySelectorAll(".conv-item").forEach(el => {
-          const name = el.querySelector(".conv-name")?.textContent.toLowerCase() || "";
+        document.querySelectorAll(".conv-item").forEach((el) => {
+          const name =
+            el.querySelector(".conv-name")?.textContent.toLowerCase() || "";
           el.style.display = name.includes(q.toLowerCase()) ? "" : "none";
         });
       }
 
       // ── Select / open a conversation ──────────────────────────────
       async function selectConversation(uid) {
-        currentConvId  = uid;
-        currentContact = conversations[uid]?.meta || VC_USERS.find(u => u.uid === uid);
+        currentConvId = uid;
+        currentContact =
+          conversations[uid]?.meta || VC_USERS.find((u) => u.uid === uid);
         if (!currentContact) return;
-        if (!conversations[uid]) conversations[uid] = { meta: currentContact, messages: [] };
+        if (!conversations[uid])
+          conversations[uid] = { meta: currentContact, messages: [] };
 
-        document.querySelectorAll(".conv-item").forEach(el => el.classList.remove("active"));
+        document
+          .querySelectorAll(".conv-item")
+          .forEach((el) => el.classList.remove("active"));
         document.getElementById("conv-" + uid)?.classList.add("active");
 
         const ha = document.getElementById("chatHeaderAvatar");
         ha.innerHTML = currentContact.avatar
           ? `<img src="${currentContact.avatar}" alt="${escapeHtml(currentContact.name)}" />`
-          : (currentContact.isGroup ? `<i class="fas fa-users"></i>` : `<i class="fas fa-user"></i>`);
-        document.getElementById("chatName").textContent   = currentContact.name;
-        document.getElementById("chatStatus").textContent = "last seen recently";
+          : currentContact.isGroup
+            ? `<i class="fas fa-users"></i>`
+            : `<i class="fas fa-user"></i>`;
+        document.getElementById("chatName").textContent = currentContact.name;
+        document.getElementById("chatStatus").textContent =
+          "last seen recently";
 
         document.getElementById("emptyChat").style.display = "none";
         document.getElementById("activeChat").style.display = "flex";
@@ -1574,20 +1796,23 @@
         if (_dbRef) {
           try {
             const convId = currentContact.isGroup
-              ? (currentContact.groupId || uid.replace(/^g_/, ""))
+              ? currentContact.groupId || uid.replace(/^g_/, "")
               : await getOrCreateConvId(_dbRef, MY_USER_ID, uid);
             currentConvId = uid; // key used in conversations{}
             _currentFirestoreConvDocId = convId;
             subscribeToConversation(_dbRef, convId);
             await markConversationRead(_dbRef, convId, uid);
-          } catch (e) { console.error("selectConversation Firestore error:", e); }
+          } catch (e) {
+            console.error("selectConversation Firestore error:", e);
+          }
         }
       }
 
       async function markConversationRead(db, convDocId, convKey) {
         try {
           const snap = await db
-            .collection("conversations").doc(convDocId)
+            .collection("conversations")
+            .doc(convDocId)
             .collection("messages")
             .orderBy("timestamp", "desc")
             .limit(80)
@@ -1600,13 +1825,21 @@
             if (m.senderId === MY_USER_ID) return;
             const readBy = Array.isArray(m.readBy) ? m.readBy : [];
             if (readBy.includes(MY_USER_ID)) return;
-            batch.update(d.ref, { readBy: firebase.firestore.FieldValue.arrayUnion(MY_USER_ID) });
+            batch.update(d.ref, {
+              readBy: firebase.firestore.FieldValue.arrayUnion(MY_USER_ID),
+            });
             touched++;
           });
           if (touched) await batch.commit();
-          await db.collection("conversations").doc(convDocId).set({
-            unreadMap: { [MY_USER_ID]: 0 },
-          }, { merge: true });
+          await db
+            .collection("conversations")
+            .doc(convDocId)
+            .set(
+              {
+                unreadMap: { [MY_USER_ID]: 0 },
+              },
+              { merge: true },
+            );
           if (conversations[convKey]) conversations[convKey].unreadCount = 0;
           renderConvList();
         } catch {}
@@ -1616,58 +1849,77 @@
         // Compute unread per conversation for the sidebar
         const convDocs = [];
         try {
-          const snap = await db.collection("conversations")
+          const snap = await db
+            .collection("conversations")
             .where("participants", "array-contains", MY_USER_ID)
             .limit(50)
             .get();
-          snap.forEach((d) => convDocs.push({ id: d.id, data: d.data() || {} }));
+          snap.forEach((d) =>
+            convDocs.push({ id: d.id, data: d.data() || {} }),
+          );
         } catch {
           return;
         }
 
-        await Promise.all(convDocs.map(async ({ id, data }) => {
-          const participants = Array.isArray(data.participants) ? data.participants : [];
-          const isGroup = (data.type === "chamber") || (participants.length > 2);
-          const key = isGroup ? ("g_" + id) : (participants.find(p => p !== MY_USER_ID) || null);
-          if (!key || !conversations[key]) return;
+        await Promise.all(
+          convDocs.map(async ({ id, data }) => {
+            const participants = Array.isArray(data.participants)
+              ? data.participants
+              : [];
+            const isGroup = data.type === "chamber" || participants.length > 2;
+            const key = isGroup
+              ? "g_" + id
+              : participants.find((p) => p !== MY_USER_ID) || null;
+            if (!key || !conversations[key]) return;
 
-          try {
-            const msgSnap = await db
-              .collection("conversations").doc(id)
-              .collection("messages")
-              .orderBy("timestamp", "desc")
-              .limit(60)
-              .get();
-            let unread = 0;
-            msgSnap.forEach((m) => {
-              const d = m.data() || {};
-              if (d.senderId === MY_USER_ID) return;
-              const readBy = Array.isArray(d.readBy) ? d.readBy : [];
-              if (!readBy.includes(MY_USER_ID)) unread++;
-            });
-            conversations[key].unreadCount = unread;
-          } catch {}
-        }));
+            try {
+              const msgSnap = await db
+                .collection("conversations")
+                .doc(id)
+                .collection("messages")
+                .orderBy("timestamp", "desc")
+                .limit(60)
+                .get();
+              let unread = 0;
+              msgSnap.forEach((m) => {
+                const d = m.data() || {};
+                if (d.senderId === MY_USER_ID) return;
+                const readBy = Array.isArray(d.readBy) ? d.readBy : [];
+                if (!readBy.includes(MY_USER_ID)) unread++;
+              });
+              conversations[key].unreadCount = unread;
+            } catch {}
+          }),
+        );
 
         renderConvList();
       }
 
       function renderMessages() {
         const container = document.getElementById("chatMessages");
-        const typing    = document.getElementById("typingIndicator");
+        const typing = document.getElementById("typingIndicator");
         container.innerHTML = "";
         container.appendChild(typing);
 
         const msgs = conversations[currentConvId]?.messages || [];
         let lastDateLabel = null;
 
-        msgs.forEach(msg => {
-          const date  = new Date(msg.time);
+        msgs.forEach((msg) => {
+          const date = new Date(msg.time);
           const today = new Date();
           let label = "";
           if (date.toDateString() === today.toDateString()) label = "Today";
-          else if (date.toDateString() === new Date(today.setDate(today.getDate() - 1)).toDateString()) label = "Yesterday";
-          else label = date.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
+          else if (
+            date.toDateString() ===
+            new Date(today.setDate(today.getDate() - 1)).toDateString()
+          )
+            label = "Yesterday";
+          else
+            label = date.toLocaleDateString([], {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            });
 
           if (label !== lastDateLabel) {
             const sep = document.createElement("div");
@@ -1683,14 +1935,15 @@
 
       function buildMsgEl(msg) {
         const isOut = msg.from === "me";
-        const wrap  = document.createElement("div");
+        const wrap = document.createElement("div");
         wrap.className = `msg-wrap ${isOut ? "out" : "in"}`;
         wrap.id = "msg-" + msg.id;
 
         let content = "";
         if (msg.type === "text") {
           content = escapeHtml(msg.content);
-          if (msg.edited) content += ` <span class="edited-tag">(edited)</span>`;
+          if (msg.edited)
+            content += ` <span class="edited-tag">(edited)</span>`;
         } else if (msg.type === "image") {
           const safeUrl = msg.url ? escapeHtml(msg.url) : "";
           content = safeUrl
@@ -1701,9 +1954,10 @@
         } else if (msg.type === "file") {
           const safeUrl = msg.url ? escapeHtml(msg.url) : "";
           const name = escapeHtml(msg.fileName || "file");
-          const size = typeof msg.fileSize === "number"
-            ? `${Math.max(1, Math.round(msg.fileSize / 1024))} KB`
-            : "";
+          const size =
+            typeof msg.fileSize === "number"
+              ? `${Math.max(1, Math.round(msg.fileSize / 1024))} KB`
+              : "";
           content = `
             <div style="display:flex;align-items:center;gap:10px;min-width:200px;max-width:280px;">
               <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;">
@@ -1724,16 +1978,23 @@
             : `<span style="color:rgba(255,255,255,0.7)">[audio unavailable]</span>`;
         }
 
-        const ticks  = isOut ? `<span class="ticks${msg.status === "read" ? " read" : ""}"><i class="fas fa-check-double"></i></span>` : "";
-        const timeStr = new Date(msg.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const ticks = isOut
+          ? `<span class="ticks${msg.status === "read" ? " read" : ""}"><i class="fas fa-check-double"></i></span>`
+          : "";
+        const timeStr = new Date(msg.time).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
 
         // Reply preview (if this message replies to another message)
         let replyPreview = "";
         if (msg.replyTo) {
           const parent = findMsg(msg.replyTo);
           if (parent) {
-            const pName = parent.from === "me" ? "You" : (currentContact?.name || "Member");
-            const pText = parent.type === "text" ? parent.content : `[${parent.type}]`;
+            const pName =
+              parent.from === "me" ? "You" : currentContact?.name || "Member";
+            const pText =
+              parent.type === "text" ? parent.content : `[${parent.type}]`;
             replyPreview = `
               <div class="reply-preview">
                 <div class="rp-name">${escapeHtml(pName)}</div>
@@ -1763,11 +2024,27 @@
           openMsgActions(msg);
         });
         let _lpTimer = null;
-        bubble?.addEventListener("touchstart", () => {
-          _lpTimer = setTimeout(() => openMsgActions(msg), 520);
-        }, { passive: true });
-        bubble?.addEventListener("touchend", () => { if (_lpTimer) clearTimeout(_lpTimer); }, { passive: true });
-        bubble?.addEventListener("touchmove", () => { if (_lpTimer) clearTimeout(_lpTimer); }, { passive: true });
+        bubble?.addEventListener(
+          "touchstart",
+          () => {
+            _lpTimer = setTimeout(() => openMsgActions(msg), 520);
+          },
+          { passive: true },
+        );
+        bubble?.addEventListener(
+          "touchend",
+          () => {
+            if (_lpTimer) clearTimeout(_lpTimer);
+          },
+          { passive: true },
+        );
+        bubble?.addEventListener(
+          "touchmove",
+          () => {
+            if (_lpTimer) clearTimeout(_lpTimer);
+          },
+          { passive: true },
+        );
         return wrap;
       }
 
@@ -1789,8 +2066,10 @@
         if (!confirm("Delete this message?")) return;
         try {
           await _dbRef
-            .collection("conversations").doc(_currentFirestoreConvDocId)
-            .collection("messages").doc(msg.id)
+            .collection("conversations")
+            .doc(_currentFirestoreConvDocId)
+            .collection("messages")
+            .doc(msg.id)
             .update({
               deleted: true,
               deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1809,7 +2088,9 @@
         const parts = [];
         Object.entries(reactions).forEach(([emoji, arr]) => {
           if (!Array.isArray(arr) || arr.length === 0) return;
-          parts.push(`<span class="rxn-chip">${escapeHtml(emoji)} ${arr.length}</span>`);
+          parts.push(
+            `<span class="rxn-chip">${escapeHtml(emoji)} ${arr.length}</span>`,
+          );
         });
         return parts.join("");
       }
@@ -1820,15 +2101,23 @@
         if (!msg || !msg.id || !_dbRef || !_currentFirestoreConvDocId) return;
         try {
           const ref = _dbRef
-            .collection("conversations").doc(_currentFirestoreConvDocId)
-            .collection("messages").doc(msg.id);
+            .collection("conversations")
+            .doc(_currentFirestoreConvDocId)
+            .collection("messages")
+            .doc(msg.id);
           const snap = await ref.get();
           if (!snap.exists) return;
           const d = snap.data() || {};
-          const reactions = (d.reactions && typeof d.reactions === "object") ? { ...d.reactions } : {};
-          const list = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
+          const reactions =
+            d.reactions && typeof d.reactions === "object"
+              ? { ...d.reactions }
+              : {};
+          const list = Array.isArray(reactions[emoji])
+            ? [...reactions[emoji]]
+            : [];
           const i = list.indexOf(MY_USER_ID);
-          if (i >= 0) list.splice(i, 1); else list.push(MY_USER_ID);
+          if (i >= 0) list.splice(i, 1);
+          else list.push(MY_USER_ID);
           reactions[emoji] = list;
           await ref.update({ reactions });
         } catch (e) {
@@ -1841,7 +2130,10 @@
         const msg = _selectedMsgForAction;
         closeMsgActions();
         if (!msg) return;
-        _forwardPayload = { type: msg.type || "text", content: msg.content || "" };
+        _forwardPayload = {
+          type: msg.type || "text",
+          content: msg.content || "",
+        };
         openForwardModal();
       }
 
@@ -1865,7 +2157,9 @@
           list.innerHTML = `<div class="nm-empty"><i class="fas fa-user-slash"></i><h4>No members found</h4></div>`;
           return;
         }
-        list.innerHTML = users.map(u => `
+        list.innerHTML = users
+          .map(
+            (u) => `
           <div class="nm-item" onclick="forwardToUser('${u.uid}')">
             <div class="nm-avatar">${u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />` : `<i class="fas fa-user"></i>`}</div>
             <div style="flex:1">
@@ -1873,15 +2167,18 @@
               <div class="nm-role">${escapeHtml(u.role || "Member")}</div>
             </div>
           </div>
-        `).join("");
+        `,
+          )
+          .join("");
       }
 
       // Override search to work for forward mode too
       const _filterNewMsgBase = filterNewMsg;
       function filterNewMsg(q) {
-        const base = VC_USERS.filter(u =>
-          u.name.toLowerCase().includes(q.toLowerCase()) ||
-          (u.role || "").toLowerCase().includes(q.toLowerCase())
+        const base = VC_USERS.filter(
+          (u) =>
+            u.name.toLowerCase().includes(q.toLowerCase()) ||
+            (u.role || "").toLowerCase().includes(q.toLowerCase()),
         );
         if (_forwardPayload) renderForwardList(base);
         else _filterNewMsgBase(q);
@@ -1895,24 +2192,33 @@
         try {
           const convId = await getOrCreateConvId(_dbRef, MY_USER_ID, uid);
           const clientId = `msg_${Date.now()}_${MY_USER_ID}`;
-          await _dbRef.collection("conversations").doc(convId).collection("messages").doc(clientId).set({
-            conversationId: convId,
-            senderId:       MY_USER_ID,
-            receiverId:     uid,
-            content:        payload.content,
-            type:           payload.type || "text",
-            replyTo:        null,
-            forwarded:      true,
-            readBy:         [MY_USER_ID],
-            deleted:        false,
-            edited:         false,
-            timestamp:      firebase.firestore.FieldValue.serverTimestamp(),
-          });
-          await _dbRef.collection("conversations").doc(convId).update({
-            lastMessage:     payload.type === "text" ? payload.content : `[${payload.type}]`,
-            lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
-            lastSenderId:    MY_USER_ID,
-          });
+          await _dbRef
+            .collection("conversations")
+            .doc(convId)
+            .collection("messages")
+            .doc(clientId)
+            .set({
+              conversationId: convId,
+              senderId: MY_USER_ID,
+              receiverId: uid,
+              content: payload.content,
+              type: payload.type || "text",
+              replyTo: null,
+              forwarded: true,
+              readBy: [MY_USER_ID],
+              deleted: false,
+              edited: false,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+          await _dbRef
+            .collection("conversations")
+            .doc(convId)
+            .update({
+              lastMessage:
+                payload.type === "text" ? payload.content : `[${payload.type}]`,
+              lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
+              lastSenderId: MY_USER_ID,
+            });
           toast("Forwarded");
         } catch (e) {
           console.error("forwardToUser:", e);
@@ -1927,18 +2233,18 @@
 
       // ── Send a message ────────────────────────────────────────────
       async function sendTextMessage() {
-        const inp  = document.getElementById("msgInput");
+        const inp = document.getElementById("msgInput");
         const text = inp.value.trim();
         if (!text || !currentConvId) return;
 
         const clientId = `msg_${Date.now()}_${MY_USER_ID}`;
         const localMsg = {
-          id:      clientId,
-          from:    "me",
-          type:    "text",
+          id: clientId,
+          from: "me",
+          type: "text",
           content: text,
-          time:    Date.now(),
-          status:  "sent",
+          time: Date.now(),
+          status: "sent",
           replyTo: replyTarget,
         };
 
@@ -1955,29 +2261,43 @@
           try {
             const isGroup = !!(currentContact && currentContact.isGroup);
             const convId = isGroup
-              ? (_currentFirestoreConvDocId || currentContact.groupId || String(currentConvId).replace(/^g_/, ""))
+              ? _currentFirestoreConvDocId ||
+                currentContact.groupId ||
+                String(currentConvId).replace(/^g_/, "")
               : await getOrCreateConvId(_dbRef, MY_USER_ID, currentConvId);
-            const msgCol = _dbRef.collection("conversations").doc(convId).collection("messages");
+            const msgCol = _dbRef
+              .collection("conversations")
+              .doc(convId)
+              .collection("messages");
             await msgCol.doc(clientId).set({
               conversationId: convId,
-              senderId:       MY_USER_ID,
-              receiverId:     isGroup ? null : currentConvId,
-              content:        text,
-              type:           "text",
-              replyTo:        replyTarget || null,
-              reactions:      {},
-              readBy:         [MY_USER_ID],
-              deleted:        false,
-              edited:         false,
-              timestamp:      firebase.firestore.FieldValue.serverTimestamp(),
+              senderId: MY_USER_ID,
+              receiverId: isGroup ? null : currentConvId,
+              content: text,
+              type: "text",
+              replyTo: replyTarget || null,
+              reactions: {},
+              readBy: [MY_USER_ID],
+              deleted: false,
+              edited: false,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             });
             // Update conversation preview
-            await _dbRef.collection("conversations").doc(convId).update({
-              lastMessage:     text,
-              lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
-              lastSenderId:    MY_USER_ID,
-              ...(isGroup ? {} : { [`unreadMap.${currentConvId}`]: firebase.firestore.FieldValue.increment(1) }),
-            });
+            await _dbRef
+              .collection("conversations")
+              .doc(convId)
+              .update({
+                lastMessage: text,
+                lastMessageTime:
+                  firebase.firestore.FieldValue.serverTimestamp(),
+                lastSenderId: MY_USER_ID,
+                ...(isGroup
+                  ? {}
+                  : {
+                      [`unreadMap.${currentConvId}`]:
+                        firebase.firestore.FieldValue.increment(1),
+                    }),
+              });
 
             // Unread indicator for receiver (red dot via notifications) — direct messages only
             if (!isGroup) {
@@ -1991,14 +2311,18 @@
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
               });
             }
-          } catch (e) { console.error("sendMessage Firestore error:", e); }
+          } catch (e) {
+            console.error("sendMessage Firestore error:", e);
+          }
         }
       }
 
       function pushMessage(msg) {
-        if (!conversations[currentConvId]) conversations[currentConvId] = { meta: currentContact, messages: [] };
+        if (!conversations[currentConvId])
+          conversations[currentConvId] = { meta: currentContact, messages: [] };
         // Avoid duplicate if real-time listener fires first
-        if (conversations[currentConvId].messages.find(m => m.id === msg.id)) return;
+        if (conversations[currentConvId].messages.find((m) => m.id === msg.id))
+          return;
         conversations[currentConvId].messages.push(msg);
         const c = document.getElementById("chatMessages");
         const t = document.getElementById("typingIndicator");
@@ -2015,7 +2339,7 @@
 
       function findMsg(id) {
         for (const conv of Object.values(conversations)) {
-          const m = conv.messages?.find(x => x.id === id);
+          const m = conv.messages?.find((x) => x.id === id);
           if (m) return m;
         }
         return null;
@@ -2035,8 +2359,10 @@
 
       function updateSendMic() {
         const val = document.getElementById("msgInput").value.trim();
-        document.getElementById("sendBtn").style.display = val ? "flex" : "none";
-        document.getElementById("micBtn").style.display  = val ? "none"  : "flex";
+        document.getElementById("sendBtn").style.display = val
+          ? "flex"
+          : "none";
+        document.getElementById("micBtn").style.display = val ? "none" : "flex";
       }
 
       function cancelReply() {
@@ -2049,25 +2375,34 @@
         if (!msg || !msg.id) return;
         replyTarget = msg.id;
         const rb = document.getElementById("replyBar");
-        const n  = document.getElementById("replyBarName");
-        const t  = document.getElementById("replyBarText");
-        if (n) n.textContent = msg.from === "me" ? "You" : (currentContact?.name || "Member");
-        if (t) t.textContent = (msg.type === "text" ? msg.content : `[${msg.type}]`) || "";
+        const n = document.getElementById("replyBarName");
+        const t = document.getElementById("replyBarText");
+        if (n)
+          n.textContent =
+            msg.from === "me" ? "You" : currentContact?.name || "Member";
+        if (t)
+          t.textContent =
+            (msg.type === "text" ? msg.content : `[${msg.type}]`) || "";
         rb?.classList.add("visible");
 
         // Keep a pinned banner under the header (does not disappear while typing)
         const rTop = document.getElementById("replyTop");
-        const rN   = document.getElementById("replyTopName");
-        const rT   = document.getElementById("replyTopText");
-        if (rN) rN.textContent = msg.from === "me" ? "You" : (currentContact?.name || "Member");
-        if (rT) rT.textContent = (msg.type === "text" ? msg.content : `[${msg.type}]`) || "";
+        const rN = document.getElementById("replyTopName");
+        const rT = document.getElementById("replyTopText");
+        if (rN)
+          rN.textContent =
+            msg.from === "me" ? "You" : currentContact?.name || "Member";
+        if (rT)
+          rT.textContent =
+            (msg.type === "text" ? msg.content : `[${msg.type}]`) || "";
         rTop?.classList.add("visible");
 
         document.getElementById("msgInput")?.focus();
       }
 
       function clearChat() {
-        if (!currentConvId || !confirm("Clear all messages in this chat?")) return;
+        if (!currentConvId || !confirm("Clear all messages in this chat?"))
+          return;
         conversations[currentConvId].messages = [];
         renderMessages();
         renderConvList();
@@ -2092,7 +2427,9 @@
           list.innerHTML = `<div class="nm-empty"><i class="fas fa-user-slash"></i><h4>No members found</h4><p style="font-size:12px;color:#8696a0;margin-top:6px;">Be the first — invite friends to join Vertex Chamber!</p></div>`;
           return;
         }
-        list.innerHTML = users.map(u => `
+        list.innerHTML = users
+          .map(
+            (u) => `
           <div class="nm-item" onclick="startNewConv('${u.uid}')">
             <div class="nm-avatar">${u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />` : `<i class="fas fa-user"></i>`}</div>
             <div style="flex:1">
@@ -2100,30 +2437,36 @@
               <div class="nm-role">${escapeHtml(u.role || "Member")}</div>
             </div>
           </div>
-        `).join("");
+        `,
+          )
+          .join("");
       }
 
       function filterNewMsg(q) {
-        renderNmList(VC_USERS.filter(u =>
-          u.name.toLowerCase().includes(q.toLowerCase()) ||
-          (u.role || "").toLowerCase().includes(q.toLowerCase())
-        ));
+        renderNmList(
+          VC_USERS.filter(
+            (u) =>
+              u.name.toLowerCase().includes(q.toLowerCase()) ||
+              (u.role || "").toLowerCase().includes(q.toLowerCase()),
+          ),
+        );
       }
 
       function startNewConv(uid) {
         closeNewMsgModal();
-        const user = VC_USERS.find(u => u.uid === uid);
-        if (user && !conversations[uid]) conversations[uid] = { meta: user, messages: [] };
+        const user = VC_USERS.find((u) => u.uid === uid);
+        if (user && !conversations[uid])
+          conversations[uid] = { meta: user, messages: [] };
         selectConversation(uid);
       }
 
       function toggleEmoji(e) {
         e.stopPropagation();
         const picker = document.getElementById("emojiPicker");
-        const btn    = document.getElementById("emojiToggleBtn");
-        const rect   = btn.getBoundingClientRect();
+        const btn = document.getElementById("emojiToggleBtn");
+        const rect = btn.getBoundingClientRect();
         picker.style.bottom = window.innerHeight - rect.top + 8 + "px";
-        picker.style.left   = rect.left + "px";
+        picker.style.left = rect.left + "px";
         const isOpen = picker.classList.contains("open");
         closeAllDropdowns();
         if (!isOpen) {
@@ -2160,7 +2503,10 @@
         if (!file || !currentConvId || !_dbRef) return;
         toast("Uploading…");
         try {
-          await sendAttachmentPayload(file, (type === "image" ? "image" : "file"));
+          await sendAttachmentPayload(
+            file,
+            type === "image" ? "image" : "file",
+          );
           toast("Sent");
         } catch (e) {
           console.error("handleFileUpload:", e);
@@ -2172,46 +2518,74 @@
         if (!fileLike || !currentConvId || !_dbRef) return;
         const isGroup = !!(currentContact && currentContact.isGroup);
         const convId = isGroup
-          ? (_currentFirestoreConvDocId || currentContact.groupId || String(currentConvId).replace(/^g_/, ""))
+          ? _currentFirestoreConvDocId ||
+            currentContact.groupId ||
+            String(currentConvId).replace(/^g_/, "")
           : await getOrCreateConvId(_dbRef, MY_USER_ID, currentConvId);
         const clientId = `msg_${Date.now()}_${MY_USER_ID}`;
         const msgType = forcedType || "file";
         const previewText =
-          msgType === "image" ? "📷 Photo" :
-          msgType === "audio" ? "🎤 Voice note" :
-          `📎 ${fileLike.name || "file"}`;
+          msgType === "image"
+            ? "📷 Photo"
+            : msgType === "audio"
+              ? "🎤 Voice note"
+              : `📎 ${fileLike.name || "file"}`;
 
         try {
           if (!_storageRef) throw new Error("storage/unknown");
-          const safeName = String(fileLike.name || "file").replace(/[^\w.\-]+/g, "_").slice(0, 120);
+          const safeName = String(fileLike.name || "file")
+            .replace(/[^\w.\-]+/g, "_")
+            .slice(0, 120);
           const objPath = `uploads/${convId}/${clientId}_${safeName}`;
           const ref = _storageRef.ref().child(objPath);
-          const snap = await ref.put(fileLike, { contentType: fileLike.type || undefined });
+          const snap = await ref.put(fileLike, {
+            contentType: fileLike.type || undefined,
+          });
           const url = await snap.ref.getDownloadURL();
 
-          await _dbRef.collection("conversations").doc(convId).collection("messages").doc(clientId).set({
-            conversationId: convId,
-            senderId: MY_USER_ID,
-            receiverId: isGroup ? null : currentConvId,
-            type: msgType,
-            content: "",
-            url,
-            fileName: fileLike.name || null,
-            fileSize: typeof fileLike.size === "number" ? fileLike.size : null,
-            mime: fileLike.type || null,
-            replyTo: replyTarget || null,
-            reactions: {},
-            readBy: [MY_USER_ID],
-            deleted: false,
-            edited: false,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          });
-          await _dbRef.collection("conversations").doc(convId).set({
-            lastMessage: previewText,
-            lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
-            lastSenderId: MY_USER_ID,
-            ...(isGroup ? {} : { unreadMap: { [currentConvId]: firebase.firestore.FieldValue.increment(1) } }),
-          }, { merge: true });
+          await _dbRef
+            .collection("conversations")
+            .doc(convId)
+            .collection("messages")
+            .doc(clientId)
+            .set({
+              conversationId: convId,
+              senderId: MY_USER_ID,
+              receiverId: isGroup ? null : currentConvId,
+              type: msgType,
+              content: "",
+              url,
+              fileName: fileLike.name || null,
+              fileSize:
+                typeof fileLike.size === "number" ? fileLike.size : null,
+              mime: fileLike.type || null,
+              replyTo: replyTarget || null,
+              reactions: {},
+              readBy: [MY_USER_ID],
+              deleted: false,
+              edited: false,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+          await _dbRef
+            .collection("conversations")
+            .doc(convId)
+            .set(
+              {
+                lastMessage: previewText,
+                lastMessageTime:
+                  firebase.firestore.FieldValue.serverTimestamp(),
+                lastSenderId: MY_USER_ID,
+                ...(isGroup
+                  ? {}
+                  : {
+                      unreadMap: {
+                        [currentConvId]:
+                          firebase.firestore.FieldValue.increment(1),
+                      },
+                    }),
+              },
+              { merge: true },
+            );
           pushMessage({
             id: clientId,
             from: "me",
@@ -2237,32 +2611,54 @@
             msg.includes("storage/unknown");
           if (!isBucketIssue) throw e;
           if ((fileLike.size || 0) > MAX_INLINE_FILE_BYTES) {
-            throw new Error("Storage bucket unavailable and fallback size exceeded");
+            throw new Error(
+              "Storage bucket unavailable and fallback size exceeded",
+            );
           }
           const dataUrl = await fileToDataUrl(fileLike);
-          await _dbRef.collection("conversations").doc(convId).collection("messages").doc(clientId).set({
-            conversationId: convId,
-            senderId: MY_USER_ID,
-            receiverId: isGroup ? null : currentConvId,
-            type: msgType,
-            content: "",
-            url: dataUrl,
-            fileName: fileLike.name || null,
-            fileSize: typeof fileLike.size === "number" ? fileLike.size : null,
-            mime: fileLike.type || null,
-            replyTo: replyTarget || null,
-            reactions: {},
-            readBy: [MY_USER_ID],
-            deleted: false,
-            edited: false,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          });
-          await _dbRef.collection("conversations").doc(convId).set({
-            lastMessage: previewText,
-            lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
-            lastSenderId: MY_USER_ID,
-            ...(isGroup ? {} : { unreadMap: { [currentConvId]: firebase.firestore.FieldValue.increment(1) } }),
-          }, { merge: true });
+          await _dbRef
+            .collection("conversations")
+            .doc(convId)
+            .collection("messages")
+            .doc(clientId)
+            .set({
+              conversationId: convId,
+              senderId: MY_USER_ID,
+              receiverId: isGroup ? null : currentConvId,
+              type: msgType,
+              content: "",
+              url: dataUrl,
+              fileName: fileLike.name || null,
+              fileSize:
+                typeof fileLike.size === "number" ? fileLike.size : null,
+              mime: fileLike.type || null,
+              replyTo: replyTarget || null,
+              reactions: {},
+              readBy: [MY_USER_ID],
+              deleted: false,
+              edited: false,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+          await _dbRef
+            .collection("conversations")
+            .doc(convId)
+            .set(
+              {
+                lastMessage: previewText,
+                lastMessageTime:
+                  firebase.firestore.FieldValue.serverTimestamp(),
+                lastSenderId: MY_USER_ID,
+                ...(isGroup
+                  ? {}
+                  : {
+                      unreadMap: {
+                        [currentConvId]:
+                          firebase.firestore.FieldValue.increment(1),
+                      },
+                    }),
+              },
+              { merge: true },
+            );
           pushMessage({
             id: clientId,
             from: "me",
@@ -2294,9 +2690,18 @@
       let _remoteAudioEl = null;
 
       function _stunConfig() {
-        const configured = Array.isArray(window.VERTEX_ICE_SERVERS) && window.VERTEX_ICE_SERVERS.length
-          ? window.VERTEX_ICE_SERVERS
-          : [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }];
+        const configured =
+          Array.isArray(window.VERTEX_ICE_SERVERS) &&
+          window.VERTEX_ICE_SERVERS.length
+            ? window.VERTEX_ICE_SERVERS
+            : [
+                {
+                  urls: [
+                    "stun:stun.l.google.com:19302",
+                    "stun:stun1.l.google.com:19302",
+                  ],
+                },
+              ];
         return {
           iceServers: configured,
           iceCandidatePoolSize: 10,
@@ -2306,10 +2711,16 @@
       }
 
       function _hasTurnServer() {
-        const servers = (Array.isArray(window.VERTEX_ICE_SERVERS) ? window.VERTEX_ICE_SERVERS : []);
+        const servers = Array.isArray(window.VERTEX_ICE_SERVERS)
+          ? window.VERTEX_ICE_SERVERS
+          : [];
         return servers.some((s) => {
           const urls = Array.isArray(s?.urls) ? s.urls : [s?.urls];
-          return urls.some((u) => String(u || "").startsWith("turn:") || String(u || "").startsWith("turns:"));
+          return urls.some(
+            (u) =>
+              String(u || "").startsWith("turn:") ||
+              String(u || "").startsWith("turns:"),
+          );
         });
       }
 
@@ -2317,11 +2728,14 @@
         if (!_pc) return;
         _pc.oniceconnectionstatechange = () => {
           const st = _pc.iceConnectionState || "";
-          if (st === "connected" || st === "completed") setCallStatus("connected");
+          if (st === "connected" || st === "completed")
+            setCallStatus("connected");
           if (st === "disconnected") setCallStatus("connecting");
           if (st === "failed") {
             setCallStatus("Connection failed");
-            toast("Call path failed. Add TURN servers in push_config.js for internet-wide calls.");
+            toast(
+              "Call path failed. Add TURN servers in push_config.js for internet-wide calls.",
+            );
           }
         };
         _pc.onconnectionstatechange = () => {
@@ -2334,14 +2748,23 @@
         };
       }
 
-      async function startVideoCall() { await startCall("video"); }
-      async function startVoiceCall() { await startCall("audio"); }
+      async function startVideoCall() {
+        await startCall("video");
+      }
+      async function startVoiceCall() {
+        await startCall("audio");
+      }
 
       async function startCall(kind) {
         if (!currentConvId || !_dbRef) return;
-        if (currentContact?.isGroup) { toast("Group calls are not enabled in this build."); return; }
+        if (currentContact?.isGroup) {
+          toast("Group calls are not enabled in this build.");
+          return;
+        }
         if (!_hasTurnServer()) {
-          toast("TURN not configured: long-distance calls may fail. Add TURN servers in push_config.js.");
+          toast(
+            "TURN not configured: long-distance calls may fail. Add TURN servers in push_config.js.",
+          );
         }
         const calleeId = currentConvId;
         const convId = await getOrCreateConvId(_dbRef, MY_USER_ID, calleeId);
@@ -2350,9 +2773,24 @@
 
         openCallUi(kind, "calling");
 
-        const constraints = kind === "video"
-          ? { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: { facingMode: "user" } }
-          : { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false };
+        const constraints =
+          kind === "video"
+            ? {
+                audio: {
+                  echoCancellation: true,
+                  noiseSuppression: true,
+                  autoGainControl: true,
+                },
+                video: { facingMode: "user" },
+              }
+            : {
+                audio: {
+                  echoCancellation: true,
+                  noiseSuppression: true,
+                  autoGainControl: true,
+                },
+                video: false,
+              };
         _localStream = await navigator.mediaDevices.getUserMedia(constraints);
         attachLocalStream(_localStream);
 
@@ -2362,13 +2800,16 @@
         attachRemoteStream(_remoteStream);
 
         _localStream.getTracks().forEach((t) => _pc.addTrack(t, _localStream));
-        _pc.ontrack = (e) => e.streams[0].getTracks().forEach((t) => _remoteStream.addTrack(t));
+        _pc.ontrack = (e) =>
+          e.streams[0].getTracks().forEach((t) => _remoteStream.addTrack(t));
 
         const callRef = _dbRef.collection("calls").doc(callId);
         const offerCandidates = callRef.collection("offerCandidates");
         const answerCandidates = callRef.collection("answerCandidates");
 
-        _pc.onicecandidate = (e) => { if (e.candidate) offerCandidates.add(e.candidate.toJSON()); };
+        _pc.onicecandidate = (e) => {
+          if (e.candidate) offerCandidates.add(e.candidate.toJSON());
+        };
 
         const offer = await _pc.createOffer();
         await _pc.setLocalDescription(offer);
@@ -2393,24 +2834,31 @@
             return;
           }
           if (data.answer && !_pc.currentRemoteDescription) {
-            await _pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+            await _pc.setRemoteDescription(
+              new RTCSessionDescription(data.answer),
+            );
             setCallStatus("connected");
           }
         });
 
-        _callIceUnsubs.push(answerCandidates.onSnapshot((snap) => {
-          snap.docChanges().forEach((c) => {
-            if (c.type === "added") {
-              _pc.addIceCandidate(new RTCIceCandidate(c.doc.data())).catch(() => {});
-            }
-          });
-        }));
+        _callIceUnsubs.push(
+          answerCandidates.onSnapshot((snap) => {
+            snap.docChanges().forEach((c) => {
+              if (c.type === "added") {
+                _pc
+                  .addIceCandidate(new RTCIceCandidate(c.doc.data()))
+                  .catch(() => {});
+              }
+            });
+          }),
+        );
       }
 
       function watchIncomingCalls() {
         if (!_dbRef) return;
         // Listen for incoming ringing calls
-        _dbRef.collection("calls")
+        _dbRef
+          .collection("calls")
           .where("calleeId", "==", MY_USER_ID)
           .where("status", "==", "ringing")
           .onSnapshot((snap) => {
@@ -2436,9 +2884,24 @@
 
         openCallUi(kind, "connecting");
 
-        const constraints = kind === "video"
-          ? { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: { facingMode: "user" } }
-          : { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false };
+        const constraints =
+          kind === "video"
+            ? {
+                audio: {
+                  echoCancellation: true,
+                  noiseSuppression: true,
+                  autoGainControl: true,
+                },
+                video: { facingMode: "user" },
+              }
+            : {
+                audio: {
+                  echoCancellation: true,
+                  noiseSuppression: true,
+                  autoGainControl: true,
+                },
+                video: false,
+              };
         _localStream = await navigator.mediaDevices.getUserMedia(constraints);
         attachLocalStream(_localStream);
 
@@ -2448,25 +2911,35 @@
         attachRemoteStream(_remoteStream);
 
         _localStream.getTracks().forEach((t) => _pc.addTrack(t, _localStream));
-        _pc.ontrack = (e) => e.streams[0].getTracks().forEach((t) => _remoteStream.addTrack(t));
+        _pc.ontrack = (e) =>
+          e.streams[0].getTracks().forEach((t) => _remoteStream.addTrack(t));
 
         const offerCandidates = callRef.collection("offerCandidates");
         const answerCandidates = callRef.collection("answerCandidates");
-        _pc.onicecandidate = (e) => { if (e.candidate) answerCandidates.add(e.candidate.toJSON()); };
+        _pc.onicecandidate = (e) => {
+          if (e.candidate) answerCandidates.add(e.candidate.toJSON());
+        };
 
         await _pc.setRemoteDescription(new RTCSessionDescription(data.offer));
         const answer = await _pc.createAnswer();
         await _pc.setLocalDescription(answer);
-        await callRef.update({ answer: { type: answer.type, sdp: answer.sdp }, status: "active" });
+        await callRef.update({
+          answer: { type: answer.type, sdp: answer.sdp },
+          status: "active",
+        });
         setCallStatus("connected");
 
-        _callIceUnsubs.push(offerCandidates.onSnapshot((snap) => {
-          snap.docChanges().forEach((c) => {
-            if (c.type === "added") {
-              _pc.addIceCandidate(new RTCIceCandidate(c.doc.data())).catch(() => {});
-            }
-          });
-        }));
+        _callIceUnsubs.push(
+          offerCandidates.onSnapshot((snap) => {
+            snap.docChanges().forEach((c) => {
+              if (c.type === "added") {
+                _pc
+                  .addIceCandidate(new RTCIceCandidate(c.doc.data()))
+                  .catch(() => {});
+              }
+            });
+          }),
+        );
 
         _callUnsub = callRef.onSnapshot(async (s) => {
           const d = s.data() || {};
@@ -2480,27 +2953,47 @@
 
       async function declineIncomingCall() {
         if (!_callDocId || !_dbRef) return;
-        try { await _dbRef.collection("calls").doc(_callDocId).update({ status: "declined" }); } catch {}
+        try {
+          await _dbRef
+            .collection("calls")
+            .doc(_callDocId)
+            .update({ status: "declined" });
+        } catch {}
         closeIncomingCallUi();
         _callDocId = null;
       }
 
       async function hangUpCall() {
         if (_callDocId && _dbRef) {
-          try { await _dbRef.collection("calls").doc(_callDocId).update({ status: "ended" }); } catch {}
+          try {
+            await _dbRef
+              .collection("calls")
+              .doc(_callDocId)
+              .update({ status: "ended" });
+          } catch {}
         }
         endCallUi();
         await cleanupCall();
       }
 
       async function cleanupCall() {
-        try { _callUnsub && _callUnsub(); } catch {}
+        try {
+          _callUnsub && _callUnsub();
+        } catch {}
         _callUnsub = null;
-        _callIceUnsubs.forEach((u) => { try { u(); } catch {} });
+        _callIceUnsubs.forEach((u) => {
+          try {
+            u();
+          } catch {}
+        });
         _callIceUnsubs = [];
-        try { _pc && _pc.close(); } catch {}
+        try {
+          _pc && _pc.close();
+        } catch {}
         _pc = null;
-        try { _localStream && _localStream.getTracks().forEach((t) => t.stop()); } catch {}
+        try {
+          _localStream && _localStream.getTracks().forEach((t) => t.stop());
+        } catch {}
         _localStream = null;
         _remoteStream = null;
         _callDocId = null;
@@ -2512,11 +3005,14 @@
         if (!m) return;
         m.classList.add("open");
         m.setAttribute("data-kind", kind);
-        document.getElementById("callKind").textContent = kind === "video" ? "Video call" : "Voice call";
-        document.getElementById("callPeer").textContent = currentContact?.name || "Member";
+        document.getElementById("callKind").textContent =
+          kind === "video" ? "Video call" : "Voice call";
+        document.getElementById("callPeer").textContent =
+          currentContact?.name || "Member";
         const a = document.getElementById("callCenterAvatar");
         if (a) {
-          if (currentContact?.avatar) a.innerHTML = `<img src="${currentContact.avatar}" alt="peer">`;
+          if (currentContact?.avatar)
+            a.innerHTML = `<img src="${currentContact.avatar}" alt="peer">`;
           else a.innerHTML = `<i class="fas fa-user"></i>`;
         }
         setCallStatus(state);
@@ -2526,7 +3022,12 @@
       function setCallStatus(state) {
         const el = document.getElementById("callStatus");
         if (!el) return;
-        const map = { calling: "Calling…", ringing: "Ringing…", connecting: "Connecting…", connected: "Connected" };
+        const map = {
+          calling: "Calling…",
+          ringing: "Ringing…",
+          connecting: "Connecting…",
+          connected: "Connected",
+        };
         el.textContent = map[state] || state;
       }
 
@@ -2571,13 +3072,16 @@
         if (!m) return;
         m.classList.add("open");
         const callerId = data.callerId || "";
-        const caller = VC_USERS.find(u => u.uid === callerId) || null;
-        const callerName = caller?.name || data.callerName || callerId || "Member";
+        const caller = VC_USERS.find((u) => u.uid === callerId) || null;
+        const callerName =
+          caller?.name || data.callerName || callerId || "Member";
         document.getElementById("callPeer").textContent = callerName;
-        document.getElementById("callKind").textContent = (data.kind === "video") ? "Incoming video call" : "Incoming voice call";
+        document.getElementById("callKind").textContent =
+          data.kind === "video" ? "Incoming video call" : "Incoming voice call";
         const a = document.getElementById("callCenterAvatar");
         if (a) {
-          if (caller?.avatar || data.callerAvatar) a.innerHTML = `<img src="${caller?.avatar || data.callerAvatar}" alt="caller">`;
+          if (caller?.avatar || data.callerAvatar)
+            a.innerHTML = `<img src="${caller?.avatar || data.callerAvatar}" alt="caller">`;
           else a.innerHTML = `<i class="fas fa-user"></i>`;
         }
         setCallStatus("ringing");
@@ -2590,16 +3094,29 @@
 
       async function toggleRecord() {
         if (!_isRecording) {
-          if (!currentConvId) { toast("Open a chat first"); return; }
+          if (!currentConvId) {
+            toast("Open a chat first");
+            return;
+          }
           try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: true,
+            });
             _recordedChunks = [];
-            _mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-            _mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) _recordedChunks.push(e.data); };
+            _mediaRecorder = new MediaRecorder(stream, {
+              mimeType: "audio/webm",
+            });
+            _mediaRecorder.ondataavailable = (e) => {
+              if (e.data && e.data.size > 0) _recordedChunks.push(e.data);
+            };
             _mediaRecorder.onstop = async () => {
-              try { stream.getTracks().forEach((t) => t.stop()); } catch {}
+              try {
+                stream.getTracks().forEach((t) => t.stop());
+              } catch {}
               const blob = new Blob(_recordedChunks, { type: "audio/webm" });
-              const file = new File([blob], `voice_${Date.now()}.webm`, { type: "audio/webm" });
+              const file = new File([blob], `voice_${Date.now()}.webm`, {
+                type: "audio/webm",
+              });
               await sendAttachmentPayload(file, "audio");
               toast("Voice note sent");
             };
@@ -2629,7 +3146,8 @@
           window.location.href = "profile.html";
           return;
         }
-        const c = conversations[uid]?.meta || VC_USERS.find(u => u.uid === uid);
+        const c =
+          conversations[uid]?.meta || VC_USERS.find((u) => u.uid === uid);
         if (!c) return;
         openContactInfoModal(c);
       }
@@ -2698,18 +3216,20 @@
         const modal = document.getElementById("contactModal");
         if (!modal) return;
         const avatar = document.getElementById("contactModalAvatar");
-        const name   = document.getElementById("contactModalName");
-        const email  = document.getElementById("contactModalEmail");
-        const bio    = document.getElementById("contactModalBio");
+        const name = document.getElementById("contactModalName");
+        const email = document.getElementById("contactModalEmail");
+        const bio = document.getElementById("contactModalBio");
 
         if (avatar) {
           avatar.innerHTML = contact.avatar
             ? `<img src="${contact.avatar}" alt="${escapeHtml(contact.name)}" />`
             : `<i class="fas fa-user"></i>`;
         }
-        if (name)  name.textContent  = contact.name || "Member";
+        if (name) name.textContent = contact.name || "Member";
         if (email) email.textContent = contact.email || "";
-        if (bio)   bio.textContent   = contact.bio || contact.role || "Vertex Chamber Member";
+        if (bio)
+          bio.textContent =
+            contact.bio || contact.role || "Vertex Chamber Member";
 
         modal.classList.add("open");
       }
@@ -2718,7 +3238,11 @@
       }
 
       function escapeHtml(str) {
-        return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        return String(str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
       }
 
       function toast(msg) {
@@ -2726,19 +3250,62 @@
         el.className = "toast";
         el.textContent = msg;
         document.body.appendChild(el);
-        setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }, 2500);
+        setTimeout(() => {
+          el.style.opacity = "0";
+          setTimeout(() => el.remove(), 300);
+        }, 2500);
       }
 
       const EMOJIS = [
-        "😀","😁","😅","😂","🤣","😊","😍","😘","😎","🤔","😮","😢","😭","😡",
-        "❤️","🧡","💛","💚","💙","💜","🤍","🖤",
-        "👍","👎","👏","🙏","💯","🔥","🎉","✨","⚡","🚀",
-        "✅","❌","⚠️","📌","📎","📷","🎥","🎧","🎤"
+        "😀",
+        "😁",
+        "😅",
+        "😂",
+        "🤣",
+        "😊",
+        "😍",
+        "😘",
+        "😎",
+        "🤔",
+        "😮",
+        "😢",
+        "😭",
+        "😡",
+        "❤️",
+        "🧡",
+        "💛",
+        "💚",
+        "💙",
+        "💜",
+        "🤍",
+        "🖤",
+        "👍",
+        "👎",
+        "👏",
+        "🙏",
+        "💯",
+        "🔥",
+        "🎉",
+        "✨",
+        "⚡",
+        "🚀",
+        "✅",
+        "❌",
+        "⚠️",
+        "📌",
+        "📎",
+        "📷",
+        "🎥",
+        "🎧",
+        "🎤",
       ];
       function buildEmojiPicker() {
         const picker = document.getElementById("emojiPicker");
         if (picker) {
-          picker.innerHTML = EMOJIS.map(em => `<button class="ep-emoji" onclick="insertEmoji('${em}')">${em}</button>`).join("");
+          picker.innerHTML = EMOJIS.map(
+            (em) =>
+              `<button class="ep-emoji" onclick="insertEmoji('${em}')">${em}</button>`,
+          ).join("");
         }
       }
 
@@ -2826,7 +3393,9 @@
       document.head.appendChild(style);
 
       // ── Help + Contact modal markup ───────────────────────────────
-      document.body.insertAdjacentHTML("beforeend", `
+      document.body.insertAdjacentHTML(
+        "beforeend",
+        `
         <div class="vc-modal" id="helpModal" onclick="if(event.target.id==='helpModal') closeHelp()">
           <div class="vc-card" role="dialog" aria-modal="true" aria-label="Help">
             <div class="vc-card-head">
@@ -2862,10 +3431,13 @@
             </div>
           </div>
         </div>
-      `);
+      `,
+      );
 
       // Call modal
-      document.body.insertAdjacentHTML("beforeend", `
+      document.body.insertAdjacentHTML(
+        "beforeend",
+        `
         <div class="vc-modal" id="callModal" onclick="if(event.target.id==='callModal') hangUpCall()">
           <div class="vc-card" role="dialog" aria-modal="true" aria-label="Call">
             <div class="vc-card-head">
@@ -2895,10 +3467,13 @@
             </div>
           </div>
         </div>
-      `);
+      `,
+      );
 
       // Message action modal (Delete / Forward)
-      document.body.insertAdjacentHTML("beforeend", `
+      document.body.insertAdjacentHTML(
+        "beforeend",
+        `
         <div class="vc-modal" id="msgActionModal" onclick="if(event.target.id==='msgActionModal') closeMsgActions()">
           <div class="vc-card" role="dialog" aria-modal="true" aria-label="Message actions">
             <div class="vc-card-head">
@@ -2907,7 +3482,7 @@
             </div>
             <div class="vc-card-body">
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-                ${["👍","❤️","😂","😮","😢","🙏","🔥"].map(e => `<button class="icon-btn" style="width:auto;padding:10px 12px;border-radius:14px;" onclick="reactToSelectedMessage('${e}')">${e}</button>`).join("")}
+                ${["👍", "❤️", "😂", "😮", "😢", "🙏", "🔥"].map((e) => `<button class="icon-btn" style="width:auto;padding:10px 12px;border-radius:14px;" onclick="reactToSelectedMessage('${e}')">${e}</button>`).join("")}
               </div>
               <div style="display:flex;flex-direction:column;gap:10px;">
                 <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;" onclick="forwardSelectedMessage()">
@@ -2920,7 +3495,8 @@
             </div>
           </div>
         </div>
-      `);
+      `,
+      );
 
       // ── Init on DOM ready ─────────────────────────────────────────
       document.addEventListener("DOMContentLoaded", () => {
@@ -2931,13 +3507,21 @@
         window.addEventListener("resize", updateMobileHeaderBack);
 
         // Best-effort: avoid pinch-zoom on some mobile browsers
-        document.addEventListener("gesturestart", (e) => e.preventDefault(), { passive: false });
-        document.addEventListener("gesturechange", (e) => e.preventDefault(), { passive: false });
-        document.addEventListener("gestureend", (e) => e.preventDefault(), { passive: false });
+        document.addEventListener("gesturestart", (e) => e.preventDefault(), {
+          passive: false,
+        });
+        document.addEventListener("gesturechange", (e) => e.preventDefault(), {
+          passive: false,
+        });
+        document.addEventListener("gestureend", (e) => e.preventDefault(), {
+          passive: false,
+        });
 
         // Auto-open conversation (used by Chambers -> Open Team Chat)
         try {
-          const openKey = new URLSearchParams(window.location.search).get("open");
+          const openKey = new URLSearchParams(window.location.search).get(
+            "open",
+          );
           if (openKey) {
             // defer until conversations have loaded
             window.__vc_open_on_ready = openKey;
@@ -2956,12 +3540,12 @@
     <script>
       // Initialize Firebase after compat scripts load
       const _firebaseConfig = {
-        apiKey:            "AIzaSyC3HO1BY4rw1uVlZnRn4qG3XpxipFzDs0M",
-        authDomain:        "vertex-chamber-993f6.firebaseapp.com",
-        projectId:         "vertex-chamber-993f6",
-        storageBucket:     "vertex-chamber-993f6.firebasestorage.app",
+        apiKey: "AIzaSyC3HO1BY4rw1uVlZnRn4qG3XpxipFzDs0M",
+        authDomain: "vertex-chamber-993f6.firebaseapp.com",
+        projectId: "vertex-chamber-993f6",
+        storageBucket: "vertex-chamber-993f6.firebasestorage.app",
         messagingSenderId: "950688239086",
-        appId:             "1:950688239086:web:13b11f2581e908dabed2ff",
+        appId: "1:950688239086:web:13b11f2581e908dabed2ff",
       };
 
       // Only initialize if not already done
@@ -2970,14 +3554,15 @@
       }
 
       const _db = firebase.firestore();
-      _dbRef     = _db; // Make available to chat functions
+      _dbRef = _db; // Make available to chat functions
       _storageRef = firebase.storage();
 
       // Load data once DOM + Firebase are both ready
       (async () => {
         // Clear unread message dot when user opens Messages tab
         try {
-          const q = await _db.collection("notifications")
+          const q = await _db
+            .collection("notifications")
             .where("userId", "==", MY_USER_ID)
             .where("read", "==", false)
             .get();
@@ -2986,7 +3571,10 @@
           q.forEach((d) => {
             const data = d.data() || {};
             if (data.type !== "message") return;
-            batch.update(d.ref, { read: true, readAt: firebase.firestore.FieldValue.serverTimestamp() });
+            batch.update(d.ref, {
+              read: true,
+              readAt: firebase.firestore.FieldValue.serverTimestamp(),
+            });
             touched++;
           });
           if (touched) await batch.commit();
@@ -2998,9 +3586,14 @@
         // unread counts now come from conversations.unreadMap for faster startup
         watchIncomingCalls();
         try {
-          const incomingCallId = new URLSearchParams(window.location.search).get("incomingCall");
+          const incomingCallId = new URLSearchParams(
+            window.location.search,
+          ).get("incomingCall");
           if (incomingCallId) {
-            const callSnap = await _db.collection("calls").doc(incomingCallId).get();
+            const callSnap = await _db
+              .collection("calls")
+              .doc(incomingCallId)
+              .get();
             if (callSnap.exists) {
               _callDocId = incomingCallId;
               openIncomingCallUi({ id: incomingCallId, ...callSnap.data() });
@@ -3012,7 +3605,15 @@
           // If preview doesn't exist yet, create a stub so selectConversation can open it.
           if (!conversations[openKey]) {
             conversations[openKey] = {
-              meta: { uid: openKey, name: "Team Chat", avatar: null, role: "Group chat", status: "online", isGroup: true, groupId: openKey.replace(/^g_/, "") },
+              meta: {
+                uid: openKey,
+                name: "Team Chat",
+                avatar: null,
+                role: "Group chat",
+                status: "online",
+                isGroup: true,
+                groupId: openKey.replace(/^g_/, ""),
+              },
               messages: [],
             };
           }

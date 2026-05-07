@@ -1,5 +1,6 @@
 import { db, getSessionEmail, emailToId } from "./firebase.js";
 import {
+  addDoc,
   collection,
   collectionGroup,
   doc,
@@ -8,7 +9,9 @@ import {
   limit,
   onSnapshot,
   query,
+  serverTimestamp,
   updateDoc,
+  writeBatch,
   where,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -48,6 +51,37 @@ function renderUsers(listEl, rows, meId) {
   `).join("");
 }
 
+function renderAuditLogs(listEl, rows) {
+  if (!rows.length) {
+    listEl.innerHTML = `<div class="admin-meta">No audit logs yet.</div>`;
+    return;
+  }
+  listEl.innerHTML = rows.map((r) => {
+    const when = r.createdAt?.toDate?.() ? r.createdAt.toDate().toLocaleString() : "—";
+    return `
+      <div class="admin-row">
+        <div style="min-width:0;">
+          <div class="admin-name">${r.action || "moderation_action"}</div>
+          <div class="admin-meta">By: ${r.actorId || "—"} · Target: ${r.targetUserId || "—"} · ${when}</div>
+          <div class="admin-meta" style="margin-top:4px;">Reason: ${r.reason || "—"}${r.chamberId ? ` · Chamber: ${r.chamberId}` : ""}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function logModeration({ action, actorId, targetUserId, reason, chamberId = null, meta = {} }) {
+  await addDoc(collection(db, "moderationLogs"), {
+    action,
+    actorId,
+    targetUserId,
+    reason: String(reason || "").trim() || "No reason provided",
+    chamberId: chamberId || null,
+    meta,
+    createdAt: serverTimestamp(),
+  });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const email = getSessionEmail();
   if (!email) {
@@ -63,12 +97,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("adminMain").style.display = "block";
 
   const usersList = document.getElementById("usersList");
+  const auditList = document.getElementById("auditList");
+  const banReasonInput = document.getElementById("banReasonInput");
   const usersQ = query(collection(db, "users"), limit(200));
   onSnapshot(usersQ, (snap) => {
     const rows = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }));
     document.getElementById("mUsers").textContent = String(rows.length);
     document.getElementById("mBanned").textContent = String(rows.filter((u) => u.isBanned === true).length);
     renderUsers(usersList, rows, myId);
+  });
+
+  const logsQ = query(collection(db, "moderationLogs"), limit(200));
+  onSnapshot(logsQ, (snap) => {
+    const rows = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }));
+    rows.sort((a, b) => {
+      const aT = a.createdAt?.toMillis?.() || 0;
+      const bT = b.createdAt?.toMillis?.() || 0;
+      return bT - aT;
+    });
+    renderAuditLogs(auditList, rows.slice(0, 80));
   });
 
   const chambersSnap = await getDocs(query(collection(db, "chambers"), limit(200))).catch(() => null);
@@ -87,7 +134,33 @@ document.addEventListener("DOMContentLoaded", async () => {
       const snap = await getDoc(userRef);
       const data = snap.exists() ? (snap.data() || {}) : {};
       const next = !(data.isBanned === true);
+      const reason = String(banReasonInput?.value || "").trim();
+      if (next && !reason) {
+        toast("Enter a reason before banning.");
+        return;
+      }
       await updateDoc(userRef, { isBanned: next, bannedAt: next ? new Date().toISOString() : null });
+
+      if (next) {
+        // Auto-kick banned user from all chamber member lists.
+        const memberSnap = await getDocs(
+          query(collectionGroup(db, "members"), where("userId", "==", uid), limit(500)),
+        ).catch(() => null);
+        if (memberSnap && !memberSnap.empty) {
+          const batch = writeBatch(db);
+          memberSnap.docs.forEach((d) => batch.delete(d.ref));
+          await batch.commit();
+        }
+      }
+
+      await logModeration({
+        action: next ? "ban_user" : "unban_user",
+        actorId: myId,
+        targetUserId: uid,
+        reason: next ? reason : (reason || "Ban removed"),
+      });
+
+      if (banReasonInput) banReasonInput.value = "";
       toast(next ? "User banned" : "User unbanned");
     } catch {
       toast("Action failed");

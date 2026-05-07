@@ -50,21 +50,27 @@
 
       .filter-tag {
         background: rgba(255, 255, 255, 0.05);
-        padding: 6px 12px;
+        padding: 8px 14px;
         border-radius: 20px;
         font-size: 13px;
         cursor: pointer;
-        transition: var(--transition);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-weight: 500;
       }
 
-      .filter-tag:hover,
+      .filter-tag:hover {
+        background: rgba(0, 212, 255, 0.15);
+        border-color: rgba(0, 212, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 212, 255, 0.15);
+      }
+
       .filter-tag.active {
-        background: linear-gradient(
-          90deg,
-          var(--accent-primary),
-          var(--accent-secondary)
-        );
+        background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
         color: white;
+        border-color: transparent;
+        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
       }
 
       .feed {
@@ -153,22 +159,58 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        background: none;
-        border: none;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         color: var(--text-secondary);
         cursor: pointer;
-        transition: var(--transition);
-        padding: 8px 16px;
-        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-weight: 500;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .action-btn::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at center, rgba(0, 212, 255, 0.15), transparent 70%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
       }
 
       .action-btn:hover {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.08);
         color: var(--text-primary);
+        border-color: rgba(0, 212, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .action-btn:hover::before {
+        opacity: 1;
+      }
+
+      .action-btn:active {
+        transform: translateY(0) scale(0.95);
       }
 
       .action-btn.active {
         color: var(--accent-primary);
+        background: rgba(0, 212, 255, 0.1);
+        border-color: rgba(0, 212, 255, 0.4);
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+      }
+
+      .action-btn.active i {
+        animation: heartPulse 0.4s ease;
+      }
+
+      @keyframes heartPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.3); }
+        100% { transform: scale(1); }
       }
 
       .right-panel {
@@ -329,9 +371,6 @@
               >
             </li>
             <li>
-              <a href="workspace.html"><i class="fas fa-code"></i> Workspace</a>
-            </li>
-            <li>
               <a href="messages.html"
                 ><i class="fas fa-comments"></i> Messages</a
               >
@@ -434,10 +473,10 @@
               "
             >
               <a
-                href="workspace.html#create-project"
+                href="chambers.html"
                 class="btn btn-primary btn-sm"
               >
-                <i class="fas fa-plus"></i> New Project
+                <i class="fas fa-plus"></i> Join Chamber
               </a>
               <button class="btn btn-secondary btn-sm" id="findTeamBtn">
                 <i class="fas fa-users"></i> Find Team
@@ -513,112 +552,7 @@
                 <i class="far fa-bookmark"></i> Save
               </button>
               <a
-                href="workspace.html"
-                class="btn btn-primary btn-sm"
-                style="margin-left: auto"
-              >
-                <i class="fas fa-plus"></i> Join Project
-              </a>
-            </div>
-          </div>
-
-          <!-- Feed Card 2 -->
-          <div class="glass-card feed-card">
-            <div class="feed-user">
-              <div class="feed-user-avatar">
-                <img
-                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
-                  alt="User"
-                />
-              </div>
-              <div class="feed-user-info">
-                <h4>Marcus Chen</h4>
-                <p>Posted 5 hours ago · Team of 4</p>
-              </div>
-            </div>
-
-            <div class="feed-content">
-              <h3>Decentralized Social Media Platform</h3>
-              <p>
-                Creating a blockchain-based social media platform where users
-                own their data and content. Built on Solana with React frontend.
-                Currently in beta testing, looking for security auditors and UX
-                designers.
-              </p>
-
-              <div class="skill-tags">
-                <span class="skill-tag">Blockchain</span>
-                <span class="skill-tag">Solana</span>
-                <span class="skill-tag">React</span>
-                <span class="skill-tag">Rust</span>
-                <span class="skill-tag">UX Design</span>
-              </div>
-            </div>
-
-            <div class="feed-actions">
-              <button class="action-btn">
-                <i class="far fa-heart"></i> 42
-              </button>
-              <button class="action-btn">
-                <i class="far fa-comment"></i> 18
-              </button>
-              <button class="action-btn">
-                <i class="far fa-bookmark"></i> Save
-              </button>
-              <a
-                href="workspace.html"
-                class="btn btn-primary btn-sm"
-                style="margin-left: auto"
-              >
-                <i class="fas fa-eye"></i> View Project
-              </a>
-            </div>
-          </div>
-
-          <!-- Feed Card 3 -->
-          <div class="glass-card feed-card">
-            <div class="feed-user">
-              <div class="feed-user-avatar">
-                <img
-                  src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80"
-                  alt="User"
-                />
-              </div>
-              <div class="feed-user-info">
-                <h4>Sarah Johnson</h4>
-                <p>Posted 1 day ago · Looking for 2 members</p>
-              </div>
-            </div>
-
-            <div class="feed-content">
-              <h3>AR Interior Design App</h3>
-              <p>
-                Developing an augmented reality app that lets users visualize
-                furniture and decor in their home before purchasing. Looking for
-                AR specialists (ARKit/ARCore) and 3D modelers.
-              </p>
-
-              <div class="skill-tags">
-                <span class="skill-tag">AR/VR</span>
-                <span class="skill-tag">Swift</span>
-                <span class="skill-tag">Kotlin</span>
-                <span class="skill-tag">3D Modeling</span>
-                <span class="skill-tag">UI/UX</span>
-              </div>
-            </div>
-
-            <div class="feed-actions">
-              <button class="action-btn active">
-                <i class="fas fa-heart"></i> 31
-              </button>
-              <button class="action-btn">
-                <i class="far fa-comment"></i> 7
-              </button>
-              <button class="action-btn active">
-                <i class="fas fa-bookmark"></i> Saved
-              </button>
-              <a
-                href="workspace.html"
+                href="chambers.html"
                 class="btn btn-primary btn-sm"
                 style="margin-left: auto"
               >
@@ -764,7 +698,6 @@
             <ul>
               <li><a href="splash.html">Home</a></li>
               <li><a href="feed.html">Community Feed</a></li>
-              <li><a href="workspace.html">Project Workspace</a></li>
               <li><a href="chambers.html">Chambers</a></li>
               <li><a href="messages.html">Messages</a></li>
             </ul>
@@ -817,5 +750,92 @@
   <script src="push_config.js"></script>
   <script type="module" src="app_shell.js"></script>
     <script type="module" src="feed_page.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.filter-tag').forEach(tag => {
+        tag.addEventListener('click', function() {
+          document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+
+      document.querySelectorAll('.btn-follow').forEach(btn => {
+        btn.addEventListener('click', function() {
+          if (this.textContent.trim() === 'Follow') {
+            this.textContent = 'Following';
+            this.style.background = 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))';
+            this.style.color = 'white';
+            this.style.borderColor = 'transparent';
+          } else {
+            this.textContent = 'Follow';
+            this.style.background = '';
+            this.style.color = '';
+            this.style.borderColor = '';
+          }
+        });
+      });
+
+      const sortSelect = document.querySelector('.feed-sort select');
+      if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+          const cards = Array.from(document.querySelectorAll('.feed-card'));
+          cards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+          });
+          setTimeout(() => {
+            cards.sort(() => Math.random() - 0.5);
+            const feed = document.querySelector('.feed');
+            const header = feed.querySelector('.feed-header');
+            cards.forEach(card => feed.appendChild(card));
+            cards.forEach((card, i) => {
+              setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+              }, i * 100);
+            });
+          }, 300);
+        });
+      }
+
+      const findTeamBtn = document.getElementById('findTeamBtn');
+      if (findTeamBtn) {
+        findTeamBtn.addEventListener('click', function() {
+          window.location.href = 'chambers.html';
+        });
+      }
+
+      document.querySelectorAll('.action-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const icon = this.querySelector('i');
+          if (icon.classList.contains('fa-heart')) {
+            this.classList.toggle('active');
+            if (this.classList.contains('active')) {
+              icon.classList.remove('far');
+              icon.classList.add('fas');
+            } else {
+              icon.classList.remove('fas');
+              icon.classList.add('far');
+            }
+          } else if (icon.classList.contains('fa-bookmark')) {
+            this.classList.toggle('active');
+            if (this.classList.contains('active')) {
+              icon.classList.remove('far');
+              icon.classList.add('fas');
+              this.innerHTML = '<i class="fas fa-bookmark"></i> Saved';
+            } else {
+              icon.classList.remove('fas');
+              icon.classList.add('far');
+              this.innerHTML = '<i class="far fa-bookmark"></i> Save';
+            }
+          } else if (icon.classList.contains('fa-comment')) {
+            const count = parseInt(this.textContent.trim()) || 0;
+            this.innerHTML = `<i class="far fa-comment"></i> ${count + 1}`;
+          }
+        });
+      });
+    });
+  </script>
   </body>
 </html>
