@@ -48,6 +48,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Static files
+app.use(express.static(path.join(__dirname)));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Database connection

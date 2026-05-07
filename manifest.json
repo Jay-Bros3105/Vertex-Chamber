@@ -2,12 +2,12 @@
   "name": "Vertex Chamber",
   "short_name": "Vertex",
   "description": "Powered By JSL FastLine.",
-  "start_url": "./splash.html",
+  "start_url": "./index.html?source=pwa",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0B0F1A",
   "theme_color": "#0B0F1A",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "categories": ["productivity", "social"],
   "lang": "en",
   "dir": "ltr",
@@ -38,5 +38,21 @@
     }
   ],
   "screenshots": [],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Feed",
+      "short_name": "Feed",
+      "description": "View the community feed",
+      "url": "./feed.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Messages",
+      "short_name": "Messages",
+      "description": "Check your messages",
+      "url": "./messages.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }
