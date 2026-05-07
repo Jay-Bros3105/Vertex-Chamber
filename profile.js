@@ -196,15 +196,31 @@ function validateUsernameFormat(username) {
 }
 
 usernameInput.addEventListener("input", () => {
-  const username = usernameInput.value.trim().toLowerCase();
-  usernameAvailable = false;
+  const raw = usernameInput.value.trim();
+  const username = raw.toLowerCase();
   updateSaveButtonUI();
 
   if (checkTimer) clearTimeout(checkTimer);
-  if (username.length === 0) { clearStatus(); return; }
+  if (raw.length === 0) {
+    usernameAvailable = false;
+    clearStatus();
+    return;
+  }
 
   const fmt = validateUsernameFormat(username);
-  if (!fmt.valid) { setStatus(fmt.reason, fmt.message); return; }
+  if (!fmt.valid) {
+    usernameAvailable = false;
+    setStatus(fmt.reason, fmt.message);
+    return;
+  }
+
+  // If user is typing their own current username, skip DB check and mark available
+  if (currentUsername && username === currentUsername.toLowerCase()) {
+    usernameAvailable = true;
+    setStatus("available", `<i class="fa-solid fa-circle-check"></i> ✓ Your current name — no change`);
+    updateSaveButtonUI();
+    return;
+  }
 
   setStatus("checking", `<i class="fa-solid fa-spinner fa-spin"></i> Checking availability…`);
 
