@@ -72,15 +72,15 @@
     btn.innerHTML = '<i class="fas fa-download"></i><span>Install App</span>';
 
     const isTouchDevice = isMobile();
-    const bottomOffset = isTouchDevice ? "calc(88px + env(safe-area-inset-bottom, 0px))" : "32px";
-    const rightOffset = isTouchDevice ? "16px" : "20px";
+    const topOffset = isTouchDevice ? "calc(16px + env(safe-area-inset-top, 0px))" : "16px";
     const fontSize = isTouchDevice ? "12px" : "13px";
     const padding = isTouchDevice ? "10px 14px" : "10px 18px";
 
     btn.style.cssText = `
       position: fixed;
-      right: ${rightOffset};
-      bottom: ${bottomOffset};
+      left: 50%;
+      transform: translateX(-50%);
+      top: ${topOffset};
       z-index: 2147483647;
       display: flex;
       align-items: center;
@@ -101,6 +101,8 @@
       animation: gradientSlide 3s linear infinite, btnPulse 2s ease-in-out infinite;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+      white-space: nowrap;
+      flex-shrink: 0;
     `;
 
     // Inject animation keyframes
