@@ -2,87 +2,849 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0B0F1A" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#060a14" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Vertex" />
+    <meta name="apple-mobile-web-app-title" content="Vertex Admin" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
+    <meta name="robots" content="noindex, nofollow" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icon-192.png" />
-    <title>Admin Dashboard | Vertex Chamber</title>
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
+    <title>Admin Panel | Vertex Chamber</title>
+    <link rel="icon" href="favicon.png" type="image/png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
-      .admin-wrap { padding: 110px 0 90px; }
-      .admin-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-bottom:16px; }
-      .admin-card { padding:16px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); }
-      .admin-label { color:var(--text-secondary); font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
-      .admin-value { font-size:30px; font-weight:900; margin-top:8px; }
-      .admin-panel { padding:16px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); margin-top:12px; }
-      .admin-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.08); }
-      .admin-row:last-child { border-bottom:none; }
-      .admin-name { font-weight:800; }
-      .admin-meta { color:var(--text-secondary); font-size:12px; }
-      .pill-ban { padding:4px 10px; border-radius:999px; font-size:11px; font-weight:900; }
-      .pill-ban.ok { background:rgba(0,255,179,.14); color:#00ffb3; border:1px solid rgba(0,255,179,.35); }
-      .pill-ban.bad { background:rgba(255,77,109,.14); color:#ff4d6d; border:1px solid rgba(255,77,109,.35); }
-      #adminDenied { display:none; margin-top:120px; text-align:center; }
+      :root {
+        --bg-primary: #060a14;
+        --bg-secondary: #0c1120;
+        --bg-card: #111827;
+        --bg-hover: #1a2235;
+        --border: rgba(255,255,255,0.06);
+        --border-active: rgba(0,212,255,0.3);
+        --cyan: #00d4ff;
+        --violet: #7f5cff;
+        --green: #00ffb3;
+        --red: #ff4d6d;
+        --orange: #ff9f43;
+        --yellow: #ffd43b;
+        --text-primary: #f0f2f5;
+        --text-secondary: #8892a4;
+        --text-muted: #5a6478;
+        --radius: 14px;
+        --radius-sm: 10px;
+        --shadow: 0 4px 24px rgba(0,0,0,0.4);
+        --sidebar-w: 260px;
+        --topbar-h: 64px;
+      }
+
+      * { margin:0; padding:0; box-sizing:border-box; }
+      html, body { height:100%; }
+      body {
+        font-family: 'Inter', -apple-system, sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        overflow: hidden;
+      }
+
+      /* ── Access Denied Overlay ── */
+      #accessDenied {
+        position:fixed; inset:0; z-index:9999;
+        display:none; align-items:center; justify-content:center;
+        background: var(--bg-primary);
+      }
+      #accessDenied.active { display:flex; }
+      .denied-box {
+        text-align:center; padding:60px 40px; max-width:440px;
+        border:1px solid var(--border); border-radius:24px;
+        background: var(--bg-card);
+      }
+      .denied-box i { font-size:56px; color:var(--red); margin-bottom:20px; }
+      .denied-box h2 { font-size:22px; font-weight:800; margin-bottom:8px; }
+      .denied-box p { color:var(--text-secondary); font-size:14px; line-height:1.6; }
+      .denied-box .btn-back {
+        margin-top:24px; display:inline-flex; align-items:center; gap:8px;
+        padding:12px 28px; border-radius:12px; border:none;
+        background: linear-gradient(135deg, var(--cyan), var(--violet));
+        color:#fff; font-weight:700; font-size:14px; cursor:pointer;
+        transition: transform .2s, box-shadow .2s;
+      }
+      .denied-box .btn-back:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,212,255,0.3); }
+
+      /* ── Loading Screen ── */
+      #adminLoader {
+        position:fixed; inset:0; z-index:9998;
+        display:flex; align-items:center; justify-content:center;
+        background: var(--bg-primary);
+        transition: opacity .4s;
+      }
+      #adminLoader.hidden { opacity:0; pointer-events:none; }
+      .loader-spinner {
+        width:48px; height:48px; border-radius:50%;
+        border:3px solid var(--border); border-top-color: var(--cyan);
+        animation: spin .8s linear infinite;
+      }
+      @keyframes spin { to { transform:rotate(360deg); } }
+
+      /* ── Layout ── */
+      #adminApp { display:none; height:100vh; }
+      #adminApp.active { display:flex; }
+
+      /* ── Sidebar ── */
+      .sidebar {
+        width: var(--sidebar-w); min-width: var(--sidebar-w);
+        height:100vh; background: var(--bg-secondary);
+        border-right:1px solid var(--border);
+        display:flex; flex-direction:column;
+        position:fixed; left:0; top:0; z-index:100;
+        transition: transform .3s cubic-bezier(.4,0,.2,1);
+      }
+      .sidebar-header {
+        padding:20px 20px 16px; border-bottom:1px solid var(--border);
+        display:flex; align-items:center; gap:12px;
+      }
+      .sidebar-logo {
+        width:40px; height:40px; border-radius:12px;
+        background: linear-gradient(135deg, var(--cyan), var(--violet));
+        display:flex; align-items:center; justify-content:center;
+        font-size:18px; color:#fff; flex-shrink:0;
+      }
+      .sidebar-brand h3 { font-size:15px; font-weight:800; letter-spacing:-.02em; }
+      .sidebar-brand span { font-size:11px; color:var(--text-muted); font-weight:500; }
+
+      .sidebar-nav { flex:1; overflow-y:auto; padding:12px 10px; }
+      .sidebar-nav::-webkit-scrollbar { width:4px; }
+      .sidebar-nav::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+      .nav-section { margin-bottom:20px; }
+      .nav-section-title {
+        font-size:10px; font-weight:700; text-transform:uppercase;
+        letter-spacing:.1em; color:var(--text-muted);
+        padding:0 12px; margin-bottom:8px;
+      }
+      .nav-item {
+        display:flex; align-items:center; gap:12px;
+        padding:10px 12px; border-radius:var(--radius-sm);
+        color:var(--text-secondary); font-size:13px; font-weight:500;
+        cursor:pointer; transition: all .15s;
+        position:relative; margin-bottom:2px;
+      }
+      .nav-item:hover { background:var(--bg-hover); color:var(--text-primary); }
+      .nav-item.active {
+        background: linear-gradient(135deg, rgba(0,212,255,.12), rgba(127,92,255,.08));
+        color:var(--cyan); font-weight:600;
+      }
+      .nav-item.active::before {
+        content:''; position:absolute; left:0; top:50%;
+        transform:translateY(-50%); width:3px; height:60%;
+        background:var(--cyan); border-radius:0 4px 4px 0;
+      }
+      .nav-item i { width:20px; text-align:center; font-size:14px; }
+      .nav-badge {
+        margin-left:auto; background:var(--red); color:#fff;
+        font-size:10px; font-weight:700; padding:2px 7px;
+        border-radius:99px; min-width:20px; text-align:center;
+      }
+
+      .sidebar-footer {
+        padding:14px 16px; border-top:1px solid var(--border);
+        display:flex; align-items:center; gap:10px;
+      }
+      .sidebar-avatar {
+        width:36px; height:36px; border-radius:10px;
+        background:var(--bg-hover); display:flex; align-items:center;
+        justify-content:center; color:var(--cyan); font-weight:700; font-size:14px;
+      }
+      .sidebar-user { flex:1; min-width:0; }
+      .sidebar-user-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .sidebar-user-role { font-size:11px; color:var(--text-muted); }
+      .sidebar-logout {
+        width:32px; height:32px; border-radius:8px; border:none;
+        background:transparent; color:var(--text-muted); cursor:pointer;
+        display:flex; align-items:center; justify-content:center;
+        transition: all .15s;
+      }
+      .sidebar-logout:hover { background:rgba(255,77,109,.12); color:var(--red); }
+
+      /* ── Main Content ── */
+      .main-content {
+        flex:1; margin-left: var(--sidebar-w);
+        height:100vh; display:flex; flex-direction:column;
+        overflow:hidden;
+      }
+
+      /* ── Top Bar ── */
+      .topbar {
+        height: var(--topbar-h); min-height: var(--topbar-h);
+        padding:0 28px; border-bottom:1px solid var(--border);
+        display:flex; align-items:center; gap:16px;
+        background: var(--bg-secondary);
+      }
+      .topbar-toggle {
+        display:none; width:40px; height:40px; border-radius:10px;
+        border:1px solid var(--border); background:transparent;
+        color:var(--text-primary); cursor:pointer; font-size:16px;
+        align-items:center; justify-content:center;
+      }
+      .topbar-title h2 { font-size:18px; font-weight:800; letter-spacing:-.02em; }
+      .topbar-title p { font-size:12px; color:var(--text-muted); }
+      .topbar-spacer { flex:1; }
+      .topbar-search {
+        display:flex; align-items:center; gap:8px;
+        padding:8px 14px; border-radius:10px;
+        background:var(--bg-card); border:1px solid var(--border);
+        max-width:320px; width:100%;
+      }
+      .topbar-search i { color:var(--text-muted); font-size:13px; }
+      .topbar-search input {
+        flex:1; background:transparent; border:none; outline:none;
+        color:var(--text-primary); font-size:13px; font-family:inherit;
+      }
+      .topbar-search input::placeholder { color:var(--text-muted); }
+      .topbar-time { font-size:12px; color:var(--text-muted); font-weight:500; white-space:nowrap; }
+
+      /* ── Page Container ── */
+      .page-container {
+        flex:1; overflow-y:auto; padding:24px 28px 100px;
+        scroll-behavior: smooth;
+      }
+      .page-container::-webkit-scrollbar { width:6px; }
+      .page-container::-webkit-scrollbar-thumb { background:var(--border); border-radius:6px; }
+
+      .page-view { display:none; }
+      .page-view.active { display:block; animation: pageIn .3s ease; }
+      @keyframes pageIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+      /* ── Stat Cards ── */
+      .stats-grid {
+        display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap:16px; margin-bottom:24px;
+      }
+      .stat-card {
+        padding:20px; border-radius:var(--radius);
+        background: var(--bg-card); border:1px solid var(--border);
+        transition: border-color .2s, transform .2s;
+      }
+      .stat-card:hover { border-color:var(--border-active); transform:translateY(-2px); }
+      .stat-icon {
+        width:44px; height:44px; border-radius:12px;
+        display:flex; align-items:center; justify-content:center;
+        font-size:18px; margin-bottom:14px;
+      }
+      .stat-icon.cyan { background:rgba(0,212,255,.12); color:var(--cyan); }
+      .stat-icon.violet { background:rgba(127,92,255,.12); color:var(--violet); }
+      .stat-icon.green { background:rgba(0,255,179,.12); color:var(--green); }
+      .stat-icon.red { background:rgba(255,77,109,.12); color:var(--red); }
+      .stat-icon.orange { background:rgba(255,159,67,.12); color:var(--orange); }
+      .stat-label { font-size:12px; color:var(--text-muted); font-weight:500; text-transform:uppercase; letter-spacing:.06em; }
+      .stat-value { font-size:28px; font-weight:900; margin-top:4px; letter-spacing:-.02em; }
+      .stat-change { font-size:11px; font-weight:600; margin-top:6px; }
+      .stat-change.up { color:var(--green); }
+      .stat-change.down { color:var(--red); }
+
+      /* ── Cards / Panels ── */
+      .panel {
+        background: var(--bg-card); border:1px solid var(--border);
+        border-radius:var(--radius); margin-bottom:20px; overflow:hidden;
+      }
+      .panel-header {
+        padding:18px 20px; border-bottom:1px solid var(--border);
+        display:flex; align-items:center; justify-content:space-between;
+        gap:12px;
+      }
+      .panel-header h3 { font-size:15px; font-weight:700; display:flex; align-items:center; gap:10px; }
+      .panel-header h3 i { color:var(--cyan); }
+      .panel-body { padding:16px 20px; }
+      .panel-body.no-pad { padding:0; }
+
+      /* ── Buttons ── */
+      .btn {
+        display:inline-flex; align-items:center; gap:8px;
+        padding:9px 18px; border-radius:var(--radius-sm);
+        font-family:inherit; font-size:13px; font-weight:600;
+        border:none; cursor:pointer; transition: all .2s;
+        white-space:nowrap;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--cyan), var(--violet));
+        color:#fff; box-shadow:0 4px 16px rgba(0,212,255,.25);
+      }
+      .btn-primary:hover { box-shadow:0 6px 24px rgba(0,212,255,.35); transform:translateY(-1px); }
+      .btn-secondary {
+        background:var(--bg-hover); color:var(--text-primary);
+        border:1px solid var(--border);
+      }
+      .btn-secondary:hover { border-color:var(--border-active); }
+      .btn-danger { background:rgba(255,77,109,.12); color:var(--red); border:1px solid rgba(255,77,109,.2); }
+      .btn-danger:hover { background:rgba(255,77,109,.2); }
+      .btn-success { background:rgba(0,255,179,.12); color:var(--green); border:1px solid rgba(0,255,179,.2); }
+      .btn-success:hover { background:rgba(0,255,179,.2); }
+      .btn-sm { padding:6px 12px; font-size:12px; border-radius:8px; }
+      .btn-icon {
+        width:34px; height:34px; padding:0; border-radius:8px;
+        display:inline-flex; align-items:center; justify-content:center;
+        border:1px solid var(--border); background:transparent;
+        color:var(--text-secondary); cursor:pointer; transition:all .15s;
+      }
+      .btn-icon:hover { background:var(--bg-hover); color:var(--text-primary); }
+
+      /* ── Table / List ── */
+      .table-wrap { overflow-x:auto; }
+      .admin-table { width:100%; border-collapse:collapse; }
+      .admin-table th {
+        text-align:left; padding:12px 16px; font-size:11px;
+        font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+        color:var(--text-muted); background:var(--bg-secondary);
+        border-bottom:1px solid var(--border);
+      }
+      .admin-table td {
+        padding:14px 16px; font-size:13px;
+        border-bottom:1px solid var(--border);
+        vertical-align:middle;
+      }
+      .admin-table tr:last-child td { border-bottom:none; }
+      .admin-table tbody tr { transition: background .15s; }
+      .admin-table tbody tr:hover { background:var(--bg-hover); }
+
+      .user-cell { display:flex; align-items:center; gap:12px; }
+      .user-avatar-sm {
+        width:38px; height:38px; border-radius:10px;
+        background: linear-gradient(135deg, rgba(0,212,255,.2), rgba(127,92,255,.2));
+        display:flex; align-items:center; justify-content:center;
+        font-weight:700; font-size:14px; color:var(--cyan);
+        flex-shrink:0; overflow:hidden;
+      }
+      .user-avatar-sm img { width:100%; height:100%; object-fit:cover; }
+      .user-info-name { font-weight:600; font-size:13px; }
+      .user-info-email { font-size:11px; color:var(--text-muted); }
+
+      .badge {
+        display:inline-flex; align-items:center; gap:5px;
+        padding:4px 10px; border-radius:99px;
+        font-size:11px; font-weight:700;
+      }
+      .badge-active { background:rgba(0,255,179,.12); color:var(--green); }
+      .badge-banned { background:rgba(255,77,109,.12); color:var(--red); }
+      .badge-pending { background:rgba(255,212,59,.12); color:var(--yellow); }
+      .badge-approved { background:rgba(0,212,255,.12); color:var(--cyan); }
+      .badge-rejected { background:rgba(255,77,109,.12); color:var(--red); }
+      .badge-admin { background:rgba(127,92,255,.15); color:var(--violet); }
+      .badge-user { background:rgba(255,255,255,.06); color:var(--text-secondary); }
+      .badge-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+      .actions-cell { display:flex; gap:6px; }
+
+      /* ── Request Cards ── */
+      .request-list { display:flex; flex-direction:column; gap:10px; }
+      .request-card {
+        padding:16px; border-radius:var(--radius-sm);
+        background:var(--bg-secondary); border:1px solid var(--border);
+        display:flex; align-items:center; gap:14px;
+        transition: border-color .2s;
+      }
+      .request-card:hover { border-color:var(--border-active); }
+      .request-info { flex:1; min-width:0; }
+      .request-info h4 { font-size:14px; font-weight:600; margin-bottom:3px; }
+      .request-info p { font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .request-meta { font-size:11px; color:var(--text-muted); margin-top:4px; display:flex; gap:12px; }
+      .request-actions { display:flex; gap:8px; flex-shrink:0; }
+
+      /* ── Audit Log ── */
+      .audit-item {
+        padding:14px 0; border-bottom:1px solid var(--border);
+        display:flex; gap:14px;
+      }
+      .audit-item:last-child { border-bottom:none; }
+      .audit-dot {
+        width:10px; height:10px; border-radius:50%;
+        margin-top:5px; flex-shrink:0;
+      }
+      .audit-dot.ban { background:var(--red); }
+      .audit-dot.unban { background:var(--green); }
+      .audit-dot.approve { background:var(--cyan); }
+      .audit-dot.reject { background:var(--orange); }
+      .audit-dot.announce { background:var(--violet); }
+      .audit-dot.update { background:var(--yellow); }
+      .audit-content { flex:1; }
+      .audit-content strong { font-weight:600; }
+      .audit-content p { font-size:12px; color:var(--text-muted); margin-top:2px; }
+      .audit-time { font-size:11px; color:var(--text-muted); white-space:nowrap; flex-shrink:0; }
+
+      /* ── Announcement Composer ── */
+      .announce-form { display:flex; flex-direction:column; gap:14px; }
+      .form-group label { display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:6px; }
+      .form-input {
+        width:100%; padding:11px 14px; border-radius:var(--radius-sm);
+        background:var(--bg-secondary); border:1px solid var(--border);
+        color:var(--text-primary); font-family:inherit; font-size:13px;
+        transition: border-color .2s;
+      }
+      .form-input:focus { outline:none; border-color:var(--cyan); }
+      textarea.form-input { resize:vertical; min-height:100px; }
+      select.form-input { cursor:pointer; }
+
+      /* ── Toast ── */
+      .toast-container { position:fixed; top:20px; right:20px; z-index:99999; display:flex; flex-direction:column; gap:10px; }
+      .toast {
+        padding:14px 20px; border-radius:12px;
+        background:var(--bg-card); border:1px solid var(--border);
+        color:var(--text-primary); font-size:13px; font-weight:500;
+        box-shadow: var(--shadow);
+        display:flex; align-items:center; gap:10px;
+        animation: toastIn .3s ease;
+        max-width:380px;
+      }
+      .toast.success { border-color:rgba(0,255,179,.3); }
+      .toast.success i { color:var(--green); }
+      .toast.error { border-color:rgba(255,77,109,.3); }
+      .toast.error i { color:var(--red); }
+      .toast.info { border-color:rgba(0,212,255,.3); }
+      .toast.info i { color:var(--cyan); }
+      @keyframes toastIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+
+      /* ── Modal ── */
+      .modal-overlay {
+        position:fixed; inset:0; z-index:10000;
+        background:rgba(0,0,0,.7); backdrop-filter:blur(6px);
+        display:none; align-items:center; justify-content:center;
+        padding:20px;
+      }
+      .modal-overlay.active { display:flex; }
+      .modal {
+        width:100%; max-width:500px; background:var(--bg-card);
+        border:1px solid var(--border); border-radius:20px;
+        box-shadow:0 24px 64px rgba(0,0,0,.5);
+        animation: modalIn .3s cubic-bezier(.22,1,.36,1);
+        max-height:90vh; overflow-y:auto;
+      }
+      @keyframes modalIn { from { opacity:0; transform:translateY(30px) scale(.96); } to { opacity:1; transform:translateY(0) scale(1); } }
+      .modal-header {
+        padding:20px 24px; border-bottom:1px solid var(--border);
+        display:flex; align-items:center; justify-content:space-between;
+      }
+      .modal-header h3 { font-size:16px; font-weight:700; }
+      .modal-close {
+        width:32px; height:32px; border-radius:8px; border:none;
+        background:var(--bg-hover); color:var(--text-secondary);
+        cursor:pointer; display:flex; align-items:center; justify-content:center;
+        transition: all .15s;
+      }
+      .modal-close:hover { color:var(--red); }
+      .modal-body { padding:20px 24px; }
+      .modal-footer {
+        padding:16px 24px; border-top:1px solid var(--border);
+        display:flex; gap:10px; justify-content:flex-end;
+      }
+
+      /* ── Empty State ── */
+      .empty-state {
+        text-align:center; padding:48px 20px;
+        color:var(--text-muted);
+      }
+      .empty-state i { font-size:40px; margin-bottom:16px; opacity:.4; }
+      .empty-state p { font-size:14px; }
+
+      /* ── Sidebar Overlay (mobile) ── */
+      .sidebar-overlay {
+        display:none; position:fixed; inset:0;
+        background:rgba(0,0,0,.5); z-index:99;
+      }
+      .sidebar-overlay.active { display:block; }
+
+      /* ── Responsive ── */
+      @media (max-width: 1024px) {
+        .topbar-search { display:none; }
+      }
+      @media (max-width: 768px) {
+        .sidebar { transform:translateX(-100%); }
+        .sidebar.open { transform:translateX(0); }
+        .main-content { margin-left:0; }
+        .topbar-toggle { display:flex; }
+        .page-container { padding:16px; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap:10px; }
+        .stat-card { padding:14px; }
+        .stat-value { font-size:22px; }
+        .admin-table th, .admin-table td { padding:10px 12px; font-size:12px; }
+        .hide-mobile { display:none !important; }
+        .request-card { flex-direction:column; align-items:flex-start; }
+        .request-actions { width:100%; }
+        .request-actions .btn { flex:1; justify-content:center; }
+      }
+      @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .topbar { padding:0 14px; }
+        .topbar-title h2 { font-size:15px; }
+        .topbar-title p { display:none; }
+      }
     </style>
   </head>
   <body>
-    <canvas id="particles"></canvas>
-    <header>
-      <div class="container nav-container">
-        <div class="logo"><div class="logo-icon"><i class="fas fa-cube"></i></div><span class="gradient-text">Vertex Chamber</span></div>
-        <nav class="main-nav"><ul><li><a href="splash.html"><i class="fas fa-home"></i> Home</a></li><li><a href="chambers.html"><i class="fas fa-door-closed"></i> Chambers</a></li><li><a href="admin.html" class="active"><i class="fas fa-shield"></i> Admin</a></li></ul></nav>
-        <div class="user-menu">
-          <button class="user-avatar" id="userAvatarBtn" type="button"><img id="userAvatarImg" src="favicon.png" alt="User Avatar" /></button>
-          <div class="notification-badge" id="notificationBadge" style="display:none">0</div>
+
+    <!-- Access Denied -->
+    <div id="accessDenied">
+      <div class="denied-box">
+        <i class="fas fa-shield-halved"></i>
+        <h2>Access Restricted</h2>
+        <p>You don't have permission to view the admin panel. Only authorized platform administrators can access this area.</p>
+        <a href="splash.html" class="btn-back"><i class="fas fa-arrow-left"></i> Return to Home</a>
+      </div>
+    </div>
+
+    <!-- Loader -->
+    <div id="adminLoader">
+      <div class="loader-spinner"></div>
+    </div>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Admin App -->
+    <div id="adminApp">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo"><i class="fas fa-cube"></i></div>
+          <div class="sidebar-brand">
+            <h3>Vertex Chamber</h3>
+            <span>Admin Panel</span>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <div class="nav-section-title">Overview</div>
+            <div class="nav-item active" data-page="dashboard">
+              <i class="fas fa-chart-pie"></i> Dashboard
+            </div>
+          </div>
+          <div class="nav-section">
+            <div class="nav-section-title">Management</div>
+            <div class="nav-item" data-page="users">
+              <i class="fas fa-users"></i> Users
+            </div>
+            <div class="nav-item" data-page="requests">
+              <i class="fas fa-clock"></i> Pending Requests
+              <span class="nav-badge" id="reqBadge">0</span>
+            </div>
+            <div class="nav-item" data-page="chambers">
+              <i class="fas fa-door-open"></i> Chambers
+            </div>
+          </div>
+          <div class="nav-section">
+            <div class="nav-section-title">Communication</div>
+            <div class="nav-item" data-page="announcements">
+              <i class="fas fa-bullhorn"></i> Announcements
+            </div>
+          </div>
+          <div class="nav-section">
+            <div class="nav-section-title">System</div>
+            <div class="nav-item" data-page="audit">
+              <i class="fas fa-clipboard-list"></i> Audit Log
+            </div>
+            <div class="nav-item" data-page="settings">
+              <i class="fas fa-gear"></i> Settings
+            </div>
+          </div>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+          <div class="sidebar-user">
+            <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+            <div class="sidebar-user-role">Platform Admin</div>
+          </div>
+          <button class="sidebar-logout" id="sidebarLogout" title="Logout"><i class="fas fa-right-from-bracket"></i></button>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <div class="main-content">
+        <header class="topbar">
+          <button class="topbar-toggle" id="topbarToggle"><i class="fas fa-bars"></i></button>
+          <div class="topbar-title">
+            <h2 id="pageTitle">Dashboard</h2>
+            <p id="pageSubtitle">Platform overview and quick stats</p>
+          </div>
+          <div class="topbar-spacer"></div>
+          <div class="topbar-search">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search anything..." id="globalSearch" />
+          </div>
+          <div class="topbar-time" id="topbarTime"></div>
+        </header>
+
+        <div class="page-container">
+
+          <!-- ═══════ DASHBOARD ═══════ -->
+          <div class="page-view active" id="page-dashboard">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon cyan"><i class="fas fa-users"></i></div>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value" id="statUsers">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-door-open"></i></div>
+                <div class="stat-label">Chambers</div>
+                <div class="stat-value" id="statChambers">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+                <div class="stat-label">Pending Requests</div>
+                <div class="stat-value" id="statPending">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon red"><i class="fas fa-ban"></i></div>
+                <div class="stat-label">Banned Users</div>
+                <div class="stat-value" id="statBanned">0</div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+              <div class="panel">
+                <div class="panel-header">
+                  <h3><i class="fas fa-clock"></i> Recent Requests</h3>
+                  <button class="btn btn-sm btn-secondary" onclick="navigateTo('requests')">View All</button>
+                </div>
+                <div class="panel-body">
+                  <div id="dashRecentRequests" class="request-list"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-header">
+                  <h3><i class="fas fa-clipboard-list"></i> Recent Activity</h3>
+                  <button class="btn btn-sm btn-secondary" onclick="navigateTo('audit')">View All</button>
+                </div>
+                <div class="panel-body">
+                  <div id="dashRecentAudit"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══════ USERS ═══════ -->
+          <div class="page-view" id="page-users">
+            <div class="panel">
+              <div class="panel-header">
+                <h3><i class="fas fa-users"></i> All Users</h3>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="text" class="form-input" placeholder="Search users..." id="userSearch" style="width:200px;padding:8px 12px;font-size:12px;" />
+                  <select class="form-input" id="userFilter" style="width:130px;padding:8px 12px;font-size:12px;">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="banned">Banned</option>
+                  </select>
+                </div>
+              </div>
+              <div class="panel-body no-pad">
+                <div class="table-wrap">
+                  <table class="admin-table">
+                    <thead>
+                      <tr>
+                        <th>User</th>
+                        <th class="hide-mobile">Role</th>
+                        <th>Status</th>
+                        <th class="hide-mobile">Joined</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══════ REQUESTS ═══════ -->
+          <div class="page-view" id="page-requests">
+            <div class="panel">
+              <div class="panel-header">
+                <h3><i class="fas fa-clock"></i> Pending Join Requests</h3>
+                <div style="display:flex;gap:8px;">
+                  <select class="form-input" id="requestFilter" style="width:140px;padding:8px 12px;font-size:12px;">
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="all">All</option>
+                  </select>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div id="requestsList" class="request-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══════ CHAMBERS ═══════ -->
+          <div class="page-view" id="page-chambers">
+            <div class="panel">
+              <div class="panel-header">
+                <h3><i class="fas fa-door-open"></i> All Chambers</h3>
+              </div>
+              <div class="panel-body no-pad">
+                <div class="table-wrap">
+                  <table class="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Chamber</th>
+                        <th class="hide-mobile">Category</th>
+                        <th>Members</th>
+                        <th class="hide-mobile">Visibility</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="chambersTableBody">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══════ ANNOUNCEMENTS ═══════ -->
+          <div class="page-view" id="page-announcements">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+              <div class="panel">
+                <div class="panel-header">
+                  <h3><i class="fas fa-paper-plane"></i> New Announcement</h3>
+                </div>
+                <div class="panel-body">
+                  <form class="announce-form" id="announceForm">
+                    <div class="form-group">
+                      <label>Title</label>
+                      <input type="text" class="form-input" id="announceTitle" placeholder="Announcement title" required />
+                    </div>
+                    <div class="form-group">
+                      <label>Message</label>
+                      <textarea class="form-input" id="announceMessage" placeholder="Write your announcement..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                      <label>Audience</label>
+                      <select class="form-input" id="announceAudience">
+                        <option value="all">All Users</option>
+                        <option value="active">Active Users Only</option>
+                        <option value="banned">Banned Users</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>Priority</label>
+                      <select class="form-input" id="announcePriority">
+                        <option value="normal">Normal</option>
+                        <option value="important">Important</option>
+                        <option value="urgent">Urgent</option>
+                      </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Announcement</button>
+                  </form>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-header">
+                  <h3><i class="fas fa-history"></i> Recent Announcements</h3>
+                </div>
+                <div class="panel-body">
+                  <div id="announcementsList"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══════ AUDIT LOG ═══════ -->
+          <div class="page-view" id="page-audit">
+            <div class="panel">
+              <div class="panel-header">
+                <h3><i class="fas fa-clipboard-list"></i> Moderation Audit Log</h3>
+                <select class="form-input" id="auditFilter" style="width:140px;padding:8px 12px;font-size:12px;">
+                  <option value="all">All Actions</option>
+                  <option value="ban_user">Bans</option>
+                  <option value="unban_user">Unbans</option>
+                  <option value="approve_request">Approvals</option>
+                  <option value="reject_request">Rejections</option>
+                  <option value="announcement">Announcements</option>
+                </select>
+              </div>
+              <div class="panel-body">
+                <div id="auditList"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══════ SETTINGS ═══════ -->
+          <div class="page-view" id="page-settings">
+            <div class="panel">
+              <div class="panel-header">
+                <h3><i class="fas fa-gear"></i> Platform Settings</h3>
+              </div>
+              <div class="panel-body">
+                <div class="announce-form">
+                  <div class="form-group">
+                    <label>Platform Name</label>
+                    <input type="text" class="form-input" value="Vertex Chamber" readonly />
+                  </div>
+                  <div class="form-group">
+                    <label>Admin Email</label>
+                    <input type="text" class="form-input" id="settingsAdminEmail" readonly />
+                  </div>
+                  <div class="form-group">
+                    <label>Session Expires</label>
+                    <input type="text" class="form-input" id="settingsSessionExpiry" readonly />
+                  </div>
+                  <div style="padding-top:12px;border-top:1px solid var(--border);margin-top:8px;">
+                    <button class="btn btn-danger" id="clearCacheBtn"><i class="fas fa-broom"></i> Clear Local Cache</button>
+                  </div>
+                  <div>
+                    <button class="btn btn-secondary" id="exportDataBtn"><i class="fas fa-download"></i> Export User Data</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
-    </header>
+    </div>
 
-    <section id="adminDenied" class="container">
-      <h2>Access restricted</h2>
-      <p style="color:var(--text-secondary); margin-top:8px;">You are not allowed to open the admin dashboard.</p>
-    </section>
-
-    <main id="adminMain" class="container admin-wrap" style="display:none;">
-      <h1 class="page-title">System <span class="gradient-text">Admin Dashboard</span></h1>
-      <p class="page-subtitle">Moderate users, watch platform health, and ban/unban rule violators.</p>
-      <div class="admin-grid">
-        <div class="admin-card"><div class="admin-label">Total users</div><div id="mUsers" class="admin-value">0</div></div>
-        <div class="admin-card"><div class="admin-label">Banned users</div><div id="mBanned" class="admin-value">0</div></div>
-        <div class="admin-card"><div class="admin-label">Total chambers</div><div id="mChambers" class="admin-value">0</div></div>
-        <div class="admin-card"><div class="admin-label">Pending join requests</div><div id="mPending" class="admin-value">0</div></div>
-      </div>
-
-      <section class="admin-panel">
-        <h3 style="margin-bottom:8px;"><i class="fas fa-user-shield"></i> User moderation</h3>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-          <input id="banReasonInput" class="glass-card" placeholder="Reason for action (required for ban)" style="padding:10px 12px;min-width:240px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;border-radius:10px;" />
+    <!-- User Detail Modal -->
+    <div class="modal-overlay" id="userModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>User Details</h3>
+          <button class="modal-close" onclick="closeModal('userModal')"><i class="fas fa-times"></i></button>
         </div>
-        <div id="usersList"></div>
-      </section>
+        <div class="modal-body" id="userModalBody"></div>
+        <div class="modal-footer" id="userModalFooter"></div>
+      </div>
+    </div>
 
-      <section class="admin-panel">
-        <h3 style="margin-bottom:8px;"><i class="fas fa-clipboard-list"></i> Moderation Audit Log</h3>
-        <div id="auditList"></div>
-      </section>
-    </main>
+    <!-- Ban/Unban Confirmation Modal -->
+    <div class="modal-overlay" id="banModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="banModalTitle">Confirm Action</h3>
+          <button class="modal-close" onclick="closeModal('banModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" style="margin-bottom:14px;">
+            <label id="banModalLabel">Reason</label>
+            <textarea class="form-input" id="banReasonInput" placeholder="Enter reason for this action..." rows="3"></textarea>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);" id="banModalHint"></p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('banModal')">Cancel</button>
+          <button class="btn btn-danger" id="banConfirmBtn">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <script src="pwa.js?v=2"></script>
-    <script src="particles.js?v=2"></script>
-    <script src="main.js?v=2"></script>
-    <script src="bottom_nav.js?v=2"></script>
-    <script src="push_config.js?v=2"></script>
-    <script type="module" src="app_shell.js?v=2"></script>
-    <script type="module" src="admin.js?v=2"></script>
+    <script type="module" src="admin.js?v=3"></script>
   </body>
-  </html>
-
+</html>
