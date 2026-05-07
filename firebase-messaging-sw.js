@@ -11,12 +11,11 @@ function assetUrl(relativePath) {
   return new URL(relativePath.replace(/^\//, ""), SW_DIR).href;
 }
 
-const CACHE_VERSION = "vc-pwa-v2";
+const CACHE_VERSION = "vc-pwa-v3";
 const APP_SHELL_ASSETS = [
   "splash.html",
   "feed.html",
   "chambers.html",
-  "workspace.html",
   "messages.html",
   "profile.html",
   "login.html",
@@ -28,9 +27,10 @@ const APP_SHELL_ASSETS = [
   "firebase.js",
   "feed_page.js",
   "chambers_page.js",
-  "workspace_page.js",
   "manifest.json",
   "favicon.png",
+  "icon-192.png",
+  "icon-512.png",
   "pwa.js",
   "push_config.js",
 ];
