@@ -178,7 +178,10 @@ async function isUsernameTakenGlobally(username) {
     if (snap.exists()) {
       const data = snap.data();
       // If this username belongs to THIS user, it's not "taken"
-      return data.userId !== userId;
+      if (data.userId === userId) return false;
+
+      const status = (data.status || "active").toString().toLowerCase();
+      return status === "active";
     }
     return false;
   } catch (err) {
@@ -287,13 +290,17 @@ window.saveProfile = async function () {
     const usernameRef  = doc(db, "usernames", username);
     const finalCheck   = await getDoc(usernameRef);
 
-    if (finalCheck.exists() && finalCheck.data().userId !== userId) {
-      usernameAvailable = false;
-      setStatus("taken", `<i class="fa-solid fa-circle-xmark"></i> @${username} was just taken — choose another`);
-      updateSaveButtonUI();
-      setSaveLoading(false);
-      if (window.showToast) window.showToast("Username just taken. Please try another.", "error");
-      return;
+    if (finalCheck.exists()) {
+      const data = finalCheck.data();
+      const status = (data.status || "active").toString().toLowerCase();
+      if (data.userId !== userId && status === "active") {
+        usernameAvailable = false;
+        setStatus("taken", `<i class="fa-solid fa-circle-xmark"></i> @${username} was just taken — choose another`);
+        updateSaveButtonUI();
+        setSaveLoading(false);
+        if (window.showToast) window.showToast("Username just taken. Please try another.", "error");
+        return;
+      }
     }
 
     // Reserve username globally (linked to this user's email id, not a device)
@@ -311,7 +318,9 @@ window.saveProfile = async function () {
       await setDoc(oldRef, {
         status:           "available",
         freedAt:          new Date().toISOString(),
-        previousUserId:   userId
+        previousUserId:   userId,
+        userId:           null,
+        email:            null
       }, { merge: true });
     }
 
