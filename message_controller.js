@@ -32,6 +32,14 @@
 
 const MessageController = (() => {
 
+  // ─── Backend API base URL (for push notifications) ────────────
+  // Change this to your deployed server URL if not running locally.
+  const PUSH_API_BASE =
+    window.VERTEX_API_BASE_URL ||
+    (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+      ? 'http://localhost:5000'
+      : '');
+
   // ─── Firestore Collection References ─────────────────────────
   // These are lazily resolved so Firebase is initialized first
   const getMessagesRef = (conversationId) =>
@@ -90,6 +98,17 @@ const MessageController = (() => {
         lastMessage: type === 'text' ? content : `[${type}]`,
         lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
         lastSenderId: senderId,
+      });
+
+      // Notify the receiver via push (fire-and-forget; never blocks sending)
+      getUserPushInfo(senderId).then((senderInfo) => {
+        sendPushNotification({
+          receiverId,
+          senderName: (senderInfo && senderInfo.username) || 'a member',
+          content,
+          type,
+          conversationId,
+        });
       });
 
       console.log('[MessageController] Message sent:', docRef.id);
@@ -364,6 +383,49 @@ const MessageController = (() => {
       });
 
     return unsubscribe;
+  };
+
+  // ─── Private Helper: Fetch a user's FCM token + display info ─
+  const getUserPushInfo = async (userId) => {
+    try {
+      const snap = await firebase.firestore().collection('users').doc(userId).get();
+      if (!snap.exists) return null;
+      const data = snap.data();
+      return {
+        fcmToken: data.fcmToken || null,
+        username: data.username || null,
+      };
+    } catch (error) {
+      console.warn('[MessageController] getUserPushInfo error:', error);
+      return null;
+    }
+  };
+
+  // ─── Private Helper: Trigger server-side push notification ───
+  const sendPushNotification = async ({ receiverId, senderName, content, type, conversationId }) => {
+    if (!PUSH_API_BASE) return; // no backend configured (e.g. static hosting)
+
+    try {
+      const receiverInfo = await getUserPushInfo(receiverId);
+      if (!receiverInfo || !receiverInfo.fcmToken) return; // receiver has no token registered
+
+      await fetch(`${PUSH_API_BASE}/api/v1/push/send-message-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fcmToken: receiverInfo.fcmToken,
+          senderName,
+          username: receiverInfo.username,
+          content,
+          type,
+          conversationId,
+          url: 'messages.html',
+        }),
+      });
+    } catch (error) {
+      // Push failures should never break the chat experience
+      console.warn('[MessageController] sendPushNotification error:', error);
+    }
   };
 
   // ─── Private Helper: Update Conversation Preview ─────────────

@@ -14,6 +14,19 @@ const path = require('path');
 // Load environment variables
 dotenv.config();
 
+// ─── Firebase Admin SDK (for Push Notifications) ──────────────
+const admin = require('firebase-admin');
+try {
+  const serviceAccount = require('./serviceAccountKey.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+  console.log('✅ Firebase Admin SDK initialized');
+} catch (err) {
+  console.error('⚠️  Firebase Admin SDK NOT initialized — push notifications disabled.');
+  console.error('   Place serviceAccountKey.json in the project root. Error:', err.message);
+}
+
 // Initialize Express app
 const app = express();
 const server = http.createServer(app);
@@ -84,7 +97,10 @@ const connectDB = async () => {
     
   } catch (error) {
     console.error(`Error connecting to MongoDB: ${error.message}`);
-    process.exit(1);
+    console.error('⚠️  Server will continue running WITHOUT MongoDB.');
+    console.error('   Routes that need the database (users, chambers, projects, admin) will fail.');
+    console.error('   Push notification routes and other non-DB routes will still work.');
+    // Do NOT exit — keep the server alive for Firebase/push routes
   }
 };
 
@@ -356,6 +372,100 @@ app.get('/', (req, res) => {
       members: `${process.env.SERVER_URL || 'http://localhost:5000'}/api/v1/members`
     }
   });
+});
+
+// ======== Push Notifications (Firebase Cloud Messaging) ========
+
+// POST /api/v1/push/send-message-notification
+// Body: { fcmToken, senderName, username, content, type, conversationId, url }
+app.post('/api/v1/push/send-message-notification', async (req, res) => {
+  try {
+    if (!admin.apps.length) {
+      return res.status(503).json({ success: false, message: 'Push notifications not configured on server' });
+    }
+
+    const { fcmToken, senderName, username, content, type = 'text', conversationId, url } = req.body;
+
+    if (!fcmToken) {
+      return res.status(400).json({ success: false, message: 'fcmToken is required' });
+    }
+
+    const previewText = type === 'text'
+      ? String(content || '').slice(0, 120)
+      : `Sent a ${type}`;
+
+    const message = {
+      token: fcmToken,
+      data: {
+        type: 'message',
+        senderName: senderName || 'a member',
+        username: username || '',
+        url: url || 'messages.html',
+        conversationId: conversationId || '',
+      },
+      notification: {
+        title: 'Vertex Chamber',
+        body: `${senderName || 'Someone'}: ${previewText}`,
+      },
+      webpush: {
+        fcmOptions: {
+          link: url || 'messages.html',
+        },
+      },
+    };
+
+    const response = await admin.messaging().send(message);
+    res.json({ success: true, messageId: response });
+  } catch (err) {
+    console.error('[Push] send-message-notification error:', err);
+
+    // Token no longer valid — caller should remove it from the user's profile
+    if (err.code === 'messaging/registration-token-not-registered') {
+      return res.status(410).json({ success: false, message: 'Token invalid/expired', code: err.code });
+    }
+
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/v1/push/send-call-notification
+// Body: { fcmToken, callerName, kind ('audio'|'video'), callId, url }
+app.post('/api/v1/push/send-call-notification', async (req, res) => {
+  try {
+    if (!admin.apps.length) {
+      return res.status(503).json({ success: false, message: 'Push notifications not configured on server' });
+    }
+
+    const { fcmToken, callerName, kind = 'audio', callId, url } = req.body;
+
+    if (!fcmToken) {
+      return res.status(400).json({ success: false, message: 'fcmToken is required' });
+    }
+
+    const message = {
+      token: fcmToken,
+      data: {
+        type: 'call',
+        kind,
+        callerName: callerName || 'Member',
+        callId: callId || '',
+        url: url || 'messages.html',
+      },
+      android: { priority: 'high' },
+      apns: { headers: { 'apns-priority': '10' } },
+    };
+
+    const response = await admin.messaging().send(message);
+    res.json({ success: true, messageId: response });
+  } catch (err) {
+    console.error('[Push] send-call-notification error:', err);
+
+    if (err.code === 'messaging/registration-token-not-registered') {
+      return res.status(410).json({ success: false, message: 'Token invalid/expired', code: err.code });
+    }
+
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // 404 handler

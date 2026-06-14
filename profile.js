@@ -98,6 +98,11 @@ async function loadUserProfile() {
         try { localStorage.setItem("vertex_avatar", data.avatarBase64); } catch {}
       }
 
+      // Register for push notifications (so SMS/message alerts arrive even when app is closed)
+      if (window.registerForPushNotifications) {
+        window.registerForPushNotifications(userId);
+      }
+
     } else {
       console.log("📝 New user — no profile yet");
       isProfileActivated = false;
@@ -352,6 +357,11 @@ window.saveProfile = async function () {
 
     currentUsername    = username;
     isProfileActivated = true;
+
+    // Register for push notifications now that the user is fully set up
+    if (window.registerForPushNotifications) {
+      window.registerForPushNotifications(userId);
+    }
 
     setSaveLoading(false);
     updateSaveButtonUI();
