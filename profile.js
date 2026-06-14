@@ -172,22 +172,18 @@ function setSaveLoading(loading) {
 
 // ── Username availability check ───────────────────────────────
 async function isUsernameTakenGlobally(username) {
-  try {
-    const ref  = doc(db, "usernames", username);
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-      const data = snap.data();
-      // If this username belongs to THIS user, it's not "taken"
-      if (data.userId === userId) return false;
+  const ref  = doc(db, "usernames", username);
+  const snap = await getDoc(ref); // let errors bubble up to caller, do NOT assume "taken"
 
-      const status = (data.status || "active").toString().toLowerCase();
-      return status === "active";
-    }
-    return false;
-  } catch (err) {
-    console.error("Error checking username:", err);
-    return true;
+  if (snap.exists()) {
+    const data = snap.data();
+    // If this username belongs to THIS user, it's not "taken"
+    if (data.userId === userId) return false;
+
+    const status = (data.status || "active").toString().toLowerCase();
+    return status === "active";
   }
+  return false;
 }
 
 function validateUsernameFormat(username) {
@@ -239,8 +235,13 @@ usernameInput.addEventListener("input", () => {
       }
       updateSaveButtonUI();
     } catch (err) {
-      setStatus("short", `<i class="fa-solid fa-wifi"></i> Connection issue — please try again`);
+      console.error("Error checking username:", err);
       usernameAvailable = false;
+      if (err.code === "permission-denied") {
+        setStatus("short", `<i class="fa-solid fa-lock"></i> Permission denied — check Firestore rules for "usernames"`);
+      } else {
+        setStatus("short", `<i class="fa-solid fa-wifi"></i> Connection issue — please try again`);
+      }
       updateSaveButtonUI();
     }
   }, 500);
@@ -367,7 +368,7 @@ window.saveProfile = async function () {
     setSaveLoading(false);
 
     let msg = "Save failed — please try again";
-    if (err.code === "permission-denied") msg = "Permission denied. Check Firebase security rules.";
+    if (err.code === "permission-denied") msg = "Permission denied — update Firestore security rules for 'usernames' and 'users' collections.";
     else if (err.code === "unavailable")  msg = "Service unavailable. Check your internet.";
     else if (err.message)                 msg = err.message.substring(0, 100);
 
