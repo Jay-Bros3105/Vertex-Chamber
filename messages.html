@@ -1295,6 +1295,40 @@
 
       const MY_USER_ID = emailToId(_sessionEmail || "");
 
+      // ── Push notification helper (calls backend /api/v1/push/...) ──
+      const PUSH_API_BASE =
+        window.VERTEX_API_BASE_URL ||
+        (location.hostname === "localhost" || location.hostname === "127.0.0.1"
+          ? "http://localhost:5000"
+          : "");
+
+      async function notifyReceiverPush({ receiverId, content, type, conversationId }) {
+        if (!PUSH_API_BASE || !receiverId) return;
+        try {
+          const snap = await _dbRef.collection("users").doc(receiverId).get();
+          if (!snap.exists) return;
+          const data = snap.data() || {};
+          const fcmToken = data.fcmToken;
+          if (!fcmToken) return;
+
+          await fetch(`${PUSH_API_BASE}/api/v1/push/send-message-notification`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              fcmToken,
+              senderName: CURRENT_USER.name || "a member",
+              username: data.username || "",
+              content,
+              type,
+              conversationId,
+              url: "messages.html",
+            }),
+          });
+        } catch (e) {
+          console.warn("notifyReceiverPush:", e);
+        }
+      }
+
       // ── Firebase setup (compat CDN, loaded below) ─────────────────
       // Firebase is loaded via <script> tags (compat v9 API) at the bottom.
       // We reference firebase.firestore() after DOMContentLoaded.
@@ -2310,6 +2344,14 @@
                 messageId: clientId,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
               });
+
+              // Fire-and-forget push notification (works even if receiver is offline/app closed)
+              notifyReceiverPush({
+                receiverId: currentConvId,
+                content: text,
+                type: "text",
+                conversationId: convId,
+              });
             }
           } catch (e) {
             console.error("sendMessage Firestore error:", e);
@@ -2602,6 +2644,26 @@
           });
           cancelReply();
           renderConvList();
+
+          if (!isGroup) {
+            await _dbRef.collection("notifications").add({
+              userId: currentConvId,
+              read: false,
+              type: "message",
+              fromUserId: MY_USER_ID,
+              conversationId: convId,
+              messageId: clientId,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+
+            notifyReceiverPush({
+              receiverId: currentConvId,
+              content: previewText,
+              type: msgType,
+              conversationId: convId,
+            });
+          }
+
           return true;
         } catch (e) {
           const msg = String(e?.message || "");
@@ -2676,6 +2738,26 @@
           cancelReply();
           renderConvList();
           toast("Sent (fallback mode)");
+
+          if (!isGroup) {
+            await _dbRef.collection("notifications").add({
+              userId: currentConvId,
+              read: false,
+              type: "message",
+              fromUserId: MY_USER_ID,
+              conversationId: convId,
+              messageId: clientId,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+
+            notifyReceiverPush({
+              receiverId: currentConvId,
+              content: previewText,
+              type: msgType,
+              conversationId: convId,
+            });
+          }
+
           return true;
         }
       }
