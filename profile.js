@@ -56,6 +56,7 @@ if (!currentEmail) {
   window.location.href = "login.html";
 } else {
   userId = emailToId(currentEmail);
+  window.currentUserId = userId;
   console.log("✅ Logged in as:", currentEmail, "→ userId:", userId);
 
   // Show email hint on page if element exists

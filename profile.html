@@ -139,9 +139,12 @@
         position: relative;
         z-index: 1;
         width: 100%;
-        max-width: 520px;
-        padding: 24px 16px;
+        max-width: 560px;
+        padding: 24px 16px 100px;
         animation: pageIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
       }
       @keyframes pageIn {
         from {
@@ -158,16 +161,225 @@
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 24px;
-        padding: 40px 36px;
+        padding: 32px 28px;
         backdrop-filter: blur(20px);
         box-shadow:
           0 32px 80px rgba(0, 0, 0, 0.6),
           inset 0 1px 0 rgba(255, 255, 255, 0.06);
       }
 
+      /* ── Section label (small heading for each card) ── */
+      .section-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: "Syne", sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 22px;
+      }
+      .section-label i {
+        color: var(--cyan);
+        font-size: 12px;
+      }
+
+      /* ── Stats row (chambers / projects / messages) ── */
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 26px;
+      }
+      .stat-box {
+        text-align: center;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px 8px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+      .stat-box:hover {
+        border-color: rgba(0, 212, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(0, 212, 255, 0.1);
+      }
+      .stat-box .stat-num {
+        font-family: "Syne", sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--cyan), var(--violet));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.2;
+      }
+      .stat-box .stat-label {
+        font-size: 10px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-top: 4px;
+        font-weight: 600;
+      }
+
+      /* ── Settings row (toggle items) ── */
+      .settings-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .settings-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      .settings-row:first-child {
+        padding-top: 0;
+      }
+      .settings-row-info {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+      }
+      .settings-icon {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        background: linear-gradient(
+          135deg,
+          rgba(0, 212, 255, 0.14),
+          rgba(138, 43, 226, 0.14)
+        );
+        color: var(--cyan);
+      }
+      .settings-row-text {
+        min-width: 0;
+      }
+      .settings-row-text .title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        font-family: "Syne", sans-serif;
+      }
+      .settings-row-text .subtitle {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .settings-row-action {
+        flex-shrink: 0;
+      }
+      .settings-row-action i.fa-chevron-right {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .settings-row-action a,
+      .settings-row-action button.link-btn {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        background: none;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: "DM Sans", sans-serif;
+        transition: color 0.2s ease;
+      }
+      .settings-row-action a:hover,
+      .settings-row-action button.link-btn:hover {
+        color: var(--cyan);
+      }
+
+      /* ── Toggle switch ── */
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 46px;
+        height: 26px;
+        flex-shrink: 0;
+      }
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: var(--surface2);
+        border: 1.5px solid var(--border);
+        border-radius: 999px;
+        transition: all 0.25s ease;
+      }
+      .toggle-slider::before {
+        content: "";
+        position: absolute;
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--muted);
+        border-radius: 50%;
+        transition: all 0.25s ease;
+      }
+      .toggle-switch input:checked + .toggle-slider {
+        background: linear-gradient(135deg, var(--cyan), var(--violet));
+        border-color: transparent;
+      }
+      .toggle-switch input:checked + .toggle-slider::before {
+        transform: translate(20px, -50%);
+        background: #fff;
+      }
+      .toggle-switch input:disabled + .toggle-slider {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* ── Help / support card ── */
+      .help-card {
+        text-align: center;
+        background: linear-gradient(
+          135deg,
+          rgba(0, 212, 255, 0.06),
+          rgba(138, 43, 226, 0.06)
+        );
+        border: 1px solid rgba(0, 212, 255, 0.15);
+        border-radius: 16px;
+        padding: 18px 20px;
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+      .help-card a {
+        color: var(--cyan);
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .help-card a:hover {
+        text-decoration: underline;
+      }
+
       .card-header {
         text-align: center;
-        margin-bottom: 36px;
+        margin-bottom: 28px;
       }
 
       .badge {
@@ -615,16 +827,22 @@
 
       @media (max-width: 540px) {
         .card {
-          padding: 28px 20px;
+          padding: 24px 18px;
           border-radius: 20px;
         }
         .card-header h1 {
           font-size: 22px;
         }
+        .stats-row {
+          gap: 8px;
+        }
+        .stat-box .stat-num {
+          font-size: 17px;
+        }
       }
       @media (max-width: 360px) {
         .card {
-          padding: 22px 14px;
+          padding: 20px 14px;
         }
       }
     </style>
@@ -648,8 +866,8 @@
     <div class="orb orb-2"></div>
 
     <div class="page">
+      <!-- Card 1: Profile Header — avatar + identity summary -->
       <div class="card">
-        <!-- Header -->
         <div class="card-header">
           <div class="badge">
             <i class="fa-solid fa-hexagon-nodes"></i>
@@ -693,7 +911,28 @@
           </div>
         </div>
 
-        <div class="divider"></div>
+        <!-- Quick stats -->
+        <div class="stats-row">
+          <a href="chambers.html" class="stat-box">
+            <div class="stat-num">—</div>
+            <div class="stat-label">Chambers</div>
+          </a>
+          <a href="feed.html" class="stat-box">
+            <div class="stat-num">—</div>
+            <div class="stat-label">Projects</div>
+          </a>
+          <a href="messages.html" class="stat-box">
+            <div class="stat-num">—</div>
+            <div class="stat-label">Messages</div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 2: Identity — username + bio -->
+      <div class="card">
+        <div class="section-label">
+          <i class="fa-solid fa-id-badge"></i> Identity
+        </div>
 
         <!-- Username -->
         <div class="field">
@@ -714,7 +953,7 @@
         </div>
 
         <!-- Bio -->
-        <div class="field">
+        <div class="field" style="margin-bottom: 0">
           <div class="field-label">
             <i class="fa-solid fa-pen-nib"></i> Bio
             <span style="font-weight: 400; color: #3a3a5c; margin-left: 4px"
@@ -730,23 +969,93 @@
           </div>
           <div class="char-count"><span id="bioCount">0</span> / 160</div>
         </div>
+      </div>
 
-        <!-- Save button -->
-        <button class="btn-save" id="saveBtn" onclick="saveProfile()" disabled>
-          <div class="btn-inner">
-            <div class="spinner"></div>
-            <span class="btn-text">
-              <i class="fa-solid fa-bolt" style="margin-right: 8px"></i>Activate
-              Profile
-            </span>
-          </div>
-        </button>
-
-        <div class="footer-note">
-          <i class="fa-solid fa-cloud"></i>
-          Your profile is linked to your email — accessible from any device,
-          anywhere.
+      <!-- Card 3: Preferences — notifications, security, support -->
+      <div class="card">
+        <div class="section-label">
+          <i class="fa-solid fa-sliders"></i> Preferences
         </div>
+
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-icon"><i class="fa-solid fa-bell"></i></div>
+            <div class="settings-row-text">
+              <div class="title">Push Notifications</div>
+              <div class="subtitle">
+                Get alerts for messages &amp; calls — even when the app is
+                closed
+              </div>
+            </div>
+          </div>
+          <div class="settings-row-action">
+            <label class="toggle-switch">
+              <input type="checkbox" id="pushToggle" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-icon">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="settings-row-text">
+              <div class="title">Account Security</div>
+              <div class="subtitle">
+                Sign-in is verified via email — no password needed
+              </div>
+            </div>
+          </div>
+          <div class="settings-row-action">
+            <i class="fa-solid fa-chevron-right"></i>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-icon">
+              <i class="fa-solid fa-eye"></i>
+            </div>
+            <div class="settings-row-text">
+              <div class="title">Profile Visibility</div>
+              <div class="subtitle">
+                Your profile is public to all chamber members
+              </div>
+            </div>
+          </div>
+          <div class="settings-row-action">
+            <i class="fa-solid fa-chevron-right"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save button -->
+      <button class="btn-save" id="saveBtn" onclick="saveProfile()" disabled>
+        <div class="btn-inner">
+          <div class="spinner"></div>
+          <span class="btn-text">
+            <i class="fa-solid fa-bolt" style="margin-right: 8px"></i>Activate
+            Profile
+          </span>
+        </div>
+      </button>
+
+      <!-- Support / help card -->
+      <div class="help-card">
+        <i class="fa-solid fa-circle-question"></i>
+        Need help with your account? Reach out to our support team anytime.
+        <br />
+        <a href="https://wa.me/" target="_blank" rel="noopener"
+          >Contact Support on WhatsApp</a
+        >
+      </div>
+
+      <div class="footer-note">
+        <i class="fa-solid fa-cloud"></i>
+        Your profile is linked to your email — accessible from any device,
+        anywhere.
       </div>
     </div>
 
@@ -833,6 +1142,88 @@
           if (saved) document.getElementById("avatar").src = saved;
         } catch {}
       });
+
+      // ── Account Security row — informational (OTP-based, no password) ──
+      document
+        .querySelectorAll(".settings-row")[1]
+        .addEventListener("click", () => {
+          showToast(
+            "Your account is secured via email sign-in. No password to manage.",
+            "success",
+          );
+        });
+
+      // ── Profile Visibility row — informational ──
+      document
+        .querySelectorAll(".settings-row")[2]
+        .addEventListener("click", () => {
+          showToast(
+            "Public visibility helps other members find and connect with you.",
+            "success",
+          );
+        });
+
+      // ── Push Notifications toggle ──
+      (function setupPushToggle() {
+        const toggle = document.getElementById("pushToggle");
+        if (!toggle) return;
+
+        const supported =
+          "serviceWorker" in navigator && "Notification" in window;
+
+        if (!supported) {
+          toggle.disabled = true;
+          return;
+        }
+
+        // Reflect current browser permission state
+        if (Notification.permission === "granted") {
+          toggle.checked = true;
+        } else {
+          toggle.checked = false;
+        }
+
+        toggle.addEventListener("change", async () => {
+          if (toggle.checked) {
+            if (Notification.permission === "granted") {
+              showToast("Push notifications are already enabled.", "success");
+              return;
+            }
+            if (Notification.permission === "denied") {
+              toggle.checked = false;
+              showToast(
+                "Notifications are blocked in your browser settings. Please enable them manually.",
+                "error",
+              );
+              return;
+            }
+
+            // Ask permission + register token
+            if (window.registerForPushNotifications && window.currentUserId) {
+              const token = await window.registerForPushNotifications(
+                window.currentUserId,
+              );
+              if (token) {
+                showToast("Push notifications enabled!", "success");
+              } else {
+                toggle.checked = false;
+                showToast("Could not enable notifications.", "error");
+              }
+            } else {
+              const perm = await Notification.requestPermission();
+              toggle.checked = perm === "granted";
+            }
+          } else {
+            // Browsers don't allow revoking permission via JS —
+            // guide the user instead.
+            toggle.checked = true;
+            showToast(
+              "To turn off notifications, disable them in your browser's site settings.",
+              "error",
+            );
+          }
+        });
+      })();
     </script>
   </body>
 </html>
