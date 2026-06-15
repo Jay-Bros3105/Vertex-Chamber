@@ -11,7 +11,7 @@ function assetUrl(relativePath) {
   return new URL(relativePath.replace(/^\//, ""), SW_DIR).href;
 }
 
-const CACHE_VERSION = "vc-pwa-v3";
+const CACHE_VERSION = "vc-pwa-v4";
 const APP_SHELL_ASSETS = [
   "splash.html",
   "feed.html",
